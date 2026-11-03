@@ -14,17 +14,20 @@ const PORT = +process.env.PORT || 3000;
 const DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 const APP = path.join(__dirname, 'app');
 
-let db = { users: {} };
+let db = { users: {}, meta: {} };
 try { db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch (e) { }
+db.meta = db.meta || {};
 let fileTimer = null;
 const core = createCore({
   BOT_TOKEN: process.env.BOT_TOKEN, WEBAPP_URL: process.env.WEBAPP_URL, BOT_USERNAME: process.env.BOT_USERNAME, DEV: process.env.DEV === '1',
-  users: db.users,
-  saveUser() {
+  users: db.users, meta: db.meta,
+  saveMeta() { writeSoon(); },
+  saveUser() { writeSoon(); },
+});
+function writeSoon() {
     if (fileTimer) return;
     fileTimer = setTimeout(() => { fileTimer = null; try { fs.writeFileSync(DATA_FILE + '.tmp', JSON.stringify(db)); fs.renameSync(DATA_FILE + '.tmp', DATA_FILE); } catch (e) { console.error('save', e.message); } }, 1000);
-  },
-});
+}
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.webp': 'image/webp', '.mp3': 'audio/mpeg', '.json': 'application/json', '.woff2': 'font/woff2' };
 const server = http.createServer((req, res) => {
@@ -40,6 +43,8 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  const ph = p.match(/^\/photo\/([0-9a-f]{16})\.jpg$/);
+  if (ph) { core.getPhoto(ph[1]).then(b => { if (!b) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': 'image/jpeg' }); res.end(b); }); return; }
   if (p === '/') p = '/index.html';
   const file = path.join(APP, path.normalize(p));
   if (!file.startsWith(APP + path.sep)) { res.writeHead(403); return res.end(); }
@@ -51,7 +56,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-const wss = new WebSocketServer({ server, maxPayload: 64 * 1024 });
+const wss = new WebSocketServer({ server, maxPayload: 800 * 1024 });
 wss.on('connection', ws => {
   const sock = { send: s => ws.readyState === 1 && ws.send(s), close: () => ws.close(), uid: null };
   ws.isAlive = true; ws.on('pong', () => { ws.isAlive = true; });

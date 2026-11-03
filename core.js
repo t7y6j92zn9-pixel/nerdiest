@@ -8,7 +8,7 @@ const C = require('./catalog.js');
 const TURN_SECONDS = 90;
 const HOOK_PATH = '/tg-hook';
 
-// cfg: { BOT_TOKEN, WEBAPP_URL, BOT_USERNAME, DEV, users, saveUser(u), log }
+// cfg: { BOT_TOKEN, WEBAPP_URL, BOT_USERNAME, DEV, users, saveUser(u), meta, saveMeta(meta), putPhoto(id, buf), getPhoto(id), log }
 function createCore(cfg) {
   const BOT_TOKEN = (cfg.BOT_TOKEN || '').trim();
   const WEBAPP_URL = (cfg.WEBAPP_URL || '').trim().replace(/\/$/, '');
@@ -16,6 +16,10 @@ function createCore(cfg) {
   const HOOK_SECRET = BOT_TOKEN ? crypto.createHash('sha256').update('hook:' + BOT_TOKEN).digest('hex').slice(0, 40) : '';
   const log = cfg.log || console.log;
   const users = cfg.users || {};
+  const meta = cfg.meta || {};
+  let metaTimer = null;
+  function saveMeta() { if (metaTimer) return; metaTimer = setTimeout(() => { metaTimer = null; cfg.saveMeta && cfg.saveMeta(meta); }, 1000); }
+  const today = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); // по Москве
   const dirty = new Set(); let saveTimer = null;
   function save(u) { if (u) dirty.add(u.id); if (saveTimer) return; saveTimer = setTimeout(() => { saveTimer = null; const ids = [...dirty]; dirty.clear(); ids.forEach(id => users[id] && cfg.saveUser && cfg.saveUser(users[id])); }, 1000); }
   let botUsername = (cfg.BOT_USERNAME || '').replace(/^@/, '').trim();
@@ -29,7 +33,7 @@ function createCore(cfg) {
     u.seen = Date.now(); save(u);
     return u;
   }
-  function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: u.eq, lvl: u.lvl || 1 }; }
+  function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: u.eq, lvl: u.lvl || 1, mars: u.mars || 0, best: u.best || 0, longG: u.longG || 0, shortG: u.shortG || 0, created: u.created, num: String(u.id).replace(/\D/g, '').slice(-4).padStart(4, '0') }; }
   function meView(u) { return { ...publicUser(u), cigs: u.cigs, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
   // внешний вид и счёт игрока присылает само приложение (сырой тестовый вариант)
   function applyProf(u, p) {
@@ -79,6 +83,7 @@ function createCore(cfg) {
       const old = online.get(uid); if (old && old !== sock) { try { old.close(); } catch (e) { } }
       online.set(uid, sock);
       const u = getUser(uid, [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 40), tg.username);
+      if (!u.app) { u.app = Date.now(); save(u); }
       applyProf(u, m.prof);
       sendMe(uid);
       const gid = userGame.get(uid);
@@ -104,8 +109,16 @@ function createCore(cfg) {
     const u = users[uid];
     switch (m.t) {
       case 'prof': return applyProf(u, m.prof);
+      case 'me': return sendMe(uid);
+      case 'peek': { // ход ещё идёт: показать сопернику шашки сразу
+        const g = games.get(userGame.get(uid)); if (!g || g.over || g.phase !== 'move' || g.uids[g.turn] !== uid || !Array.isArray(m.moves)) return;
+        const moves = m.moves.slice(0, 4).map(x => ({ i: x.i | 0, d: x.d | 0 }));
+        g.uids.forEach(x => x !== uid && send(x, { t: 'peek', id: g.id, moves }));
+        return;
+      }
+      case 'photo': return sharePhoto(uid, m);
       case 'top': {
-        const all = Object.values(users).sort((a, b) => b.rating - a.rating || b.wins - a.wins);
+        const all = Object.values(users).filter(x => x.app).sort((a, b) => b.rating - a.rating || b.wins - a.wins);
         return send(uid, { t: 'top', list: all.slice(0, 50).map(publicUser), place: all.findIndex(x => x.id === uid) + 1, total: all.length });
       }
       case 'create': {
@@ -180,6 +193,7 @@ function createCore(cfg) {
       id: crypto.randomBytes(6).toString('hex'), uids, variant, stake, s: E.newState(variant), turn: 0, dice: [], shown: [],
       phase: 'roll', last: null, seq: 0, away: [0, 0], timeouts: [0, 0], deadline: 0, over: null, opening: null, chatAt: {},
     };
+    meta.gamesTotal = (meta.gamesTotal || 0) + 1; if (meta.day !== today()) { meta.day = today(); meta.gamesDay = 0; } meta.gamesDay = (meta.gamesDay || 0) + 1; saveMeta();
     let a, b; do { a = r6(); b = r6(); } while (a === b);
     g.opening = [a, b]; g.turn = a > b ? 0 : 1;
     if (stake) uids.forEach(x => { users[x].cigs -= stake; });
@@ -226,10 +240,10 @@ function createCore(cfg) {
   function finishMove(g, p, n, moves) {
     const before = g.s;
     g.s = n; g.s.first[p] = false; g.last = { p, moves, before };
-    if (n.off[p] === 15) { g.phase = 'anim'; sendGame(g); return setTimeout(() => endGame(g, p, E.winMult(n, p), 'win'), 400 + moves.length * 600); }
+    if (n.off[p] === 15) { g.phase = 'anim'; sendGame(g); return setTimeout(() => endGame(g, p, E.winMult(n, p), 'win'), 300); }
     g.dice = []; g.phase = 'anim';
     sendGame(g);
-    setTimeout(() => nextTurn(g), 400 + moves.length * 600);
+    setTimeout(() => nextTurn(g), 200);
   }
   function nextTurn(g) { if (g.over) return; g.turn = 1 - g.turn; beginPhase(g, 0); }
 
@@ -270,6 +284,9 @@ function createCore(cfg) {
     uw.rating += C.RATING.win[mult];
     ul.rating = Math.max(0, ul.rating + (reason === 'resign' ? C.RATING.resign : C.RATING.loss[mult]));
     uw.wins++; ul.losses++;
+    if (mult > 1) uw.mars = (uw.mars || 0) + 1;
+    uw.streak = (uw.streak || 0) + 1; uw.best = Math.max(uw.best || 0, uw.streak); ul.streak = 0;
+    const vk = g.variant === 'short' ? 'shortG' : 'longG'; uw[vk] = (uw[vk] || 0) + 1; ul[vk] = (ul[vk] || 0) + 1;
     g.over = res; g.phase = 'over'; g.deadline = 0;
     save(uw); save(ul);
     sendGame(g);
@@ -302,7 +319,7 @@ function createCore(cfg) {
     ] };
   }
   function topText() {
-    const all = Object.values(users).sort((a, b) => b.rating - a.rating || b.wins - a.wins).slice(0, 10);
+    const all = Object.values(users).filter(x => x.app).sort((a, b) => b.rating - a.rating || b.wins - a.wins).slice(0, 10);
     if (!all.length) return '🏆 Доска почёта пока пустая. Сыграй первым!';
     return '🏆 Доска почёта\n\n' + all.map((u, i) => `${i + 1}. ${u.name} — ${u.rating} (${C.rankOf(u.rating)}), побед: ${u.wins}`).join('\n');
   }
@@ -314,6 +331,57 @@ function createCore(cfg) {
       reply_markup: { inline_keyboard: [[{ text: 'Сесть за доску', web_app: { url: appUrl('?room=' + room.code) } }]] },
     }).catch(() => { });
   }
+  // ---------- фото на память: сохранить и отдать Телеграму готовое сообщение для пересылки ----------
+  const photosMem = new Map();
+  async function sharePhoto(uid, m) {
+    const d = String(m.data || ''); const mt = d.match(/^data:image\/jpeg;base64,(.+)$/);
+    if (!mt || d.length > 600000) return err(uid, 'Фото не получилось');
+    if (!BOT_TOKEN || !WEBAPP_URL || uid.startsWith('dev')) return err(uid, 'Пересылка фото работает только в Телеграме');
+    const id = crypto.randomBytes(8).toString('hex'), buf = Buffer.from(mt[1], 'base64');
+    if (cfg.putPhoto) await cfg.putPhoto(id, buf); else { photosMem.set(id, buf); if (photosMem.size > 200) photosMem.delete(photosMem.keys().next().value); }
+    const url = `${WEBAPP_URL}/photo/${id}.jpg`;
+    try {
+      const r = await tg('savePreparedInlineMessage', {
+        user_id: +uid, allow_user_chats: true, allow_group_chats: true, allow_channel_chats: true, allow_bot_chats: false,
+        result: { type: 'photo', id, photo_url: url, thumbnail_url: url, caption: String(m.caption || 'Нарды от Кондрата').slice(0, 300),
+          reply_markup: { inline_keyboard: [[{ text: '🎲 Сыграть в нарды', url: 'https://t.me/' + botUsername }]] } },
+      });
+      if (r.ok) return send(uid, { t: 'prepared', id: r.result.id });
+      log('savePreparedInlineMessage: ' + r.description); err(uid, 'Телеграм не дал отправить фото: ' + r.description);
+    } catch (e) { err(uid, 'Нет связи с Телеграмом'); }
+  }
+  async function getPhoto(id) { if (!/^[0-9a-f]{16}$/.test(id)) return null; return cfg.getPhoto ? cfg.getPhoto(id) : photosMem.get(id) || null; }
+
+  // ---------- админка ----------
+  function adminText() {
+    const all = Object.values(users), day = Date.now() - 864e5;
+    const inGames = [...games.values()].filter(g => !g.over).length;
+    const top = all.slice().sort((a, b) => b.rating - a.rating).slice(0, 3).map((u, i) => `${i + 1}. ${u.name} — ${u.rating}`).join('\n') || '—';
+    const fresh = all.filter(u => u.created > day).sort((a, b) => b.created - a.created).slice(0, 5).map(u => u.name).join(', ') || '—';
+    return `🛠 Админка «Нарды от Кондрата»
+
+👥 Всего игроков: ${all.length} (новых за сутки: ${all.filter(u => u.created > day).length})
+🤖 Запускали бота: ${all.filter(u => u.bot).length}
+🎮 Открывали игру: ${all.filter(u => u.app).length}
+📅 Заходили за сутки: ${all.filter(u => (u.seen || 0) > day).length}
+
+🟢 Сейчас в игре: ${online.size}
+🎲 Идёт партий: ${inGames}, ищут соперника: ${queue.length}
+📊 Партий сегодня: ${meta.day === today() ? meta.gamesDay || 0 : 0}, всего: ${meta.gamesTotal || 0}
+
+🏆 Топ:
+${top}
+
+🆕 Новенькие: ${fresh}`;
+  }
+  const adminKb = { inline_keyboard: [[{ text: '🔄 Обновить', callback_data: 'adm' }], [{ text: '🎲 Играть', web_app: { url: WEBAPP_URL + '/' } }]] };
+  function touchBotUser(from) {
+    if (!from || !from.id) return null;
+    const u = getUser(String(from.id), [from.first_name, from.last_name].filter(Boolean).join(' ').slice(0, 40), from.username);
+    if (!u.bot) { u.bot = Date.now(); save(u); }
+    return u;
+  }
+
   // ответ боту отдаётся прямо в ответ на webhook
   function onUpdate(up) {
     if (up.callback_query) {
@@ -321,6 +389,7 @@ function createCore(cfg) {
       tg('answerCallbackQuery', { callback_query_id: q.id }).catch(() => { });
       const chat_id = q.message && q.message.chat.id; if (!chat_id) return null;
       if (q.data === 'rules') return { method: 'sendMessage', chat_id, text: RULES };
+      if (q.data === 'adm' && meta.admin && String(q.from.id) === meta.admin) return { method: 'editMessageText', chat_id, message_id: q.message.message_id, text: adminText(), reply_markup: adminKb };
       if (q.data === 'top') return { method: 'sendMessage', chat_id, text: topText() };
       return null;
     }
@@ -329,6 +398,25 @@ function createCore(cfg) {
     const cmd = cmd0.split('@')[0].toLowerCase();
     const chat_id = msg.chat.id, M = (text, reply_markup) => ({ method: 'sendMessage', chat_id, text, ...(reply_markup ? { reply_markup } : {}) });
     if (!WEBAPP_URL) return M('Игра ещё не настроена: на сервере не задан WEBAPP_URL.');
+    const me = touchBotUser(msg.from);
+    if (cmd === '/admin' && me) {
+      if (!meta.admin) {
+        meta.admin = me.id; saveMeta();
+        tg('setMyCommands', { scope: { type: 'chat', chat_id }, commands: [
+          { command: 'admin', description: 'Админка' }, { command: 'start', description: 'Главное меню' }, { command: 'play', description: 'Играть' },
+          { command: 'top', description: 'Доска почёта' }, { command: 'rules', description: 'Правила' }] }).catch(() => { });
+        return M('👑 Ты записан как хозяин бота. Эта команда теперь работает только у тебя.\n\n' + adminText(), adminKb);
+      }
+      if (meta.admin === me.id) return M(adminText(), adminKb);
+    }
+    if (cmd === '/start' && /^fr_/i.test(payload || '') && me) {
+      const fid = payload.slice(3), f = users[fid];
+      if (f && fid !== me.id) {
+        const was = me.friends.includes(fid); addFriends(me.id, fid); save(me); save(f);
+        if (!was) { send(fid, { t: 'toast', text: `${me.name} теперь твой кореш` }); sendMe(fid); if (!online.has(fid)) tg('sendMessage', { chat_id: fid, text: `🤝 ${me.name} принял твоё приглашение, теперь вы кореша.` }).catch(() => { }); }
+        return M(`🤝 Теперь ты кореш с ${f.name}. Он появится у тебя во вкладке «Кореша», оттуда можно звать друг друга на партию.`, menuKeyboard());
+      }
+    }
     if (cmd === '/start' && /^room_/i.test(payload || '')) {
       const code = payload.replace(/^room_?/i, '').toUpperCase();
       return M('🎲 Тебя позвали сыграть в нарды! Жми кнопку, чтобы сесть за доску.', { inline_keyboard: [[{ text: 'Сесть за доску', web_app: { url: appUrl('?room=' + code) } }]] });
@@ -370,7 +458,7 @@ function createCore(cfg) {
     }
   }
 
-  return { onMessage, onClose, tick, busy, onUpdate, hookAllowed, botSetup, fetchName, HOOK_PATH, get botUsername() { return botUsername; } };
+  return { onMessage, onClose, tick, busy, onUpdate, hookAllowed, botSetup, fetchName, getPhoto, HOOK_PATH, get botUsername() { return botUsername; } };
 }
 
 module.exports = { createCore };

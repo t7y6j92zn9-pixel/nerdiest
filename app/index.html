@@ -276,6 +276,11 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .ck.can{outline:2px solid #ffd76a;outline-offset:1px}
 .ck.sel{outline:3px solid #fff;outline-offset:1px;filter:brightness(1.15)}
 .ck.moved{animation:pop .35s ease}
+.ck.dragck{position:fixed!important;left:0!important;top:0!important;bottom:auto!important;z-index:9999;pointer-events:none;outline:none;filter:drop-shadow(0 8px 10px #000a);will-change:transform}
+.pt.hov::after{background:#ffe9a6dd!important;animation:none!important}
+.tray .half.hov{background:#f2b35a90!important}
+#board,#tray{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 .ck.ghost{background:#fff3!important;box-shadow:inset 0 0 0 2px #ffe6a0!important;outline:none;animation:ghost 1.4s ease-in-out infinite}
 @keyframes ghost{50%{background:#ffe6a066!important}}
 .setup .pt .ck{animation:setup .5s backwards;animation-delay:calc(var(--j) * 60ms + var(--d,0) * 40ms)}
@@ -975,12 +980,16 @@ function updCigs(){ $('cigN').textContent = P.cigs; document.body.dataset.lvl = 
 
 // ---------- Звук ----------
 let AC=null, music=null, radioNode=null;
+function sv(){ const v=P.set.vs; return v==null?1:v; }
+function mv(){ const v=P.set.vm; return v==null?1:v; }
+let musicGain=null;
+function musicVol(x){ const v=x*mv(); if(musicGain) musicGain.gain.value=v; else if(music) music.volume=Math.min(1,v); }
 function ac(){ if(!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } return AC; }
 function noise(dur, f1, f2, gain, type){ const a=ac(); if(!a||!P.set.sfx) return; const n=a.sampleRate*dur, b=a.createBuffer(1,n,a.sampleRate), d=b.getChannelData(0);
   for(let i=0;i<n;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2); const s=a.createBufferSource(); s.buffer=b; const f=a.createBiquadFilter(); f.type=type||'bandpass'; f.frequency.value=f1; f.Q.value=f2||1;
-  const g=a.createGain(); g.gain.value=gain; s.connect(f).connect(g).connect(a.destination); s.start(); }
+  const g=a.createGain(); g.gain.value=gain*sv(); s.connect(f).connect(g).connect(a.destination); s.start(); }
 function tone(freq, dur, gain, type, t0){ const a=ac(); if(!a||!P.set.sfx) return; const o=a.createOscillator(), g=a.createGain(); o.type=type||'sine'; o.frequency.value=freq; const t=a.currentTime+(t0||0);
-  g.gain.setValueAtTime(gain,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur); }
+  g.gain.setValueAtTime(Math.max(.0002,gain*sv()),t); g.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(g).connect(a.destination); o.start(t); o.stop(t+dur); }
 const SFX = {
   clang(){ [220,331,497,742].forEach((f,i)=>tone(f,1.2-i*.2,.08,'triangle')); noise(.25,300,1,.5,'lowpass'); },
   slam(){ noise(.3,180,1,.9,'lowpass'); [150,233,410].forEach(f=>tone(f,.6,.06,'square')); },
@@ -990,14 +999,16 @@ const SFX = {
   keys(){ for(let i=0;i<10;i++) setTimeout(()=>{ tone(3000+Math.random()*2000,.15,.02,'triangle'); },i*90+Math.random()*60); },
   step(){ for(let i=0;i<5;i++) setTimeout(()=>noise(.12,140,1,.7,'lowpass'),i*520); },
   plink(){ tone(1800,.18,.05); tone(2600,.12,.03,'sine',.02); },
-  buzz(){ const a=ac(); if(!a||!P.set.sfx) return; const o=a.createOscillator(),g=a.createGain(); o.type='sawtooth'; o.frequency.value=110; g.gain.value=.03; o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+1.4); },
+  buzz(){ const a=ac(); if(!a||!P.set.sfx) return; const o=a.createOscillator(),g=a.createGain(); o.type='sawtooth'; o.frequency.value=110; g.gain.value=.03*sv(); o.connect(g).connect(a.destination); o.start(); o.stop(a.currentTime+1.4); },
   coin(){ tone(1320,.12,.05,'square'); tone(1760,.18,.04,'square',.08); },
   flick(){ noise(.08,4000,2,.2); },
+  checker(){ noise(.05,900,1.4,.7,'lowpass'); tone(210,.07,.05,'triangle'); tone(520,.03,.02,'square'); },
 };
-function startMusic(){ if(!music){ music=new Audio(A+'fon.mp3'); music.loop=true; music.volume=.35; } if(P.set.music) music.play().catch(()=>{}); }
+function startMusic(){ if(!music){ music=new Audio(A+'fon.mp3'); music.loop=true; const a=ac(); if(a){ try{ const src=a.createMediaElementSource(music); musicGain=a.createGain(); src.connect(musicGain).connect(a.destination); }catch(e){ musicGain=null; } } musicVol(.35); } if(a0()) {} if(P.set.music) music.play().catch(()=>{}); }
+function a0(){ const a=AC; if(a&&a.state==='suspended') a.resume().catch(()=>{}); return a; }
 function setMusic(on){ P.set.music=on; saveP(); $('musicBtn').classList.toggle('off',!on); if(on) startMusic(); else if(music) music.pause(); }
 function radioSnippet(){ const a=ac(); if(!a) return; const r=new Audio(A+'fon.mp3'); r.currentTime=20+Math.random()*120; let src; try{ src=a.createMediaElementSource(r); const f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1200; f.Q.value=1.2; const g=a.createGain(); g.gain.value=.9; src.connect(f).connect(g).connect(a.destination);}catch(e){ r.volume=.3; }
-  if(music) music.volume=.08; r.play().catch(()=>{}); noise(.3,3000,.5,.15); setTimeout(()=>{ r.pause(); noise(.2,3000,.5,.15); if(music) music.volume=.35; },3000); }
+  musicVol(.08); r.volume=Math.min(1,mv()); r.play().catch(()=>{}); noise(.3,3000,.5,.15); setTimeout(()=>{ r.pause(); noise(.2,3000,.5,.15); musicVol(.35); },3000); }
 
 // ---------- Сцена хаты ----------
 function isNight(){ const t=P.set.tod; if(t==='day') return false; if(t==='night') return true; const h=new Date().getHours(); return h<7||h>=20; }
@@ -1102,6 +1113,7 @@ async function renderHome(){
 // личное дело: своё или чужое (из рейтинга и корешей)
 const NOTES=['Характер спокойный, на кубики не обижается.','В игре дерзкий, любит ставить на всё.','Марсы ставит без жалости.','Держит слово. Долги отдаёт сигаретами.','Говорит мало, ходит быстро.','С головы снимает аккуратно, по понятиям.'];
 function personOf(x){ if(!x||x.me) return {me:true,name:P.name,num:P.num,rating:P.rating,eq:P.eq,lvl:lvl(),games:P.games,wins:P.wins+P.botWins,mars:P.mars||0,streak:P.streak||0,fav:(P.longGames||0)>=(P.shortGames||0)?'длинные нарды':'короткие нарды',days:Math.max(1,Math.round((Date.now()-(P.since||Date.now()))/864e5))};
+  if(x.net){ const g=(x.wins|0)+(x.losses|0); return {name:x.name,num:String(x.num||'0000'),rating:x.rating,eq:x.eq,lvl:x.lvl||1,games:g,wins:x.wins|0,mars:x.mars|0,streak:x.best|0,fav:(x.longG|0)>=(x.shortG|0)?'длинные нарды':'короткие нарды',days:Math.max(1,Math.round((Date.now()-(x.created||Date.now()))/864e5)),online:x.online}; }
   const i=Math.max(0,EX.indexOf(x)); if(x.bot) return {bot:true,name:x.name,num:'0001',rating:x.rating,eq:x.eq,lvl:x.lvl||2,games:9999,wins:7777,mars:999,streak:42,fav:variant==='long'?'длинные нарды':'короткие нарды',days:3650,note:'Тренировочный. Сидит пожизненно, учит первоходов.'};
   return {name:x.name,num:String(1000+((x.name.length*397+x.rating*7)%8999)).padStart(4,'0'),rating:x.rating,eq:x.eq,lvl:x.lvl||1,games:x.wins*2+17,wins:x.wins,mars:Math.round(x.wins/9),streak:3+i%6,fav:i%3?'длинные нарды':'короткие нарды',days:40+x.rating%700,online:x.online,note:NOTES[i%NOTES.length]}; }
 async function showCase(x, inGame){
@@ -1112,12 +1124,12 @@ async function showCase(x, inGame){
     <img class="stamp" src="${A}nashivki/0${ri+1}.webp" alt="">
     <div class="shots"><div><img id="mugF" alt=""><span>АНФАС</span></div><div><img id="mugFull" alt=""><span>В РОСТ</span></div></div>
     <dl><dt>Погоняло</dt><dd>${p.name}</dd><dt>Звание</dt><dd>${rank} · ${p.rating}</dd><dt>Статья</dt><dd>${p.fav}</dd><dt>Партий</dt><dd>${p.games} · побед ${p.wins}</dd>
-    <dt>Марсов</dt><dd>${p.mars}</dd><dt>Лучшая серия</dt><dd>${p.streak} побед подряд</dd><dt>Хата</dt><dd>${hata.name}</dd><dt>Нарды</dt><dd>${item(p.eq.board).name}</dd>
+    <dt>Марсов</dt><dd>${p.mars}</dd><dt>Лучшая серия</dt><dd>${p.streak} ${p.streak%10===1&&p.streak%100!==11?'победа':'побед'} подряд</dd><dt>Хата</dt><dd>${hata.name}</dd><dt>Нарды</dt><dd>${item(p.eq.board).name}</dd>
     <dt>Срок</dt><dd>${p.days} ${p.days%10===1&&p.days%100!==11?'день':(p.days%10>=2&&p.days%10<=4&&(p.days%100<10||p.days%100>=20))?'дня':'дней'} в игре</dd>
     <dt>Особые приметы</dt><dd>${tats.length?tats.join(', '):'наколок нет'}</dd>${p.note?`<dt>Характеристика</dt><dd>${p.note}</dd>`:''}</dl>
     </div>
     ${(p.me||inGame)?'<button class="btn sec" style="width:100%;margin-top:12px" data-close>Закрыть дело</button>':`<div class="row" style="margin-top:12px"><button class="btn sec" data-close>Закрыть</button><button class="btn hot" id="caseCall">Вызвать на партию</button></div>`}`);
-  if($('caseCall')) $('caseCall').onclick=()=>{ hideModal(); malyava('Малява отправлена. Ждём ответа…'); setTimeout(()=>startGame({opp:x,stake:0,online:true}),1400); };
+  if($('caseCall')) $('caseCall').onclick=()=>{ hideModal(); if(x.net&&window.netInvite) return netInvite(x); malyava('Малява отправлена. Ждём ответа…'); setTimeout(()=>startGame({opp:x,stake:0,online:true}),1400); };
   $('mugF').src = await headURL(p.eq);
   const f = await heroOnBg(p.eq, p.lvl, 300); $('mugFull').src=f.toDataURL('image/webp',.8);
 }
@@ -1236,7 +1248,7 @@ const EX = ['Сеня Шрам','Валера Чифир','Гоша Кубик',
 
 // ---------- Рейтинг: доска почёта ----------
 async function renderTop(){
-  const all=((window.NET&&NET.top)||EX).map(x=>({...x})).concat([{name:P.name,rating:P.rating,wins:P.wins,eq:P.eq,me:true}]).sort((a,b)=>b.rating-a.rating);
+  const all=((window.NET&&NET.on)?(NET.top||[]):EX).map(x=>({...x})).concat([{name:P.name,rating:P.rating,wins:P.wins,eq:P.eq,me:true}]).sort((a,b)=>b.rating-a.rating);
   const t3=all.slice(0,3);
   const ord=[1,0,2].filter(i=>t3[i]);
   $('top3').innerHTML=ord.map(i=>`<div class="frame"><span class="pl">${i+1}</span><img id="hf${i}" alt=""><b>${t3[i].name}</b><span>${t3[i].rating}</span></div>`).join('');
@@ -1318,18 +1330,18 @@ function renderClocks(){ if(!G||!G.clk) return;
 function startTimer(){ if(!G.clk) G.clk={res:[RESERVE_SEC,RESERVE_SEC],left:MOVE_SEC}; clearInterval(G.timer); G.clk.left=MOVE_SEC; renderClocks();
   const g0=G; G.timer=setInterval(()=>{ if(G!==g0||G.over) return clearInterval(g0.timer); if(G.over) return clearInterval(G.timer); if(G.clk.left>0) G.clk.left--; else if(G.clk.res[G.turn]>0) G.clk.res[G.turn]--; else { clearInterval(G.timer); return gameOver(1-G.turn,G.turn===0); }
     if(G.turn===0&&G.clk.left<=10&&G.clk.left>0) tone(1200,.04,.03,'square'); renderClocks(); },1000); }
-function roll(p){ const a=rnd(), b=rnd(); G.shown=[a,b]; G.dice=E.beginTurn(G.s,p,a,b); G.rolledNow=true; SFX.dice(); }
+function roll(p){ const a=rnd(), b=rnd(); G.shown=[a,b]; G.dice=E.beginTurn(G.s,p,a,b); G.rolledNow=true; SFX.dice(); if(p===0) haptic('medium'); }
 function playerRoll(){ if(G.phase!=='roll') return;
   roll(0); G.hist=[]; G.steps=E.legalSteps(G.s,0,G.dice); G.tg=null;
   if(!G.steps.length){ G.phase='wait'; setG('Ходов нет: ход переходит сопернику'); renderGame(); setTimeout(endTurn,1500); return; }
   G.phase='move'; setG(G.s.bar[0]?'Сначала введи шашку с бара':'Выбирай шашку'); renderGame(); }
 // seq — один или несколько шагов одной шашкой (например 5 и 1 сразу на 6)
-function playerStep(seq){ if(!Array.isArray(seq)) seq=[seq]; G.hist.push({s:E.clone(G.s),dice:G.dice.slice()}); const hit=G.s.bar[1]<seq[seq.length-1].n.bar[1];
+function playerStep(seq, noFly){ if(!Array.isArray(seq)) seq=[seq]; { const f=seq[0], l=seq[seq.length-1], t=l.i+l.d; if(!noFly) FLY={from:f.i===-1?'bar':E.absOf(G.v,0,f.i), to:t<24?E.absOf(G.v,0,t):'off'}; } haptic('light'); G.hist.push({s:E.clone(G.s),dice:G.dice.slice()}); const hit=G.s.bar[1]<seq[seq.length-1].n.bar[1];
   for(const st of seq){ G.s=st.n; G.dice=E.removeOne(G.dice,st.d); }
-  const l=seq[seq.length-1], t=l.i+l.d; G.sel=null; G.tg=null; G.last=t<24?E.absOf(G.v,0,t):-1; SFX.click();
+  const l=seq[seq.length-1], t=l.i+l.d; G.sel=null; G.tg=null; G.last=t<24?E.absOf(G.v,0,t):-1; SFX.checker();
   if(G.s.off[0]===15){ renderGame(); return gameOver(0); }
   G.steps=G.dice.length?E.legalSteps(G.s,0,G.dice):[];
-  if(!G.steps.length){ G.phase='wait'; setG(hit?'Шашка соперника сбита!':'Ход сделан'); renderGame(); clearTimeout(G.endT); G.endT=setTimeout(()=>{ if(G.phase==='wait'&&G.turn===0) endTurn(); },650); return; }
+  if(!G.steps.length){ G.phase='wait'; setG(hit?'Шашка соперника сбита!':'Ход сделан'); renderGame(); clearTimeout(G.endT); G.endT=setTimeout(()=>{ if(G.phase==='wait'&&G.turn===0) endTurn(); },G.net?250:650); return; }
   G.phase='move'; setG(hit?'Шашка соперника сбита!':'Ходи дальше'); renderGame(); }
 function undo(){ if(!G.hist.length||G.phase!=='move') return; const h=G.hist.pop(); G.s=h.s; G.dice=h.dice; G.sel=null; G.tg=null; G.last=-1; G.steps=E.legalSteps(G.s,0,G.dice); G.phase='move'; setG('Ход отменён'); renderGame(); }
 function endTurn(){ if(G.over) return; G.s.first[G.turn]=false; G.hist=[]; startTurn(1-G.turn); }
@@ -1338,7 +1350,7 @@ function botTurn(){ if(G.over) return; roll(1); renderGame();
   const plan=E.botPlan(G.s,1,G.dice); if(!plan.length){ setG('У соперника нет ходов'); setTimeout(endTurn,1400); return; }
   let k=0; const next=()=>{ if(G.over) return; if(k>=plan.length){ setTimeout(endTurn,450); return; }
     const m=plan[k++], n=E.step(G.s,1,m.i,m.d); if(!n){ setTimeout(endTurn,400); return; } const hit=n.bar[0]>G.s.bar[0];
-    G.s=n; G.dice=E.removeOne(G.dice,m.d); const t=m.i+m.d; G.last=t<24?E.absOf(G.v,1,t):-1; SFX.click(); if(hit) setG('Твою шашку сбили!'); renderGame();
+    G.s=n; G.dice=E.removeOne(G.dice,m.d); const t=m.i+m.d; G.last=t<24?E.absOf(G.v,1,t):-1; if(m.i>=0) FLY={from:E.absOf(G.v,1,m.i),to:t<24?G.last:'off'}; SFX.checker(); if(hit) setG('Твою шашку сбили!'); renderGame();
     if(G.s.off[1]===15) return gameOver(1); setTimeout(next,560); }; setTimeout(next,700); }
 function resign(){ if(!G||G.over) return; gameOver(1,true); }
 async function gameOver(w, resigned, mOv){
@@ -1393,7 +1405,15 @@ function targetsFor(sel){ if(sel===null) return {}; if(G.tg&&G.tg.sel===sel) ret
       const rest=E.removeOne(dice,s.d); if(t<24&&rest.length&&seq.length<4) walk(s.n,rest,E.legalSteps(s.n,0,rest),t,seq); } };
   walk(G.s,G.dice,G.steps,i,[]); G.tg={sel,out}; return out; }
 function ckStyle(col){ const sk=item(P.eq.checkers); if(!sk.w) return ''; const f = col==='w'?sk.w:sk.k; return ` skin" style="--img:url(${A}shashki_kubiki/${f}.webp)`; }
-function renderGame(){
+function renderGame(){ const f=FLY; FLY=null; let r0=null;
+  if(f&&!drag){ const el=ckAt(f.from); if(el) r0=el.getBoundingClientRect(); }
+  renderGame0();
+  if(r0&&f.to!=='off'){ const el=ckAt(f.to); if(el){ const r1=el.getBoundingClientRect(), dx=r0.left-r1.left, dy=r0.top-r1.top; if(Math.abs(dx)+Math.abs(dy)>2){ el.classList.remove('moved'); el.style.zIndex=6; el.style.transition='none'; el.style.transform=`translate(${dx}px,${dy}px)`; void el.offsetWidth; el.style.transition='transform .3s cubic-bezier(.25,.8,.35,1)'; el.style.transform=''; setTimeout(()=>{ el.style.zIndex=''; el.classList.add('moved'); },300); } } }
+}
+let FLY=null;
+function ckAt(a){ const box=a==='bar'?$('board').querySelector('[data-a="bar"]'):$('board').querySelector(`.pt[data-a="${a}"]`); if(!box) return null; const l=box.querySelectorAll('.ck:not(.ghost)'); return l[l.length-1]||null; }
+function haptic(k){ try{ const h=window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback; if(h) h.impactOccurred(k||'light'); }catch(e){} }
+function renderGame0(){
   if(!G) return; updCigs();
   const S=G.s, tg=G.phase==='move'?targetsFor(G.sel):{}; const src=new Set(G.phase==='move'?G.steps.map(s=>s.i===-1?'bar':E.absOf(G.v,0,s.i)):[]);
   const MY=G.myCol||'w', OP=MY==='w'?'k':'w';
@@ -1439,7 +1459,29 @@ function boardClick(e){ if(!G||G.phase!=='move') return; const el=e.target.close
   // повторный тап по выбранной шашке — вывести её, если можно
   if(G.sel===a&&tg.off) return playerStep(tg.off);
   const has=G.steps.some(s=>a==='bar'?s.i===-1:(s.i!==-1&&E.absOf(G.v,0,s.i)===a)); G.sel=has?(G.sel===a?null:a):null; setG(G.sel===null?'Выбирай шашку':'Куда ставим?'); renderGame(); }
-$('board').addEventListener('click',boardClick); $('tray').addEventListener('click',boardClick);
+function boardClickGuard(e){ if(dragEnd && Date.now()-dragEnd<350) return; boardClick(e); }
+$('board').addEventListener('click',boardClickGuard); $('tray').addEventListener('click',boardClickGuard);
+// зажал шашку — тащи пальцем, отпустил над подсвеченной лункой — ход
+let drag=null, dragEnd=0;
+function dropTarget(x,y){ const el=document.elementFromPoint(x,y); const t=el&&el.closest('[data-a]'); if(!t||!($('board').contains(t)||$('tray').contains(t))) return null; const r=t.dataset.a; return r==='off'?'off':r==='bar'?'bar':+r; }
+$('board').addEventListener('pointerdown',e=>{ if(!G||G.phase!=='move'||e.button>0) return; const ck=e.target.closest('.ck.can,.ck.sel'); if(!ck) return; const box=ck.closest('[data-a]'); if(!box) return;
+  const raw=box.dataset.a; drag={a:raw==='bar'?'bar':+raw, x0:e.clientX, y0:e.clientY, id:e.pointerId, moved:false, ghost:null, src:ck}; });
+window.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; const dx=e.clientX-drag.x0, dy=e.clientY-drag.y0;
+  if(!drag.moved){ if(Math.hypot(dx,dy)<7) return; drag.moved=true;
+    const r=drag.src.getBoundingClientRect(), g=drag.src.cloneNode(true); g.classList.remove('can','sel','moved'); g.classList.add('dragck'); g.style.width=r.width+'px'; g.style.height=r.height+'px'; drag.w=r.width; document.body.append(g); drag.ghost=g;
+    if(G.sel!==drag.a){ G.sel=drag.a; G.tg=null; }
+    renderGame(); const s=ckAt(drag.a); if(s) s.style.visibility='hidden'; haptic('light'); }
+  e.preventDefault();
+  drag.ghost.style.transform=`translate(${e.clientX-drag.w/2}px,${e.clientY-drag.w*0.8}px) scale(1.18)`;
+  const t=dropTarget(e.clientX,e.clientY), tg=targetsFor(G.sel); document.querySelectorAll('.hov').forEach(x=>x.classList.remove('hov'));
+  if(t!==null&&tg[t]){ const el=t==='off'?$('tray').querySelector('[data-a="off"]'):$('board').querySelector(`.pt[data-a="${t}"]`); if(el) el.classList.add('hov'); } },{passive:false});
+function dragFinish(e){ if(!drag||e.pointerId!==drag.id) return; const d=drag; drag=null; if(!d.moved) return; dragEnd=Date.now();
+  if(d.ghost) d.ghost.remove(); document.querySelectorAll('.hov').forEach(x=>x.classList.remove('hov'));
+  if(!G||G.phase!=='move'){ return renderGame(); }
+  const t=e.type==='pointerup'?dropTarget(e.clientX,e.clientY):null, tg=targetsFor(G.sel);
+  if(t!==null&&tg[t]) return playerStep(tg[t], true);
+  renderGame(); }
+window.addEventListener('pointerup',dragFinish); window.addEventListener('pointercancel',dragFinish);
 $('resignBtn').onclick=()=>{ if(!G||G.over) return; showModal(`<h3>Сдаться?</h3><p style="text-align:center">${G.stake?`Ставка ${G.stake} сигарет уйдёт сопернику.`:'Партия будет засчитана как поражение.'} В рейтинге −30.</p><div class="row"><button class="btn sec" data-close>Играть дальше</button><button class="btn hot" id="resYes">Сдаться</button></div>`); $('resYes').onclick=()=>{ hideModal(); resign(); }; };
 $('rulesBtn').onclick=()=>showModal(G&&G.v==='short'?`<h3>Короткие нарды</h3><ul><li>Шашки ходят навстречу друг другу, против часовой стрелки.</li><li>Одиночную шашку соперника можно сбить: она уходит на бар и заходит заново.</li><li>Пока у тебя шашка на баре, сначала вводи её.</li><li>На пункт с двумя и больше шашками соперника вставать нельзя.</li><li>Все 15 в доме — можно выбрасывать.</li><li>Марс — двойная победа, кокс — тройная.</li></ul><button class="btn hot" style="width:100%" data-close>Понятно</button>`:`<h3>Длинные нарды</h3><ul><li>У каждого 15 шашек на «голове». Ходят по кругу против часовой стрелки.</li><li>Ходишь на числа кубиков: одной шашкой или двумя. Дубль — 4 хода.</li><li>Бить нельзя. На пункт с чужой шашкой вставать нельзя.</li><li>С головы за ход снимается одна шашка (первый ход с 6-6, 4-4, 3-3 — две).</li><li>Нельзя строить забор из 6 подряд, если впереди нет шашки соперника.</li><li>Все 15 в доме — можно выбрасывать. Марс — победа вдвойне.</li></ul><button class="btn hot" style="width:100%" data-close>Понятно</button>`);
 
@@ -1451,22 +1493,24 @@ $('setBtn').onclick=()=>{
   showModal(`<h3>Настройки</h3><div class="set">
     <div class="rowi"><span>Музыка</span>${tg('music',[[true,'Вкл'],[false,'Выкл']])}</div>
     <div class="rowi"><span>Звуки</span>${tg('sfx',[[true,'Вкл'],[false,'Выкл']])}</div>
+    <div class="rowi"><span>Громкость музыки</span><input type="range" class="vol" id="volM" min="0" max="100" value="${Math.round(mv()*100)}"></div>
+    <div class="rowi"><span>Громкость звуков</span><input type="range" class="vol" id="volS" min="0" max="100" value="${Math.round(sv()*100)}"></div>
     <div class="rowi"><span>Время суток</span>${tg('tod',[['auto','Как у тебя'],['day','День'],['night','Ночь']])}</div>
-    <p style="margin:12px 0 6px;color:var(--muted);font-size:12px">ДЛЯ ПРОВЕРКИ ПРОТОТИПА</p>
+    ${window.NET&&NET.on?'':`<p style="margin:12px 0 6px;color:var(--muted);font-size:12px">ДЛЯ ПРОВЕРКИ ПРОТОТИПА</p>
     <div class="row"><button class="btn sec" id="tCigs">+5000 сигарет</button><button class="btn sec" id="tRate">+400 рейтинга</button></div>
     <div class="row" style="margin-top:8px"><button class="btn sec" id="tDust">Запылить вещи</button><button class="btn sec" id="tRank">Показать нашивку</button></div>
-    <p style="margin:12px 0 6px;color:var(--muted);font-size:12px">МОМЕНТЫ В ХАТЕ</p>
-    <div class="row">${Object.entries(MOMENT_NAMES).map(([k,n])=>`<button class="btn ghost" style="flex:1 1 45%;padding:8px;font-size:12px" data-m="${k}">${n}</button>`).join('')}</div>
-    <button class="btn ghost" id="tReset" style="width:100%;margin-top:10px">Начать заново</button></div>
+    <button class="btn ghost" id="tReset" style="width:100%;margin-top:10px">Начать заново</button>`}</div>
     <button class="btn hot" style="width:100%;margin-top:12px" data-close>Готово</button>`);
   $('modalBody').querySelectorAll('.tg button').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; let v=b.dataset.v; v=v==='true'?true:v==='false'?false:v;
     if(k==='music') setMusic(v); else P.set[k]=v; saveP(); heroCache.clear(); b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(screen==='home') renderHome(); });
+  $('volM').oninput=e=>{ P.set.vm=e.target.value/100; musicVol(.35); }; $('volM').onchange=()=>saveP();
+  $('volS').oninput=e=>{ P.set.vs=e.target.value/100; }; $('volS').onchange=()=>{ saveP(); SFX.checker(); };
+  if(!$('tCigs')) return;
   $('tCigs').onclick=()=>{ P.cigs+=5000; saveP(); updCigs(); SFX.coin(); };
   $('tRate').onclick=()=>{ const o=rankOf(P.rating); P.rating+=400; saveP(); if(rankOf(P.rating)!==o) rankUp(rankOf(P.rating)); else malyava('Рейтинг: '+P.rating); };
   $('tDust').onclick=()=>{ P.owned.concat(Object.values(P.eq).filter(v=>typeof v==='string')).forEach(id=>{ const it=item(id); if(it&&['board','mug','checkers'].includes(it.slot)) P.dust[id]=1; }); saveP(); heroCache.clear(); malyava('Нарды и кружка запылились'); if(screen==='home') renderHome(); };
   $('tRank').onclick=()=>rankUp(rankOf(P.rating));
   $('tReset').onclick=()=>{ P=fresh(); saveP(); heroCache.clear(); hideModal(); go('home',true); };
-  $('modalBody').querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{ hideModal(); const box=screen==='game'?$('gScene'):$('homeScene'); if(box&&box._fx) MOMENTS[b.dataset.m](box._fx); });
 };
 
 // ---------- Старт: загрузочный экран ----------
@@ -1495,7 +1539,7 @@ function cleanEq(eq) {
     if (eq.tats && typeof eq.tats === 'object') for (const k in eq.tats) if (PLACES[k] && item(eq.tats[k])) e.tats[k] = eq.tats[k]; }
   e.ring = 'r_0'; return e;
 }
-function netPerson(p) { return { id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
+function netPerson(p) { return { net: true, losses: p.losses | 0, mars: p.mars | 0, best: p.best | 0, longG: p.longG | 0, shortG: p.shortG | 0, created: p.created, num: p.num, id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
 // партия на сервере хранится «как есть»; если я второй игрок — разворачиваю доску, чтобы я всегда был снизу
 function flipState(s, me) {
   const n = E.clone(s); if (me !== 1) return n;
@@ -1534,6 +1578,8 @@ async function netMsg(m) {
     case 'top': NET.top = m.list.filter(x => x.id !== NET.uid).map(netPerson); NET.topFresh = true; if (screen === 'top') renderTop(); return;
     case 'chat': if (G && G.net && !G.over) _react(1, m.img ? { img: m.img } : { text: m.text }); return;
     case 'game': return netGame(m);
+    case 'peek': return netPeek(m);
+    case 'prepared': try { TGA.shareMessage(m.id, ok => { if (ok) malyava('Фото отправлено'); }); } catch (e) { malyava('Обнови Телеграм, чтобы пересылать фото'); } return;
   }
 }
 
@@ -1558,6 +1604,7 @@ async function netGame(m) {
       renderGame(); return;
     case 'move':
       G.turn = lt; G.shown = m.shown; G.dice = m.dice.slice(); G.rolledNow = !m.resync; if (!m.resync) SFX.dice(); G.s = L(m.s);
+      if (lt === 1) { G.oppStart = { s: E.clone(G.s), dice: G.dice.slice() }; G.oppShown = []; }
       if (lt === 0) { G.hist = []; G.mv = []; G.tg = null; G.sel = null; G.steps = E.legalSteps(G.s, 0, G.dice); G.phase = 'move'; setG(G.s.bar[0] ? 'Сначала введи шашку с бара' : 'Выбирай шашку'); }
       else { G.phase = 'bot'; setG('Соперник думает…'); }
       renderGame(); return;
@@ -1566,16 +1613,8 @@ async function netGame(m) {
       setG(lt === 0 ? 'Ходов нет: ход переходит сопернику' : 'У соперника нет ходов'); renderGame(); return;
     case 'anim': {
       const who = m.last.p === m.me ? 0 : 1;
-      if (who === 1) {
-        G.s = L(m.last.before); await sleep(300);
-        for (const mv of m.last.moves) {
-          if (G.over) return;
-          const n = E.step(G.s, 1, mv.i, mv.d); if (!n) break;
-          const hit = n.bar[0] > G.s.bar[0]; G.s = n; if (G.dice.includes(mv.d)) G.dice = E.removeOne(G.dice, mv.d);
-          const t = mv.i + mv.d; G.last = t < 24 ? E.absOf(G.v, 1, t) : -1; SFX.click(); if (hit) setG('Твою шашку сбили!'); renderGame();
-          await sleep(520);
-        }
-      }
+      if (who === 1) await showOpp(m.last.moves, L(m.last.before));
+      G.oppStart = null; G.oppShown = null;
       G.s = L(m.s); G.phase = 'wait'; G.sel = null; renderGame(); return;
     }
     case 'over': {
@@ -1590,13 +1629,40 @@ async function netGame(m) {
   }
 }
 
+// ход соперника: группы шагов одной шашкой (5+3 с головы) летят одним прыжком
+function groups(moves) { const out = []; for (const mv of moves) { const g = out[out.length - 1]; if (g && g[g.length - 1].i + g[g.length - 1].d === mv.i) g.push(mv); else out.push([mv]); } return out; }
+async function showOpp(moves, before) {
+  const sh = G.oppShown || [], same = sh.length <= moves.length && sh.every((x, k) => x.i === moves[k].i && x.d === moves[k].d);
+  if (!same || !G.oppStart) {   // соперник отменил ход — перерисовать с начала хода
+    G.s = E.clone(G.oppStart ? G.oppStart.s : before); G.dice = G.oppStart ? G.oppStart.dice.slice() : G.dice; G.oppShown = [];
+  }
+  const done = (G.oppShown || []).length, rest = moves.slice(done);
+  for (const gr of groups(rest)) {
+    if (G.over) return;
+    let s = G.s, ok = true; for (const mv of gr) { const n = E.step(s, 1, mv.i, mv.d); if (!n) { ok = false; break; } s = n; if (G.dice.includes(mv.d)) G.dice = E.removeOne(G.dice, mv.d); }
+    if (!ok) break;
+    const f = gr[0], l = gr[gr.length - 1], t = l.i + l.d, hit = s.bar[0] > G.s.bar[0];
+    G.s = s; G.last = t < 24 ? E.absOf(G.v, 1, t) : -1; if (f.i >= 0) FLY = { from: E.absOf(G.v, 1, f.i), to: t < 24 ? G.last : 'off' };
+    SFX.checker(); if (hit) { setG('Твою шашку сбили!'); haptic('heavy'); } renderGame();
+    G.oppShown = (G.oppShown || []).concat(gr);
+    await sleep(380);
+  }
+  G.oppShown = moves.slice();
+}
+function netPeek(m) {
+  if (!G || !G.net || G.gid !== m.id || G.turn !== 1 || G.phase !== 'bot' || !G.oppStart) return;
+  const sh = G.oppShown || [], same = sh.length <= m.moves.length && sh.every((x, k) => x.i === m.moves[k].i && x.d === m.moves[k].d);
+  if (!same) { G.s = E.clone(G.oppStart.s); G.dice = G.oppStart.dice.slice(); G.oppShown = []; for (const mv of m.moves) { const n = E.step(G.s, 1, mv.i, mv.d); if (!n) break; G.s = n; G.dice = E.removeOne(G.dice, mv.d); } G.oppShown = m.moves.slice(); G.last = -1; renderGame(); return; }
+  return showOpp(m.moves, G.oppStart.s);
+}
+
 // --- перехват функций партии ---
 const _playerRoll = playerRoll, _playerStep = playerStep, _undo = undo, _endTurn = endTurn, _gameOver = gameOver, _react = react, _renderClocks = renderClocks;
 const _renderPlay = renderPlay, _renderTop = renderTop, _renderFriends = renderFriends, _saveP = saveP;
 function sendMyMoves() { if (G.phase === 'sent') return; G.phase = 'sent'; setG('Ход отправлен'); nsend({ t: 'move', moves: [].concat(...G.mv) }); renderGame(); }
 playerRoll = function () { if (!G || !G.net) return _playerRoll(); if (G.phase !== 'roll') return; G.phase = 'rolling'; setG('Бросаю…'); renderGame(); nsend({ t: 'roll' }); };
-playerStep = function (seq) { if (G && G.net) { const a = Array.isArray(seq) ? seq : [seq]; G.mv.push(a.map(s => ({ i: s.i, d: s.d }))); } return _playerStep(seq); };
-undo = function () { if (G && G.net && G.hist.length && G.phase === 'move') G.mv.pop(); return _undo(); };
+playerStep = function (seq, noFly) { if (G && G.net) { const a = Array.isArray(seq) ? seq : [seq]; G.mv.push(a.map(s => ({ i: s.i, d: s.d }))); } const r = _playerStep(seq, noFly); if (G && G.net && !G.over) nsend({ t: 'peek', moves: [].concat(...G.mv) }); return r; };
+undo = function () { const net = G && G.net && G.hist.length && G.phase === 'move'; if (net) G.mv.pop(); const r = _undo(); if (net) nsend({ t: 'peek', moves: [].concat(...G.mv) }); return r; };
 endTurn = function () { if (!G || !G.net) return _endTurn(); if (G.over || G.turn !== 0 || G.phase !== 'wait') return; sendMyMoves(); };
 gameOver = function (w, resigned, mult) {
   if (!G || !G.net || G._srv) return _gameOver(w, resigned, mult);
@@ -1615,6 +1681,26 @@ renderClocks = function () {
 };
 let profT = null;
 saveP = function () { _saveP(); if (NET.on && NET.uid) { clearTimeout(profT); profT = setTimeout(() => nsend({ t: 'prof', prof: profOf() }), 1500); } };
+
+// --- поделиться: сразу выбор, кому отправить ---
+const _shareGame = shareGame, _photo = photo;
+function tgShare(text, url) { const u = `https://t.me/share/url?url=${encodeURIComponent(url || ('https://t.me/' + NET.bot))}&text=${encodeURIComponent(text)}`; if (TGA && TGA.openTelegramLink) TGA.openTelegramLink(u); else window.open(u, '_blank'); }
+shareGame = function (title, lines, w) {
+  if (!NET.on) return _shareGame(title, lines, w);
+  const opp = G && G.opp ? G.opp.name : 'соперник';
+  tgShare(`🎲 «Нарды от Кондрата»: ${w === 0 ? 'выиграл' : 'проиграл'} партейку у ${opp}${lines.length ? ' (' + lines.join(', ') + ')' : ''}. Садись за нарды, проверим кто кого!`);
+};
+photo = async function (title, lines) {
+  if (!NET.on) return _photo(title, lines);
+  const c = document.createElement('canvas'); c.width = 600; c.height = 700; const x = c.getContext('2d'); const h = await heroOnBg(P.eq, lvl(), 600);
+  x.drawImage(h, 0, 0, 600, 796, 0, -40, 600, 796); x.fillStyle = '#000a'; x.fillRect(0, 600, 600, 100); x.fillStyle = '#f2b35a'; x.font = '700 44px Caveat, cursive'; x.fillText(title + ' ' + lines.join(' · '), 20, 662);
+  showModal(`<h3>Фото на память</h3><div class="photo" id="ph"><p>${P.name} · ${new Date().toLocaleDateString('ru-RU')}</p></div>
+    <button class="btn hot" style="width:100%" id="shareBtn">Отправить в Телеграм</button><button class="btn ghost" style="width:100%;margin-top:8px" data-close>Закрыть</button>`);
+  $('ph').prepend(c);
+  $('shareBtn').onclick = () => { malyava('Готовлю фото…'); nsend({ t: 'photo', data: c.toDataURL('image/jpeg', .82), caption: `${P.name}: ${title} ${lines.join(' · ')}\n«Нарды от Кондрата»` }); };
+};
+window.netInvite = x => { playMode = 'friend'; nsend({ t: 'create', variant, stake: 0, friend: x.id, prof: profOf() }); malyava('Кореш получит приглашение в боте'); };
+function friendLink() { return `https://t.me/${NET.bot}?start=fr_${NET.uid}`; }
 
 // --- экран «Играть» ---
 renderPlay = function () {
@@ -1647,9 +1733,11 @@ renderPlay = function () {
 renderTop = function () { if (NET.on && !NET.topFresh) nsend({ t: 'top' }); NET.topFresh = false; return _renderTop(); };
 renderFriends = function () {
   if (!NET.on) return _renderFriends();
+  if (!renderFriends._ask || Date.now() - renderFriends._ask > 3000) { renderFriends._ask = Date.now(); nsend({ t: 'me' }); }
+  const af = $('addFriend'); if (af) { af.textContent = 'Добавить кореша по ссылке'; af.onclick = () => tgShare('Добавляйся ко мне в кореша в «Нардах от Кондрата» — будем звать друг друга на партейку 🎲', friendLink()); }
   document.querySelectorAll('#friendList ~ *, .demo').forEach(el => { if (el.classList.contains('demo')) el.hidden = true; });
   const fr = NET.friends;
-  if (!fr.length) { $('friendList').innerHTML = `<div class="card" style="text-align:center;padding:16px"><b>Пока пусто</b><p class="sub" style="margin:6px 0 10px">Сыграй с кем-нибудь онлайн, и он появится тут</p><button class="btn hot" id="frInvite">Позвать кореша</button></div>`; $('frInvite').onclick = () => { playMode = 'friend'; go('play'); }; return; }
+  if (!fr.length) { $('friendList').innerHTML = `<div class="card" style="text-align:center;padding:16px"><b>Пока пусто</b><p class="sub" style="margin:6px 0 10px">Отправь другу ссылку: как только он откроет бота, вы станете корешами. Ещё сюда попадают все, с кем ты сыграл.</p><button class="btn hot" id="frInvite">Добавить кореша</button></div>`; $('frInvite').onclick = () => tgShare('Добавляйся ко мне в кореша в «Нардах от Кондрата» — будем звать друг друга на партейку 🎲', friendLink()); return; }
   $('friendList').innerHTML = fr.map((x, i) => `<div class="li2"><span class="av"><img data-f="${i}" alt=""></span><span class="who"><b>${x.name}</b><span><span class="dot${x.online ? ' on' : ''}"></span>${x.online ? 'в сети' : 'не в сети'} · ${rankOf(x.rating)}</span></span><button class="btn sec" style="padding:8px 12px;font-size:13px" data-i="${i}">Вызвать</button></div>`).join('');
   fr.forEach(async (x, i) => { const el = $('friendList').querySelector(`[data-f="${i}"]`); if (el) el.src = await headURL(x.eq); });
   $('friendList').querySelectorAll('.li2').forEach((el, i) => { el.querySelector('.who').onclick = () => showCase(fr[i]); });
@@ -1658,7 +1746,7 @@ renderFriends = function () {
 
 if (NET.on) {
   if (TGA) { try { TGA.ready(); TGA.expand(); if (TGA.disableVerticalSwipes) TGA.disableVerticalSwipes(); if (TGA.setHeaderColor) TGA.setHeaderColor('#14100c'); if (TGA.setBackgroundColor) TGA.setBackgroundColor('#14100c'); } catch (e) { } }
-  try { document.querySelector('.logo small').textContent = 'тестовая версия'; const af = $('addFriend'); if (af) af.onclick = () => { playMode = 'friend'; go('play'); }; } catch (e) { }
+  try { document.querySelector('.logo small').textContent = 'тестовая версия'; } catch (e) { }
   (function waitAssets() { if (ANCH) netConnect(); else setTimeout(waitAssets, 100); })();
   if (NET.joinCode || (TGA && TGA.initDataUnsafe && /^room_/i.test(TGA.initDataUnsafe.start_param || ''))) window.__skipLoad = true;
 }
