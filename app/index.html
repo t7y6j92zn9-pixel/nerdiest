@@ -1631,8 +1631,23 @@ function netConnect() {
     NET.joinCode = '';
   };
   ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } NET.q = NET.q.then(() => netMsg(m)).catch(x => console.error(x)); };
-  ws.onclose = () => { if (NET.ws !== ws) return; NET.ws = null; setTimeout(netConnect, Math.min(10000, 1000 * (++NET.tries))); };
+  ws.onclose = () => { if (NET.ws !== ws) return; NET.ws = null; if (NET.kicked) return; setTimeout(netConnect, Math.min(5000, 700 * (++NET.tries))); };
+  NET.lastPong = Date.now();
 }
+// связь «живая»? Телефон может молча оборвать соединение, когда игра свёрнута (например, пока зовёшь кореша).
+// Раз в 7 секунд пингуем сервер; нет ответа 15 секунд — сразу переподключаемся, не дожидаясь, пока ход «потеряется».
+function netRevive() { if (NET.kicked) return; const w = NET.ws; NET.ws = null; if (w) { try { w.onclose = null; w.close(); } catch (e) { } } netConnect(); }
+setInterval(() => {
+  if (!NET.on || NET.kicked) return;
+  if (NET.ws && NET.ws.readyState === 1) { if (Date.now() - NET.lastPong > 15000) return netRevive(); try { NET.ws.send('{"t":"ping"}'); } catch (e) { } }
+  if (G && G.net && !G.over && ['sent', 'rolling'].includes(G.phase) && G.sentAt && Date.now() - G.sentAt > 6000) { G.sentAt = Date.now(); nsend({ t: 'sync' }); }
+}, 7000);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden || !NET.on || NET.kicked || !NET.uid) return;
+  if (!NET.ws || NET.ws.readyState !== 1) return netRevive();
+  const t = Date.now(); try { NET.ws.send('{"t":"ping"}'); } catch (e) { return netRevive(); }
+  setTimeout(() => { if (NET.lastPong < t) netRevive(); }, 2500);
+});
 
 async function netMsg(m) {
   switch (m.t) {
@@ -1652,8 +1667,10 @@ async function netMsg(m) {
       if (screen === 'friends') renderFriends();
       return;
     }
-    case 'err': if (m.fatal) showModal(`<h3>Не получилось войти</h3><p style="text-align:center">${m.text}</p>`); else malyava(m.text); return;
+    case 'err': if (G && G.net) G.pending = null; if (m.fatal) showModal(`<h3>Не получилось войти</h3><p style="text-align:center">${m.text}</p>`); else malyava(m.text); return;
     case 'toast': return malyava(m.text);
+    case 'pong': NET.lastPong = Date.now(); return;
+    case 'kicked': NET.kicked = true; showModal(`<h3>Игра открыта в другом окне</h3><p style="text-align:center">Нарды можно держать открытыми только в одном месте, иначе ходы теряются.</p><button class="btn hot" style="width:100%" id="kickBack">Играть здесь</button>`); $('kickBack').onclick = () => { NET.kicked = false; hideModal(); netConnect(); }; return;
     case 'searching': NET.searching = true; NET.room = null; if (screen === 'play') renderPlay(); return;
     case 'room': NET.room = m; NET.searching = false; playMode = 'friend'; if (screen !== 'play') go('play'); else renderPlay(); return;
     case 'lobby': NET.room = null; NET.searching = false; if (screen === 'play') renderPlay(); return;
@@ -1680,6 +1697,7 @@ async function netGame(m) {
   G.opp.online = opp.online;
   const L = s => flipState(s, m.me), lt = m.me === 1 ? 1 - m.turn : m.turn;
   G.dl = m.deadline ? Date.now() + m.deadline : 0;
+  if (m.phase !== 'move') G.pending = null;
   switch (m.phase) {
     case 'roll':
       G.s = L(m.s); G.turn = lt; G.dice = []; G.shown = []; G.sel = null; G.tg = null; G.hist = []; G.mv = [];
@@ -1689,6 +1707,7 @@ async function netGame(m) {
     case 'move':
       G.turn = lt; G.shown = m.shown; G.dice = m.dice.slice(); G.rolledNow = !m.resync; if (!m.resync) SFX.dice(); G.s = L(m.s);
       if (lt === 1) { G.oppStart = { s: E.clone(G.s), dice: G.dice.slice() }; G.oppShown = []; }
+      if (lt === 0 && G.pending && G.pending.gid === m.id) { const mv = G.pending.moves; G.phase = 'sent'; G.sentAt = Date.now(); setG('Ход отправлен'); nsend({ t: 'move', moves: mv }); renderGame(); return; }
       if (lt === 0) { G.hist = []; G.mv = []; G.tg = null; G.sel = null; G.steps = E.legalSteps(G.s, 0, G.dice); G.phase = 'move'; setG(G.s.bar[0] ? 'Сначала введи шашку с бара' : 'Выбирай шашку'); }
       else { G.phase = 'bot'; setG('Соперник думает…'); }
       renderGame(); return;
@@ -1743,8 +1762,14 @@ function netPeek(m) {
 // --- перехват функций партии ---
 const _playerRoll = playerRoll, _playerStep = playerStep, _undo = undo, _endTurn = endTurn, _gameOver = gameOver, _react = react, _renderClocks = renderClocks;
 const _renderPlay = renderPlay, _renderTop = renderTop, _renderFriends = renderFriends, _saveP = saveP;
-function sendMyMoves() { if (G.phase === 'sent') return; G.phase = 'sent'; setG('Ход отправлен'); nsend({ t: 'move', moves: [].concat(...G.mv) }); renderGame(); }
-playerRoll = function () { if (!G || !G.net) return _playerRoll(); if (G.phase !== 'roll') return; G.phase = 'rolling'; setG('Бросаю…'); renderGame(); nsend({ t: 'roll' }); };
+function sendMyMoves() {
+  if (G.phase === 'sent') return; G.phase = 'sent'; G.sentAt = Date.now(); setG('Ход отправлен');
+  const moves = [].concat(...G.mv);
+  G.pending = { gid: G.gid, moves };
+  if (!nsend({ t: 'move', moves })) { setG('Связь пропала — ход отправится сам, как только она вернётся'); netRevive(); }
+  renderGame();
+}
+playerRoll = function () { if (!G || !G.net) return _playerRoll(); if (G.phase !== 'roll') return; G.phase = 'rolling'; G.sentAt = Date.now(); setG('Бросаю…'); renderGame(); if (!nsend({ t: 'roll' })) { G.phase = 'roll'; setG('Связь пропала, переподключаюсь… потом бросай ещё раз'); netRevive(); renderGame(); } };
 playerStep = function (seq, noFly) { if (G && G.net) { const a = Array.isArray(seq) ? seq : [seq]; G.mv.push(a.map(s => ({ i: s.i, d: s.d }))); } const r = _playerStep(seq, noFly); if (G && G.net && !G.over) nsend({ t: 'peek', moves: [].concat(...G.mv) }); return r; };
 undo = function () { const net = G && G.net && G.hist.length && G.phase === 'move'; if (net) G.mv.pop(); const r = _undo(); if (net) nsend({ t: 'peek', moves: [].concat(...G.mv) }); return r; };
 endTurn = function () { if (!G || !G.net) return _endTurn(); if (G.over || G.turn !== 0 || G.phase !== 'wait') return; sendMyMoves(); };

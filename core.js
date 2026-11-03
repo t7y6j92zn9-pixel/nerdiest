@@ -121,14 +121,14 @@ function createCore(cfg) {
       if (!tg) { try { sock.send(JSON.stringify({ t: 'err', text: 'Открой игру через Телеграм-бота', fatal: true })); } catch (e) { } return; }
       const bu = users[String(tg.id)]; if (bu && bu.banned) { try { sock.send(JSON.stringify({ t: 'err', text: 'Доступ закрыт администратором' + (bu.banReason ? ': ' + bu.banReason : ''), fatal: true })); } catch (e) { } return; }
       const uid = sock.uid = String(tg.id);
-      const old = online.get(uid); if (old && old !== sock) { try { old.close(); } catch (e) { } }
+      const old = online.get(uid); if (old && old !== sock) { try { old.send(JSON.stringify({ t: 'kicked' })); } catch (e) { } try { old.close(); } catch (e) { } }
       online.set(uid, sock);
       const u = getUser(uid, [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 40), tg.username);
       if (!u.app) { u.app = Date.now(); save(u); }
       applyProf(u, m.prof);
       sendMe(uid);
       const gid = userGame.get(uid);
-      if (gid && games.has(gid)) { const g = games.get(gid); g.away[g.uids.indexOf(uid)] = 0; sendGame(g); }
+      if (gid && games.has(gid)) { const g = games.get(gid); g.away[g.uids.indexOf(uid)] = 0; g.resync = true; sendGame(g); g.resync = false; }
       const code = String(m.room || start || '').replace(/^room_?/i, '').toUpperCase();
       if (code && !gid) joinRoom(uid, code);
       return;
@@ -168,6 +168,8 @@ function createCore(cfg) {
         return sendMe(uid);
       }
       case 'me': return sendMe(uid);
+      case 'ping': return send(uid, { t: 'pong' });
+      case 'sync': { const g = games.get(userGame.get(uid)); if (g && !g.over) { g.resync = true; send(uid, gameView(g, g.uids.indexOf(uid))); g.resync = false; } return; }
       case 'peek': { // ход ещё идёт: показать сопернику шашки сразу
         const g = games.get(userGame.get(uid)); if (!g || g.over || g.phase !== 'move' || g.uids[g.turn] !== uid || !Array.isArray(m.moves)) return;
         const moves = m.moves.slice(0, 4).map(x => ({ i: x.i | 0, d: x.d | 0 }));
