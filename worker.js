@@ -19,7 +19,7 @@ export class Lobby extends DurableObject {
     if (this.core) return this.core;
     const env = this.env;
     this.core = createCore({
-      BOT_TOKEN: env.BOT_TOKEN, WEBAPP_URL: env.WEBAPP_URL || origin, BOT_USERNAME: env.BOT_USERNAME, DEV: env.DEV === '1',
+      BOT_TOKEN: env.BOT_TOKEN, WEBAPP_URL: env.WEBAPP_URL || origin, BOT_USERNAME: env.BOT_USERNAME, ADMIN_PASS: env.ADMIN_PASS, DEV: env.DEV === '1',
       users: this.users, saveUser: u => this.ctx.storage.put('u:' + u.id, u),
       meta: this.meta, saveMeta: m => this.ctx.storage.put('meta', m),
       putPhoto: async (id, buf) => {

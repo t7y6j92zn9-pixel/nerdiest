@@ -17,6 +17,7 @@ function createCore(cfg) {
   const log = cfg.log || console.log;
   const users = cfg.users || {};
   const meta = cfg.meta || {};
+  if (meta.admin && !meta.admins) { meta.admins = [String(meta.admin)]; } // кто уже стал админом — остаётся
   let metaTimer = null;
   function saveMeta() { if (metaTimer) return; metaTimer = setTimeout(() => { metaTimer = null; cfg.saveMeta && cfg.saveMeta(meta); }, 1000); }
   const today = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); // по Москве
@@ -316,6 +317,7 @@ function createCore(cfg) {
       [{ text: '🎲 Играть', web_app: { url: appUrl() } }],
       [{ text: '📜 Правила', callback_data: 'rules' }, { text: '🏆 Рейтинг', callback_data: 'top' }],
       [{ text: '🤝 Позвать кореша', url: share }],
+      [{ text: '📩 Поддержка', callback_data: 'sup' }],
     ] };
   }
   function topText() {
@@ -374,13 +376,38 @@ ${top}
 
 🆕 Новенькие: ${fresh}`;
   }
-  const adminKb = { inline_keyboard: [[{ text: '🔄 Обновить', callback_data: 'adm' }], [{ text: '🎲 Играть', web_app: { url: WEBAPP_URL + '/' } }]] };
+  const adminKb = { inline_keyboard: [[{ text: '🔄 Обновить', callback_data: 'adm' }, { text: '📬 Обращения', callback_data: 'tickets' }], [{ text: '🎲 Играть', web_app: { url: WEBAPP_URL + '/' } }]] };
+  const ADMIN_PASS = String(cfg.ADMIN_PASS || '').trim();
+  const isAdmin = id => Array.isArray(meta.admins) && meta.admins.includes(String(id));
   function touchBotUser(from) {
     if (!from || !from.id) return null;
     const u = getUser(String(from.id), [from.first_name, from.last_name].filter(Boolean).join(' ').slice(0, 40), from.username);
     if (!u.bot) { u.bot = Date.now(); save(u); }
     return u;
   }
+  function ticketsText() {
+    const t = (meta.tlist || []).slice(-10).reverse();
+    if (!t.length) return '📬 Обращений пока нет.';
+    return '📬 Последние обращения:\n\n' + t.map(x => `• ${new Date(x.at + 3 * 3600e3).toISOString().slice(5, 16).replace('T', ' ')} ${x.name}: ${x.text || '(скриншот)'}`).join('\n') + '\n\nЧтобы ответить игроку — ответь (свайп влево) на его пересланное сообщение выше в этом чате.';
+  }
+  // обращение в поддержку: копия уходит всем админам, ответ админа (reply) — обратно игроку
+  async function toSupport(u, msg) {
+    meta.tlist = (meta.tlist || []).concat([{ id: u.id, name: u.name, text: String(msg.text || msg.caption || '').slice(0, 120), at: Date.now() }]).slice(-50);
+    meta.tickets = meta.tickets || {};
+    for (const a of meta.admins || []) {
+      try {
+        await tg('sendMessage', { chat_id: a, text: `📩 Обращение от ${u.name}${u.username ? ' @' + u.username : ''} (id ${u.id}). Ответь на сообщение ниже — ответ уйдёт игроку.` });
+        const r = await tg('copyMessage', { chat_id: a, from_chat_id: msg.chat.id, message_id: msg.message_id });
+        if (r.ok) meta.tickets[a + ':' + r.result.message_id] = u.id;
+      } catch (e) { }
+    }
+    const keys = Object.keys(meta.tickets); if (keys.length > 300) keys.slice(0, keys.length - 300).forEach(k => delete meta.tickets[k]);
+    saveMeta();
+  }
+  async function answerTicket(admin, msg, uid) {
+    try { await tg('sendMessage', { chat_id: uid, text: '📩 Ответ поддержки:' }); await tg('copyMessage', { chat_id: uid, from_chat_id: msg.chat.id, message_id: msg.message_id }); } catch (e) { }
+  }
+  const SUPPORT_PROMPT = '📩 Поддержка\n\nОпиши проблему одним сообщением: что случилось и когда. Можно приложить скриншот (с подписью). Ответим тут же, в боте.\n\nПередумал — напиши /cancel';
 
   // ответ боту отдаётся прямо в ответ на webhook
   function onUpdate(up) {
@@ -389,26 +416,50 @@ ${top}
       tg('answerCallbackQuery', { callback_query_id: q.id }).catch(() => { });
       const chat_id = q.message && q.message.chat.id; if (!chat_id) return null;
       if (q.data === 'rules') return { method: 'sendMessage', chat_id, text: RULES };
-      if (q.data === 'adm' && meta.admin && String(q.from.id) === meta.admin) return { method: 'editMessageText', chat_id, message_id: q.message.message_id, text: adminText(), reply_markup: adminKb };
+      if (q.data === 'adm' && isAdmin(q.from.id)) return { method: 'editMessageText', chat_id, message_id: q.message.message_id, text: adminText(), reply_markup: adminKb };
+      if (q.data === 'tickets' && isAdmin(q.from.id)) return { method: 'sendMessage', chat_id, text: ticketsText() };
       if (q.data === 'top') return { method: 'sendMessage', chat_id, text: topText() };
+      if (q.data === 'sup') { const u = touchBotUser(q.from); if (u) { u.supWait = Date.now(); save(u); } return { method: 'sendMessage', chat_id, text: SUPPORT_PROMPT }; }
       return null;
     }
-    const msg = up.message; if (!msg || !msg.text) return null;
-    const [cmd0, payload] = msg.text.trim().split(/\s+/);
-    const cmd = cmd0.split('@')[0].toLowerCase();
+    const msg = up.message; if (!msg) return null;
     const chat_id = msg.chat.id, M = (text, reply_markup) => ({ method: 'sendMessage', chat_id, text, ...(reply_markup ? { reply_markup } : {}) });
-    if (!WEBAPP_URL) return M('Игра ещё не настроена: на сервере не задан WEBAPP_URL.');
+    if (msg.chat.type !== 'private') return null;
     const me = touchBotUser(msg.from);
+    const text = String(msg.text || '').trim(), isCmd = text.startsWith('/');
+    // админ отвечает игроку
+    if (me && isAdmin(me.id) && msg.reply_to_message && meta.tickets) {
+      const uid = meta.tickets[me.id + ':' + msg.reply_to_message.message_id];
+      if (uid) { answerTicket(me, msg, uid); return M('✅ Ответ отправлен игроку'); }
+    }
+    // игрок пишет в поддержку
+    if (me && me.supWait && !isCmd && Date.now() - me.supWait < 3600e3) {
+      me.supWait = 0; save(me);
+      if (!(meta.admins || []).length) return M('Поддержка ещё не подключена, попробуй позже.');
+      toSupport(me, msg).catch(() => { });
+      return M('✅ Спасибо! Обращение передано. Ответ придёт сюда, в этот чат.', menuKeyboard());
+    }
+    if (!text) return null;
+    const [cmd0, payload] = text.split(/\s+/);
+    const cmd = cmd0.split('@')[0].toLowerCase();
+    if (!WEBAPP_URL) return M('Игра ещё не настроена: на сервере не задан WEBAPP_URL.');
+    if (cmd === '/cancel') { if (me) { me.supWait = 0; save(me); } return M('Ок, отменено.', menuKeyboard()); }
+    if (cmd === '/support' || (cmd === '/start' && payload === 'support')) { if (me) { me.supWait = Date.now(); save(me); } return M(SUPPORT_PROMPT); }
     if (cmd === '/admin' && me) {
-      if (!meta.admin) {
-        meta.admin = me.id; saveMeta();
+      if (payload) { tg('deleteMessage', { chat_id, message_id: msg.message_id }).catch(() => { }); } // пароль не оставляем в чате
+      if (!isAdmin(me.id)) {
+        if (!ADMIN_PASS) return M('Админка выключена: в настройках сервера не задан пароль ADMIN_PASS.');
+        if (!payload) return M('Напиши: /admin пароль');
+        if (payload !== ADMIN_PASS) return M('❌ Неверный пароль');
+        meta.admins = (meta.admins || []).concat([me.id]); saveMeta();
         tg('setMyCommands', { scope: { type: 'chat', chat_id }, commands: [
           { command: 'admin', description: 'Админка' }, { command: 'start', description: 'Главное меню' }, { command: 'play', description: 'Играть' },
-          { command: 'top', description: 'Доска почёта' }, { command: 'rules', description: 'Правила' }] }).catch(() => { });
-        return M('👑 Ты записан как хозяин бота. Эта команда теперь работает только у тебя.\n\n' + adminText(), adminKb);
+          { command: 'top', description: 'Доска почёта' }, { command: 'support', description: 'Поддержка' }] }).catch(() => { });
+        return M('👑 Пароль верный, ты админ. Дальше просто пиши /admin, без пароля.\n\n' + adminText(), adminKb);
       }
-      if (meta.admin === me.id) return M(adminText(), adminKb);
+      return M(adminText(), adminKb);
     }
+    if (cmd === '/unadmin' && me && isAdmin(me.id)) { meta.admins = meta.admins.filter(x => x !== me.id); saveMeta(); return M('Ты больше не админ.'); }
     if (cmd === '/start' && /^fr_/i.test(payload || '') && me) {
       const fid = payload.slice(3), f = users[fid];
       if (f && fid !== me.id) {
@@ -438,7 +489,7 @@ ${top}
       botUsername = r.result.username; log('Бот: @' + botUsername);
       await tg('setMyCommands', { commands: [
         { command: 'start', description: 'Главное меню' }, { command: 'play', description: 'Играть в нарды' },
-        { command: 'rules', description: 'Правила' }, { command: 'top', description: 'Доска почёта' }, { command: 'invite', description: 'Позвать кореша' },
+        { command: 'rules', description: 'Правила' }, { command: 'top', description: 'Доска почёта' }, { command: 'invite', description: 'Позвать кореша' }, { command: 'support', description: 'Написать в поддержку' },
       ] });
       if (!WEBAPP_URL) { log('WEBAPP_URL не задан'); return (opts && opts.poll) ? poll() : null; }
       await tg('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Играть', web_app: { url: appUrl() } } });

@@ -1500,7 +1500,9 @@ $('setBtn').onclick=()=>{
     <div class="row"><button class="btn sec" id="tCigs">+5000 сигарет</button><button class="btn sec" id="tRate">+400 рейтинга</button></div>
     <div class="row" style="margin-top:8px"><button class="btn sec" id="tDust">Запылить вещи</button><button class="btn sec" id="tRank">Показать нашивку</button></div>
     <button class="btn ghost" id="tReset" style="width:100%;margin-top:10px">Начать заново</button>`}</div>
+    ${window.NET&&NET.on?'<button class="btn sec" id="supBtn" style="width:100%;margin-top:12px">Написать в поддержку</button>':''}
     <button class="btn hot" style="width:100%;margin-top:12px" data-close>Готово</button>`);
+  if($('supBtn')) $('supBtn').onclick=()=>{ const u=`https://t.me/${NET.bot}?start=support`; try{ Telegram.WebApp.openTelegramLink(u); }catch(e){ window.open(u,'_blank'); } };
   $('modalBody').querySelectorAll('.tg button').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; let v=b.dataset.v; v=v==='true'?true:v==='false'?false:v;
     if(k==='music') setMusic(v); else P.set[k]=v; saveP(); heroCache.clear(); b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(screen==='home') renderHome(); });
   $('volM').oninput=e=>{ P.set.vm=e.target.value/100; musicVol(.35); }; $('volM').onchange=()=>saveP();

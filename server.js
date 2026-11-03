@@ -19,7 +19,7 @@ try { db = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8')); } catch (e) { }
 db.meta = db.meta || {};
 let fileTimer = null;
 const core = createCore({
-  BOT_TOKEN: process.env.BOT_TOKEN, WEBAPP_URL: process.env.WEBAPP_URL, BOT_USERNAME: process.env.BOT_USERNAME, DEV: process.env.DEV === '1',
+  BOT_TOKEN: process.env.BOT_TOKEN, WEBAPP_URL: process.env.WEBAPP_URL, BOT_USERNAME: process.env.BOT_USERNAME, ADMIN_PASS: process.env.ADMIN_PASS, DEV: process.env.DEV === '1',
   users: db.users, meta: db.meta,
   saveMeta() { writeSoon(); },
   saveUser() { writeSoon(); },
