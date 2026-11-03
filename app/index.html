@@ -969,6 +969,7 @@ function fresh(){ return { since:Date.now(), name:'Кондрат', num:'0715', 
 let P = fresh();
 try { const r=localStorage.getItem(KEY); if(r) P=Object.assign(fresh(),JSON.parse(r)); } catch(e){}
 P.eq.ring='r_0'; if(P.eq.tats){ delete P.eq.tats.kist; delete P.eq.tats.palcy; } for(const k of ['hat','neck','watch','beads','board','mug','ash','pack','level','outfit','checkers','dice']) if(P.eq[k]&&!item(P.eq[k])) P.eq[k]=DEFAULT_EQ[k];
+function eco(t,d){ try{ if(window.NET&&NET.on&&window.nsend) nsend(Object.assign({t},d||{})); }catch(e){} }
 function saveP(){ try{ localStorage.setItem(KEY,JSON.stringify(P)); }catch(e){} }
 const rankOf = r => CAT.rankOf(r);
 const rankIdx = name => CAT.RANKS.findIndex(r=>r.name===name);
@@ -1107,7 +1108,7 @@ async function renderHome(){
   $('homeStats').innerHTML = `<div class="stat"><b>${P.rating}</b><span>рейтинг</span></div><div class="stat"><b>${P.wins}</b><span>побед онлайн</span></div><div class="stat"><b>${P.botWins}</b><span>побед над ботом</span></div>`;
   const ready = Date.now()-P.lastDaily >= 20*3600e3;
   $('dailyCard').innerHTML = `<div><b>Передачка с воли</b><div class="sub" style="margin:2px 0 0">Каждый день +${CAT.ECON.dailyBonus} сигарет</div></div><button class="btn${ready?' hot':' ghost'}" id="dailyBtn" ${ready?'':'disabled'}>${ready?'Забрать':'Завтра'}</button>`;
-  if (ready) $('dailyBtn').onclick=()=>{ P.cigs+=CAT.ECON.dailyBonus; P.lastDaily=Date.now(); saveP(); SFX.coin(); malyava(`Передачка: +${CAT.ECON.dailyBonus} сигарет`); renderHome(); };
+  if (ready) $('dailyBtn').onclick=()=>{ P.cigs+=CAT.ECON.dailyBonus; P.lastDaily=Date.now(); eco('daily'); saveP(); SFX.coin(); malyava(`Передачка: +${CAT.ECON.dailyBonus} сигарет`); renderHome(); };
 }
 // дело (профиль)
 // личное дело: своё или чужое (из рейтинга и корешей)
@@ -1187,13 +1188,13 @@ async function renderPreview(opt){
   if (showHero) await buildScene($('pvScene'), tryEq(it), {});
   const b1=$('buyBtn'); if(b1) b1.onclick=()=>buy(it);
   const b2=$('eqBtn'); if(b2) b2.onclick=()=>{ if(it.slot==='tat'&&on) delete P.eq.tats[it.place]; else applyEq(it); saveP(); SFX.click(); if(it.slot==='tat'&&!on) inkAnim(it); else renderShop(); };
-  const b3=$('cleanBtn'); if(b3) b3.onclick=()=>{ if(P.cigs<10) return malyava('Не хватает сигарет'); P.cigs-=10; delete P.dust[it.id]; heroCache.clear(); saveP(); SFX.coin(); malyava('Почищено, блестит'); renderShop(); };
+  const b3=$('cleanBtn'); if(b3) b3.onclick=()=>{ if(P.cigs<10) return malyava('Не хватает сигарет'); P.cigs-=10; eco('clean'); delete P.dust[it.id]; heroCache.clear(); saveP(); SFX.coin(); malyava('Почищено, блестит'); renderShop(); };
 }
 function applyEq(it){ if(it.slot==='tat') P.eq.tats[it.place]=it.id; else if(it.slot==='level') P.eq.level=it.id; else if(it.slot!=='phrase'&&it.slot!=='sticker') P.eq[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place) && item(P.eq.outfit).file!=='00_golyi'){} }
 function buy(it){
   if (P.cigs<it.price) return;
-  P.cigs-=it.price; P.owned.push(it.id); applyEq(it);
+  P.cigs-=it.price; P.owned.push(it.id); eco('buy',{id:it.id}); applyEq(it);
   if (it.slot==='beads'){ const n=ITEMS.filter(x=>x.slot==='beads'&&x.img&&P.owned.includes(x.id)).length; if(n>=5&&!P.ach.beads5){ P.ach.beads5=1; setTimeout(()=>malyava('Достижение: «Чётки не врут». Открыты нарды «С иконой»'),1400); } }
   saveP(); SFX.coin();
   // газетный свёрток летит к герою
@@ -1360,7 +1361,7 @@ async function gameOver(w, resigned, mOv){
   if(G.online){ const d=w===0?CAT.RATING.win[mult]:(resigned?CAT.RATING.resign:CAT.RATING.loss[mult]);
     if(w===0){ const win=G.stake*2+CAT.ECON.onlineWin*mult; P.cigs+=win; P.rating+=d; P.wins++; P.streak++; lines.push(`+${win-G.stake} сигарет`,`+${d} к рейтингу`); if(G.stake>=500) P.ach.stake500=1; if((G.opp.lvl||1)-lvl()>=2) P.ach.underdog=1; }
     else { P.rating=Math.max(0,P.rating+d); P.losses++; P.streak=0; if(G.stake) lines.push(`−${G.stake} сигарет`); lines.push(`${d} к рейтингу`); } }
-  else if(w===0){ const r=CAT.ECON.botWin*mult; P.cigs+=r; P.botWins++; lines.push(`+${r} сигарет`); }
+  else if(w===0){ const r=CAT.ECON.botWin*mult; P.cigs+=r; P.botWins++; eco('botwin',{mult}); lines.push(`+${r} сигарет`); }
   if(w===0&&mult>1){ P.mars=(P.mars||0)+1; if(P.mars>=5) P.ach.mars5=1; } if(P.streak>=10) P.ach.streak10=1; if(P.games>=100) P.ach.games100=1;
   saveP(); renderGame();
   const title=w===0?(mult===3?'Кокс!':mult===2?'Марс!':'Победа!'):resigned?'Сдался':(mult>1?'Тебе марс…':'Поражение');
@@ -1533,7 +1534,8 @@ const QS = new URLSearchParams(location.search);
 const NET = { on: !!((TGA && TGA.initData) || QS.get('dev')), ws: null, q: Promise.resolve(), top: null, friends: [], bot: '', uid: null, room: null, searching: false, tries: 0, joinCode: QS.get('room') || '' };
 window.NET = NET;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-function profOf() { return { cigs: P.cigs, rating: P.rating, lvl: lvl(), eq: P.eq }; }
+function profOf() { return { cigs: P.cigs, rating: P.rating, lvl: lvl(), eq: P.eq, owned: P.owned, lastDaily: P.lastDaily }; }
+
 function nsend(m) { if (NET.ws && NET.ws.readyState === 1) { NET.ws.send(JSON.stringify(m)); return true; } malyava('Нет связи с сервером, переподключаюсь…'); return false; }
 function cleanEq(eq) {
   const e = JSON.parse(JSON.stringify(DEFAULT_EQ));
@@ -1568,7 +1570,17 @@ async function netMsg(m) {
   switch (m.t) {
     case 'me': {
       NET.uid = m.me.id; NET.bot = m.bot || NET.bot; NET.friends = (m.me.friends || []).map(netPerson);
-      if (m.me.name && P.name !== m.me.name) { P.name = m.me.name; saveP(); }
+      if (m.me.name) P.name = m.me.name;
+      // кошелёк — с сервера
+      const oldRank = rankOf(P.rating);
+      if (Number.isFinite(m.me.cigs)) P.cigs = m.me.cigs;
+      if (Number.isFinite(m.me.rating)) P.rating = m.me.rating;
+      if (Array.isArray(m.me.owned)) P.owned = [...new Set(m.me.owned.concat(ITEMS.filter(x => x.price === 0 && !x.rank && !x.ach).map(x => x.id)))];
+      if (Number.isFinite(m.me.lastDaily)) P.lastDaily = m.me.lastDaily;
+      P.wins = m.me.wins | 0; P.losses = m.me.losses | 0; if (Number.isFinite(m.me.botWins)) P.botWins = m.me.botWins;
+      _saveP(); updCigs();
+      if (NET.gotMe && rankIdx(rankOf(P.rating)) > rankIdx(oldRank) && screen !== 'game') rankUp(rankOf(P.rating));
+      NET.gotMe = true;
       if (screen === 'friends') renderFriends();
       return;
     }

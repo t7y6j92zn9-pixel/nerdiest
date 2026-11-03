@@ -4,6 +4,8 @@ const crypto = require('crypto');
 const { Buffer } = require('buffer');
 const E = require('./engine.js');
 const C = require('./catalog.js');
+const ITEMS = require('./items.json'); // цены барахолки (собираются из игры)
+const RANK_NAMES = C.RANKS.map(r => r.name);
 
 const TURN_SECONDS = 90;
 const HOOK_PATH = '/tg-hook';
@@ -35,16 +37,31 @@ function createCore(cfg) {
     return u;
   }
   function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: u.eq, lvl: u.lvl || 1, mars: u.mars || 0, best: u.best || 0, longG: u.longG || 0, shortG: u.shortG || 0, created: u.created, num: String(u.id).replace(/\D/g, '').slice(-4).padStart(4, '0') }; }
-  function meView(u) { return { ...publicUser(u), cigs: u.cigs, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
+  function meView(u) { return { ...publicUser(u), cigs: u.cigs, owned: u.owned || [], lastDaily: u.lastDaily || 0, botWins: u.botWins || 0, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
   // внешний вид и счёт игрока присылает само приложение (сырой тестовый вариант)
+  // кошелёк живёт на сервере. С телефона принимается только внешний вид (и только из того, что куплено).
+  // Один раз, при переходе со старой версии, сервер забирает с телефона сигареты, рейтинг и покупки.
+  const rankOk = (u, it) => !it.rank || RANK_NAMES.indexOf(C.rankOf(u.rating)) >= RANK_NAMES.indexOf(it.rank);
+  const canUse = (u, id) => { const it = ITEMS[id]; if (!it) return false; return u.owned.includes(id) || (!it.price && rankOk(u, it)) || (it.free && rankOk(u, it)) || (!!it.ach && !it.price); };
   function applyProf(u, p) {
     if (!p || typeof p !== 'object') return;
-    if (Number.isFinite(+p.cigs)) u.cigs = Math.max(0, Math.min(1e7, Math.floor(+p.cigs)));
-    if (Number.isFinite(+p.rating)) u.rating = Math.max(0, Math.min(1e6, Math.floor(+p.rating)));
-    if (Number.isFinite(+p.lvl)) u.lvl = Math.max(1, Math.min(11, Math.floor(+p.lvl)));
-    if (p.eq && typeof p.eq === 'object') { const s = JSON.stringify(p.eq); if (s.length < 2000) u.eq = JSON.parse(s); }
+    if (!Array.isArray(u.owned)) u.owned = [];
+    if (!u.eco) {
+      u.eco = Date.now();
+      if (Number.isFinite(+p.cigs)) u.cigs = Math.max(0, Math.min(20000, Math.floor(+p.cigs)));
+      if (Number.isFinite(+p.rating)) u.rating = Math.max(u.rating || 0, Math.min(5000, Math.floor(+p.rating)));
+      if (Array.isArray(p.owned)) u.owned = [...new Set(p.owned.filter(id => ITEMS[id]))];
+      if (Number.isFinite(+p.lastDaily)) u.lastDaily = +p.lastDaily;
+    }
+    if (p.eq && typeof p.eq === 'object' && JSON.stringify(p.eq).length < 2000) {
+      const eq = {};
+      for (const k in p.eq) { const v = p.eq[k]; if (k === 'tats' && v && typeof v === 'object') { eq.tats = {}; for (const t in v) if (canUse(u, v[t])) eq.tats[t] = v[t]; } else if (typeof v === 'string' && canUse(u, v)) eq[k] = v; }
+      u.eq = eq;
+      const lv = eq.level && /^l_(\d+)$/.exec(eq.level); u.lvl = lv ? Math.max(1, Math.min(11, +lv[1])) : 1;
+    }
     save(u);
   }
+  function addLog(by, text) { meta.alog = (meta.alog || []).concat([{ at: Date.now(), by, text }]).slice(-200); saveMeta(); }
 
   // ---------- вход через Телеграм ----------
   function checkInitData(initData) {
@@ -80,6 +97,7 @@ function createCore(cfg) {
       if (r) { tg = r.user; start = r.start; }
       else if (DEV && m.dev && m.dev.id) tg = { id: 'dev' + String(m.dev.id).slice(0, 20), first_name: String(m.dev.name || 'Тестер').slice(0, 30) };
       if (!tg) { try { sock.send(JSON.stringify({ t: 'err', text: 'Открой игру через Телеграм-бота', fatal: true })); } catch (e) { } return; }
+      const bu = users[String(tg.id)]; if (bu && bu.banned) { try { sock.send(JSON.stringify({ t: 'err', text: 'Доступ закрыт администратором' + (bu.banReason ? ': ' + bu.banReason : ''), fatal: true })); } catch (e) { } return; }
       const uid = sock.uid = String(tg.id);
       const old = online.get(uid); if (old && old !== sock) { try { old.close(); } catch (e) { } }
       online.set(uid, sock);
@@ -110,6 +128,23 @@ function createCore(cfg) {
     const u = users[uid];
     switch (m.t) {
       case 'prof': return applyProf(u, m.prof);
+      case 'buy': {
+        const it = ITEMS[m.id]; if (!it || !it.price) return sendMe(uid);
+        if (u.owned.includes(m.id)) return sendMe(uid);
+        if (!rankOk(u, it)) { err(uid, 'Нужно звание «' + it.rank + '»'); return sendMe(uid); }
+        if (u.cigs < it.price) { err(uid, 'Не хватает сигарет'); return sendMe(uid); }
+        u.cigs -= it.price; u.owned.push(m.id); save(u); return sendMe(uid);
+      }
+      case 'daily': {
+        if (Date.now() - (u.lastDaily || 0) < 20 * 3600e3) return sendMe(uid);
+        u.lastDaily = Date.now(); u.cigs += C.ECON.dailyBonus; save(u); return sendMe(uid);
+      }
+      case 'clean': { if (u.cigs >= 10) { u.cigs -= 10; save(u); } return sendMe(uid); }
+      case 'botwin': { // победа над ботом в тренировке: не чаще раза в 40 секунд
+        const mult = Math.max(1, Math.min(3, m.mult | 0));
+        if (Date.now() - (u.botAt || 0) > 40e3) { u.botAt = Date.now(); u.cigs += C.ECON.botWin * mult; u.botWins = (u.botWins || 0) + 1; save(u); }
+        return sendMe(uid);
+      }
       case 'me': return sendMe(uid);
       case 'peek': { // ход ещё идёт: показать сопернику шашки сразу
         const g = games.get(userGame.get(uid)); if (!g || g.over || g.phase !== 'move' || g.uids[g.turn] !== uid || !Array.isArray(m.moves)) return;
@@ -291,7 +326,7 @@ function createCore(cfg) {
     g.over = res; g.phase = 'over'; g.deadline = 0;
     save(uw); save(ul);
     sendGame(g);
-    g.uids.forEach(x => userGame.delete(x));
+    g.uids.forEach(x => { userGame.delete(x); sendMe(x); });
   }
 
   // ---------- Телеграм-бот ----------
@@ -374,7 +409,9 @@ function createCore(cfg) {
 🏆 Топ:
 ${top}
 
-🆕 Новенькие: ${fresh}`;
+🆕 Новенькие: ${fresh}
+
+Команды: /help`;
   }
   const adminKb = { inline_keyboard: [[{ text: '🔄 Обновить', callback_data: 'adm' }, { text: '📬 Обращения', callback_data: 'tickets' }], [{ text: '🎲 Играть', web_app: { url: WEBAPP_URL + '/' } }]] };
   const ADMIN_PASS = String(cfg.ADMIN_PASS || '').trim();
@@ -408,6 +445,50 @@ ${top}
     try { await tg('sendMessage', { chat_id: uid, text: '📩 Ответ поддержки:' }); await tg('copyMessage', { chat_id: uid, from_chat_id: msg.chat.id, message_id: msg.message_id }); } catch (e) { }
   }
   const SUPPORT_PROMPT = '📩 Поддержка\n\nОпиши проблему одним сообщением: что случилось и когда. Можно приложить скриншот (с подписью). Ответим тут же, в боте.\n\nПередумал — напиши /cancel';
+
+  // ---------- команды админа ----------
+  const ADMIN_HELP = `🛠 Команды админа
+/player кто — карточка игрока
+/give кто 500 — выдать сигареты (минус — забрать: /give кто -100)
+/rating кто 1200 — поставить рейтинг
+/ban кто причина — закрыть доступ, /unban кто — открыть
+/log — журнал выдач и банов
+
+«кто» — @ник, id или имя игрока; «я» — ты сам.`;
+  function findUser(q, me) {
+    q = String(q || '').trim(); if (!q) return null;
+    if (q === 'я' || q === 'me') return me;
+    if (users[q]) return users[q];
+    const lq = q.replace(/^@/, '').toLowerCase();
+    return Object.values(users).find(u => (u.username || '').toLowerCase() === lq) || Object.values(users).find(u => (u.name || '').toLowerCase() === q.toLowerCase()) || null;
+  }
+  const dt = t => t ? new Date(t + 3 * 3600e3).toISOString().slice(0, 16).replace('T', ' ') : '—';
+  function card(u) {
+    return `👤 ${u.name}${u.username ? ' @' + u.username : ''}\nid: ${u.id}${u.banned ? '\n⛔ ЗАБАНЕН' + (u.banReason ? ': ' + u.banReason : '') : ''}
+🚬 Сигареты: ${u.cigs}
+⭐ Рейтинг: ${u.rating} (${C.rankOf(u.rating)})
+🎲 Онлайн: побед ${u.wins || 0}, поражений ${u.losses || 0}; бот: ${u.botWins || 0} побед
+🛍 Вещей куплено: ${(u.owned || []).filter(id => ITEMS[id] && ITEMS[id].price).length}
+👥 Корешей: ${(u.friends || []).length}
+📅 С нами с ${dt(u.created)}, был ${dt(u.seen)}${online.has(u.id) ? ' (сейчас в игре)' : ''}`;
+  }
+  function adminCmd(me, cmd, text, M) {
+    const parts = text.split(/\s+/).slice(1);
+    if (cmd === '/help') return M(ADMIN_HELP);
+    if (cmd === '/log') { const l = (meta.alog || []).slice(-20).reverse(); return M(l.length ? '📒 Журнал:\n\n' + l.map(x => `${dt(x.at)} ${users[x.by] ? users[x.by].name : x.by}: ${x.text}`).join('\n') : '📒 Журнал пуст'); }
+    // кто может быть из нескольких слов: число в конце — сумма
+    let num = null, who = parts.join(' ');
+    if (cmd === '/give' || cmd === '/rating') { const last = parts[parts.length - 1]; if (!/^[-+]?\d+$/.test(last || '')) return M(cmd === '/give' ? 'Пример: /give @ник 500' : 'Пример: /rating @ник 1200'); num = parseInt(last, 10); who = parts.slice(0, -1).join(' '); }
+    let reason = '';
+    if (cmd === '/ban') { who = parts[0] || ''; reason = parts.slice(1).join(' ').slice(0, 100); }
+    const u = findUser(who, me);
+    if (!u) return M('Не нашёл игрока «' + who + '». Можно @ник, id или имя.');
+    if (cmd === '/player') return M(card(u));
+    if (cmd === '/give') { u.cigs = Math.max(0, u.cigs + num); save(u); addLog(me.id, `${num >= 0 ? 'выдал' : 'забрал'} ${Math.abs(num)} сиг. → ${u.name} (стало ${u.cigs})`); sendMe(u.id); send(u.id, { t: 'toast', text: num >= 0 ? `🎁 Тебе подогнали ${num} сигарет` : `Списано ${-num} сигарет` }); return M(`✅ ${u.name}: теперь ${u.cigs} сигарет`); }
+    if (cmd === '/rating') { const old = u.rating; u.rating = Math.max(0, num); save(u); addLog(me.id, `рейтинг ${u.name}: ${old} → ${u.rating}`); sendMe(u.id); return M(`✅ ${u.name}: рейтинг ${u.rating} (${C.rankOf(u.rating)})`); }
+    if (cmd === '/ban') { if (u.id === me.id) return M('Себя банить не надо 🙂'); u.banned = Date.now(); u.banReason = reason; save(u); addLog(me.id, `бан ${u.name}${reason ? ': ' + reason : ''}`); const sk = online.get(u.id); if (sk) { try { sk.send(JSON.stringify({ t: 'err', text: 'Доступ закрыт администратором', fatal: true })); sk.close(); } catch (e) { } } return M(`⛔ ${u.name} забанен`); }
+    if (cmd === '/unban') { u.banned = 0; u.banReason = ''; save(u); addLog(me.id, `разбан ${u.name}`); return M(`✅ ${u.name} разбанен`); }
+  }
 
   // ответ боту отдаётся прямо в ответ на webhook
   function onUpdate(up) {
@@ -454,11 +535,12 @@ ${top}
         meta.admins = (meta.admins || []).concat([me.id]); saveMeta();
         tg('setMyCommands', { scope: { type: 'chat', chat_id }, commands: [
           { command: 'admin', description: 'Админка' }, { command: 'start', description: 'Главное меню' }, { command: 'play', description: 'Играть' },
-          { command: 'top', description: 'Доска почёта' }, { command: 'support', description: 'Поддержка' }] }).catch(() => { });
+          { command: 'help', description: 'Команды админа' }, { command: 'player', description: 'Карточка игрока' }, { command: 'give', description: 'Выдать сигареты' }, { command: 'log', description: 'Журнал' }, { command: 'support', description: 'Поддержка' }] }).catch(() => { });
         return M('👑 Пароль верный, ты админ. Дальше просто пиши /admin, без пароля.\n\n' + adminText(), adminKb);
       }
       return M(adminText(), adminKb);
     }
+    if (me && isAdmin(me.id) && ['/player', '/give', '/rating', '/ban', '/unban', '/log', '/help'].includes(cmd)) return adminCmd(me, cmd, text, M);
     if (cmd === '/unadmin' && me && isAdmin(me.id)) { meta.admins = meta.admins.filter(x => x !== me.id); saveMeta(); return M('Ты больше не админ.'); }
     if (cmd === '/start' && /^fr_/i.test(payload || '') && me) {
       const fid = payload.slice(3), f = users[fid];
