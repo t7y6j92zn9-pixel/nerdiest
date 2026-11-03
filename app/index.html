@@ -185,6 +185,19 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .seg{display:grid;grid-template-columns:1fr 1fr;background:#000a;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px}
 .seg button{border:0;background:none;padding:9px;border-radius:8px;font-size:14px;color:var(--muted)}
 .seg3{grid-template-columns:1fr 1fr 1fr}
+.cnt{display:inline-block;min-width:18px;padding:1px 5px;border-radius:9px;background:#c0261a;color:#fff;font-size:11px;font-weight:800;line-height:16px;text-align:center}
+.navcnt{position:absolute;top:2px;left:calc(50% + 8px)}
+.mal{background:#e9dfc6;color:#2a2219;border-radius:4px 14px 4px 14px;padding:10px 12px;margin-bottom:10px;box-shadow:0 2px 0 #0006;position:relative;transform:rotate(-.4deg)}
+.mal:nth-child(even){transform:rotate(.5deg)}
+.mal.new{box-shadow:0 0 0 2px #e0a33a,0 2px 0 #0006}
+.mal .hd{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#6a5a3a;margin-bottom:4px}
+.mal .tx{white-space:pre-wrap;word-break:break-word;font-size:14px}
+.mal .act{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.mal .act button{border:1px solid #9b8760;background:#d8cba8;color:#2a2219;border-radius:8px;padding:5px 10px;font-size:12px}
+.malform textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid #fff3;background:#0006;color:inherit;font:inherit;padding:10px;box-sizing:border-box;resize:vertical}
+.brighead{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:center}.brighead img{width:78px;height:78px}
+.bmem{display:grid;grid-template-columns:36px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #ffffff14}.bmem img{width:36px;height:36px;border-radius:50%}.bmem small{display:block;color:var(--muted);font-size:11px}
+.bemb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.bemb button{background:#0006;border:1px solid var(--line);border-radius:12px;padding:6px}.bemb button.on{border-color:var(--accent2)}.bemb img{width:100%}
+.btag{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--accent2)}.btag img{width:16px;height:16px}
 .ctabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin:0 0 8px}.ctabs button{border:0;border-radius:8px 8px 0 0;padding:8px 4px;background:#9b8760;color:#2a2219;font-size:13px}.ctabs button.on{background:#c9b58c;font-weight:700}
 .cpane{background:#c9b58c;color:#2a2219;border-radius:4px;padding:14px;box-shadow:inset 0 0 0 2px #9b8760;font-size:13px;min-height:200px}
 .cpane dl{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0}.cpane dt{color:#5a4a2a}.cpane dd{margin:0;font-weight:600}
@@ -464,6 +477,9 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
     </section>
 
     <section class="screen" id="s-friends" hidden>
+      <div class="seg seg3" id="frSeg" hidden><button data-t="fr" class="on">Кореша</button><button data-t="mal">Малявы <span class="cnt" id="malCnt" hidden></span></button><button data-t="brig">Общак <span class="cnt" id="brigCnt" hidden></span></button></div>
+      <div id="malBox" hidden></div><div id="brigBox" hidden></div>
+      <div id="frMain">
       <h2>Кореша</h2>
       <p class="sub">Друзья из Телеграма. Бот пришлёт им маляву с вызовом. <span class="demo">пример</span></p>
       <div class="list" id="friendList"></div>
@@ -471,6 +487,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
       <div class="card empty"><b>Пусто</b>Даже вертухай не пишет. Позови кореша, будет с кем перекинуться.</div>
       <button class="btn sec" style="width:100%;margin-top:12px" id="addFriend">Позвать кореша из Телеграма</button>
       <p class="sub" id="refNote" hidden style="text-align:center;margin-top:8px">Новичок по твоей ссылке сыграет 3 онлайн-партии — вам обоим по 300 сигарет.</p>
+      </div>
     </section>
 
     <section class="screen" id="s-game" hidden>
@@ -503,7 +520,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
   <button data-go="shop"><i style="background-image:url(a/knopki/02.webp)"></i>Барахолка</button>
   <button data-go="play"><i style="background-image:url(a/knopki/01.webp)"></i>Играть</button>
   <button data-go="top"><i style="background-image:url(a/knopki/10.webp)"></i>Рейтинг</button>
-  <button data-go="friends"><i style="background-image:url(a/knopki/03.webp)"></i>Кореша</button>
+  <button data-go="friends" style="position:relative"><i style="background-image:url(a/knopki/03.webp)"></i>Кореша<span class="cnt navcnt" id="navCnt" hidden></span></button>
 </div></nav>
 
 <div class="overlay" id="modal" hidden><div class="modal" id="modalBody"></div></div>
@@ -1980,5 +1997,132 @@ function renderLive() {
 // ---- рефералка: подсказка в «Корешах» ----
 const _renderFriends2 = renderFriends;
 renderFriends = function () { const r = _renderFriends2.apply(this, arguments); if (NET.on && $('refNote')) $('refNote').hidden = false; return r; };
+
+// ================= Этап 3: малявы, подарки, общак =================
+const BRIG_ROLE = { owner: 'создатель', dep: 'заместитель', smot: 'смотрящий', member: 'боец' };
+const emb = k => `${A}gerby/${String(k).padStart(2, '0')}.webp`;
+const ago = t => { const d = (Date.now() - t) / 1000; if (d < 60) return 'только что'; if (d < 3600) return Math.floor(d / 60) + ' мин назад'; if (d < 86400) return Math.floor(d / 3600) + ' ч назад'; return new Date(t).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }); };
+NET.frTab = QS.get('tab') === 'mal' ? 'mal' : 'fr';
+function updBadges() {
+  const me = NET.me || {}, n = me.unread | 0, bi = me.brigInv | 0;
+  const set = (id, v) => { const el = $(id); if (el) { el.hidden = !v; el.textContent = v; } };
+  set('navCnt', n + bi); set('malCnt', n); set('brigCnt', bi);
+}
+const _netMsg3 = netMsg;
+netMsg = async function (m) {
+  switch (m.t) {
+    case 'me': { NET.me = m.me; const r = await _netMsg3(m); updBadges(); if (QS.get('tab') === 'mal' && !NET.tabDone) { NET.tabDone = true; go('friends'); } return r; }
+    case 'mal': { NET.me && (NET.me.unread = (NET.me.unread | 0) + 1); updBadges(); try { SFX.coin(); } catch (e) { }
+      if (screen === 'friends' && NET.frTab === 'mal') nsend({ t: 'mals' }); else malyava(`📩 Малява от ${m.m.fn}`); return; }
+    case 'mals': NET.mals = m; if (screen === 'friends' && NET.frTab === 'mal') renderMal(); return;
+    case 'brig': NET.brigD = m; if (screen === 'friends' && NET.frTab === 'brig') renderBrig(); return;
+    case 'brigTop': NET.brigTop = m.list; if (screen === 'friends' && NET.frTab === 'brig') renderBrig(); return;
+  }
+  return _netMsg3(m);
+};
+const _renderFriends3 = renderFriends;
+renderFriends = function () {
+  if (!NET.on) return _renderFriends3();
+  const seg = $('frSeg'); seg.hidden = false;
+  seg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.t === NET.frTab); b.onclick = () => { NET.frTab = b.dataset.t; renderFriends(); }; });
+  $('frMain').hidden = NET.frTab !== 'fr'; $('malBox').hidden = NET.frTab !== 'mal'; $('brigBox').hidden = NET.frTab !== 'brig';
+  updBadges();
+  if (NET.frTab === 'mal') { nsend({ t: 'mals' }); return renderMal(); }
+  if (NET.frTab === 'brig') { nsend({ t: 'brig' }); nsend({ t: 'brigTop' }); return renderBrig(); }
+  return _renderFriends3();
+};
+// ---- малявы ----
+function renderMal() {
+  const d = NET.mals, box = $('malBox'); if (!d) { box.innerHTML = '<p class="sub" style="text-align:center">Загружаю…</p>'; return; }
+  const tab = NET.malTab || 'in';
+  let h = `<div class="row" style="margin-bottom:10px"><button class="btn hot" id="malNew">Написать маляву</button></div>
+    <div class="seg" style="margin-bottom:10px"><button data-m="in" class="${tab === 'in' ? 'on' : ''}">Входящие</button><button data-m="out" class="${tab === 'out' ? 'on' : ''}">Отправленные</button></div>`;
+  if (tab === 'in') h += d.inbox.length ? d.inbox.map((x, i) => `<div class="mal${x.read ? '' : ' new'}"><div class="hd"><b>${x.from ? esc(x.fn) : 'Система'}</b><span>${ago(x.at)}</span></div><div class="tx">${esc(x.text)}</div>
+      <div class="act">${x.brigInv ? `<button data-bj="${i}">Вступить</button>` : ''}${x.from ? `<button data-re="${i}">Ответить</button>` : ''}${x.from && !x.gift && !x.rep ? `<button data-rp="${i}">Пожаловаться</button>` : ''}${x.rep ? '<span style="font-size:12px;color:#8a1e14">жалоба отправлена</span>' : ''}<button data-del="${i}">Выкинуть</button></div></div>`).join('')
+    : '<div class="card empty"><b>Пусто</b>Никто не пишет. Черкни кому-нибудь первым.</div>';
+  else h += d.sent.length ? d.sent.map(x => `<div class="mal"><div class="hd"><b>→ ${esc(x.tn)}</b><span>${ago(x.at)}</span></div><div class="tx">${esc(x.text)}</div></div>`).join('') : '<div class="card empty"><b>Пусто</b>Ты ещё никому не писал.</div>';
+  h += `<p class="sub" style="text-align:center;margin-top:8px">Написать можно любому: открой его дело в рейтинге или у корешей. Мат заменяется звёздочками.</p>`;
+  box.innerHTML = h;
+  box.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { NET.malTab = b.dataset.m; renderMal(); });
+  $('malNew').onclick = () => pickFriend('Кому малява?', f => writeMal(f.id, f.name));
+  box.querySelectorAll('[data-re]').forEach(b => b.onclick = () => { const x = d.inbox[+b.dataset.re]; writeMal(x.from, x.fn); });
+  box.querySelectorAll('[data-rp]').forEach(b => b.onclick = () => { const x = d.inbox[+b.dataset.rp]; showModal(`<h3>Пожаловаться?</h3><p style="text-align:center">Админ увидит эту маляву от ${esc(x.fn)} и решит, что делать.</p><div class="row"><button class="btn sec" data-close>Отмена</button><button class="btn hot" id="rpYes">Пожаловаться</button></div>`); $('rpYes').onclick = () => { hideModal(); x.rep = 1; nsend({ t: 'malReport', id: x.id }); renderMal(); }; });
+  box.querySelectorAll('[data-del]').forEach(b => b.onclick = () => nsend({ t: 'malDel', id: d.inbox[+b.dataset.del].id }));
+  box.querySelectorAll('[data-bj]').forEach(b => b.onclick = () => { nsend({ t: 'brigJoin', id: d.inbox[+b.dataset.bj].brigInv }); NET.frTab = 'brig'; renderFriends(); });
+}
+function pickFriend(title, cb, filter) {
+  const fr = NET.friends.filter(filter || (() => true));
+  if (!fr.length) return malyava('Сначала добавь корешей');
+  showModal(`<h3>${title}</h3><div style="max-height:55vh;overflow:auto">${fr.map((f, i) => `<div class="li2" data-pk="${i}" style="cursor:pointer"><span class="av"><img data-pf="${i}" alt=""></span><span class="who"><b>${esc(f.name)}</b><span><span class="dot${f.online ? ' on' : ''}"></span>${f.online ? 'в сети' : 'не в сети'}</span></span></div>`).join('')}</div><button class="btn sec" style="width:100%;margin-top:10px" data-close>Отмена</button>`);
+  fr.forEach(async (f, i) => { const el = document.querySelector(`[data-pf="${i}"]`); if (el) el.src = await headURL(f.eq); });
+  document.querySelectorAll('[data-pk]').forEach(el => el.onclick = () => { hideModal(); cb(fr[+el.dataset.pk]); });
+}
+function writeMal(to, name) {
+  showModal(`<h3>Малява для ${esc(name)}</h3><div class="malform"><textarea id="malText" maxlength="300" placeholder="Пиши по делу…"></textarea></div><p class="sub" id="malLeft" style="text-align:right;margin:4px 0 8px">0 / 300</p><div class="row"><button class="btn sec" data-close>Отмена</button><button class="btn hot" id="malSend">Отправить</button></div>`);
+  const t = $('malText'); t.focus(); t.oninput = () => { $('malLeft').textContent = t.value.length + ' / 300'; };
+  $('malSend').onclick = () => { const v = t.value.trim(); if (!v) return malyava('Пустая малява'); hideModal(); nsend({ t: 'mal', to, text: v }); if (NET.frTab === 'mal') setTimeout(() => nsend({ t: 'mals' }), 400); };
+}
+// ---- подарки ----
+function giftTo(f) {
+  const left = NET.me ? NET.me.giftLeft : 500;
+  showModal(`<h3>Подогреть ${esc(f.name)}</h3><p class="sub" style="text-align:center">Сигаретами — до ${left} сегодня (всего 500 в день). Или подари вещь с барахолки.</p>
+    <div class="row" style="gap:6px;flex-wrap:wrap;justify-content:center;margin:6px 0">${[50, 100, 200, 500].map(n => `<button class="btn ghost" data-gc="${n}" ${n > left || n > P.cigs ? 'disabled style="opacity:.4"' : ''}>${n}</button>`).join('')}</div>
+    <div class="malform"><textarea id="giftNote" maxlength="120" placeholder="Пара слов к подарку (можно пусто)" style="min-height:50px"></textarea></div>
+    <div class="row" style="margin-top:8px"><button class="btn sec" data-close>Отмена</button><button class="btn hot" id="giftItem">Подарить вещь</button></div>`);
+  document.querySelectorAll('[data-gc]').forEach(b => b.onclick = () => { const n = +b.dataset.gc, note = $('giftNote').value; hideModal(); nsend({ t: 'gift', to: f.id, cigs: n, text: note }); });
+  $('giftItem').onclick = () => { const note = $('giftNote').value; giftPick(f, note); };
+}
+function giftPick(f, note) {
+  const ok = ITEMS.filter(it => it.price > 0 && !it.rank && !it.ach && !it.stars && it.cat !== 'zvezdy' && it.price <= P.cigs);
+  const groups = {}; ok.forEach(it => { const c = (CATS.find(c => c.id === it.cat) || {}).name || it.cat; (groups[c] = groups[c] || []).push(it); });
+  showModal(`<h3>Какую вещь?</h3><div style="max-height:58vh;overflow:auto">${Object.entries(groups).map(([g, l]) => `<h4 style="margin:10px 0 4px">${g}</h4>` + l.sort((a, b) => a.price - b.price).map(it => `<div data-gi="${it.id}" style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 12px;margin-bottom:6px;border:1px solid var(--line);border-radius:10px;background:#0006"><b style="font-weight:600">${esc(it.name)}</b><span style="white-space:nowrap;color:var(--accent2);font-weight:700">${it.price} 🚬</span></div>`).join('')).join('') || '<p>Не хватает сигарет ни на что</p>'}</div><button class="btn sec" style="width:100%;margin-top:10px" data-close>Отмена</button>`);
+  document.querySelectorAll('[data-gi]').forEach(el => el.onclick = () => { const it = item(el.dataset.gi); showModal(`<h3>Подарить?</h3><p style="text-align:center">«${esc(it.name)}» для ${esc(f.name)} за ${it.price} сигарет.</p><div class="row"><button class="btn sec" data-close>Отмена</button><button class="btn hot" id="giYes">Подарить</button></div>`); $('giYes').onclick = () => { hideModal(); nsend({ t: 'gift', to: f.id, item: it.id, name: it.name, text: note }); }; });
+}
+// кнопки «Малява» и «Подогреть» в деле игрока, бригада в статистике
+const _showCase3 = showCase;
+showCase = async function (x, inGame) {
+  const r = _showCase3(x, inGame);
+  if (NET.on && NET.uid && x && x.net && x.id && x.id !== NET.uid && $('caseVisit')) {
+    const fr = NET.friends.some(f => f.id === x.id);
+    $('caseVisit').insertAdjacentHTML('afterend', `<button class="btn ghost" id="caseMal">Малява</button>${fr ? '<button class="btn ghost" id="caseGift">Подогреть</button>' : ''}`);
+    $('caseMal').onclick = () => writeMal(x.id, x.name); if ($('caseGift')) $('caseGift').onclick = () => giftTo(x);
+  }
+  return r;
+};
+const _fillCase3 = fillCase;
+fillCase = function (m) { _fillCase3(m); const b = m.user && m.user.brig; if (b && $('cpS')) $('cpS').querySelector('dl').insertAdjacentHTML('afterbegin', `<dt>Бригада</dt><dd><span class="btag" style="color:inherit">${b.emblem ? `<img src="${emb(b.emblem)}" alt="">` : ''}${esc(b.name)}</span></dd>`); };
+// ---- общак ----
+function renderBrig() {
+  const box = $('brigBox'), d = NET.brigD; if (!d) { box.innerHTML = '<p class="sub" style="text-align:center">Загружаю…</p>'; return; }
+  const b = d.b, top = NET.brigTop || [];
+  const topHTML = `<h2 style="font-size:24px;margin-top:16px">Бригады</h2>` + (top.length ? top.map((x, i) => `<div class="li2"><span class="n" style="width:22px;text-align:center;font-weight:800">${i + 1}</span><span class="av" style="border-radius:50%">${x.emblem ? `<img src="${emb(x.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(x.name)}</b><span>${x.n} из 15 · рейтинг ${x.rating}${x.bonus ? ' · +5%' : ''}</span></span></div>`).join('') : '<div class="card empty"><b>Пока ни одной</b>Собери первую бригаду.</div>');
+  if (!b) {
+    box.innerHTML = (d.invites && d.invites.length ? `<h2 style="font-size:24px">Зовут в бригаду</h2>` + d.invites.map((v, i) => `<div class="li2"><span class="av" style="border-radius:50%">${v.emblem ? `<img src="${emb(v.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(v.name)}</b><span>зовёт ${esc(v.by)} · ${v.n} из 15</span></span><button class="btn hot" style="padding:8px 10px;font-size:13px" data-bj="${i}">Вступить</button><button class="btn ghost" style="padding:8px 10px;font-size:13px" data-bd="${i}">✕</button></div>`).join('') : '')
+      + `<div class="card" style="text-align:center;padding:16px"><b>Общак</b><p class="sub" style="margin:6px 0 10px">Собери бригаду до 15 человек. В общак все скидываются сигаретами, а создатель тратит их на герб и на +5% к выигрышу для всех.</p><button class="btn hot" id="brigNew">Собрать бригаду · 5000</button></div>` + topHTML;
+    box.querySelectorAll('[data-bj]').forEach(x => x.onclick = () => nsend({ t: 'brigJoin', id: d.invites[+x.dataset.bj].id }));
+    box.querySelectorAll('[data-bd]').forEach(x => x.onclick = () => nsend({ t: 'brigDecline', id: d.invites[+x.dataset.bd].id }));
+    $('brigNew').onclick = () => { if (P.cigs < 5000) return malyava('Нужно 5000 сигарет'); showModal(`<h3>Новая бригада</h3><input id="brigName" maxlength="20" placeholder="Название" style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;border:1px solid #fff3;background:#0006;color:inherit;font:inherit"><p class="sub" style="text-align:center;margin:8px 0">Стоит 5000 сигарет. Название от 3 до 20 букв.</p><div class="row"><button class="btn sec" data-close>Отмена</button><button class="btn hot" id="brigGo">Собрать</button></div>`); $('brigGo').onclick = () => { const n = $('brigName').value.trim(); if (n.length < 3) return malyava('Слишком короткое'); hideModal(); nsend({ t: 'brigCreate', name: n }); }; };
+    return;
+  }
+  const my = b.members.find(x => x.id === NET.uid) || {}, role = my.role, boss = role === 'owner', canInv = role && role !== 'member';
+  const bonus = b.bonus ? `+5% к выигрышу до ${new Date(b.bonus).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}` : 'бонуса нет';
+  box.innerHTML = `<div class="card"><div class="brighead"><img src="${b.emblem ? emb(b.emblem) : A + 'nashivki/01.webp'}" alt=""><div><h2 style="margin:0;font-size:26px">${esc(b.name)}</h2><span class="sub" style="margin:0">${b.members.length} из 15 · ты ${BRIG_ROLE[role] || ''}</span><br><b style="font-size:18px">Общак: ${b.pot}</b><br><span class="sub" style="margin:0">${bonus}</span></div></div>
+    <div class="row" style="margin-top:12px;flex-wrap:wrap;gap:6px"><button class="btn hot" id="bPot">Закинуть в общак</button>${canInv ? '<button class="btn sec" id="bInv">Позвать</button>' : ''}</div>
+    ${boss ? `<div class="row" style="margin-top:6px;gap:6px"><button class="btn ghost" id="bEmb">Герб · 2000</button><button class="btn ghost" id="bBon">+5% на 30 дней · 10000</button></div>` : ''}</div>
+    <h2 style="font-size:24px;margin-top:14px">Состав</h2><div class="card" style="padding:6px 12px">${b.members.sort((a, c) => ['owner', 'dep', 'smot', 'member'].indexOf(a.role) - ['owner', 'dep', 'smot', 'member'].indexOf(c.role) || c.rating - a.rating).map((x, i) => `<div class="bmem" data-bm="${x.id}"><img data-bh="${i}" alt=""><span><b>${esc(x.name)}${x.id === NET.uid ? ' (ты)' : ''}</b><small>${BRIG_ROLE[x.role]} · ${rankOf(x.rating)} · в общак ${x.gave}${x.online ? ' · в сети' : ''}</small></span>${(boss && x.id !== NET.uid) || (role === 'dep' && ['member', 'smot'].includes(x.role)) ? '<button class="btn ghost" style="padding:6px 10px;font-size:12px" data-bx="' + x.id + '">⋯</button>' : ''}</div>`).join('')}</div>
+    <h2 style="font-size:24px;margin-top:14px">Что было</h2><div class="card" style="padding:8px 12px;font-size:13px">${(b.log || []).map(l => `<div style="padding:4px 0;border-bottom:1px solid #ffffff10"><span class="sub" style="margin:0">${ago(l.at)}</span> · ${esc(l.t)}</div>`).join('') || 'пока тихо'}</div>
+    <button class="btn ghost" style="width:100%;margin-top:12px" id="bLeave">Выйти из бригады</button>` + topHTML;
+  b.members.forEach(async (x, i) => { const el = box.querySelector(`[data-bh="${i}"]`); if (el) el.src = await headURL(x.eq); });
+  box.querySelectorAll('.bmem').forEach(el => { el.querySelector('span').style.cursor = 'pointer'; el.querySelector('span').onclick = () => { const x = b.members.find(y => y.id === el.dataset.bm); showCase({ ...netPerson(x), net: true }); }; });
+  $('bPot').onclick = () => { showModal(`<h3>В общак</h3><div class="row" style="gap:6px;flex-wrap:wrap;justify-content:center">${[50, 100, 500, 1000, 5000].map(n => `<button class="btn ghost" data-pp="${n}" ${n > P.cigs ? 'disabled style="opacity:.4"' : ''}>${n}</button>`).join('')}</div><button class="btn sec" style="width:100%;margin-top:10px" data-close>Отмена</button>`); document.querySelectorAll('[data-pp]').forEach(x => x.onclick = () => { hideModal(); nsend({ t: 'brigPot', cigs: +x.dataset.pp }); }); };
+  if ($('bInv')) $('bInv').onclick = () => pickFriend('Кого позвать?', f => nsend({ t: 'brigInvite', to: f.id }), f => !b.members.some(x => x.id === f.id));
+  if ($('bEmb')) $('bEmb').onclick = () => { showModal(`<h3>Герб бригады</h3><div class="bemb">${[1, 2, 3, 4, 5, 6, 7, 8, 9].map(k => `<button data-ek="${k}" class="${b.emblem === k ? 'on' : ''}"><img src="${emb(k)}" alt=""></button>`).join('')}</div><p class="sub" style="text-align:center;margin:8px 0">Новый герб — 2000 из общака</p><button class="btn sec" style="width:100%" data-close>Отмена</button>`); document.querySelectorAll('[data-ek]').forEach(x => x.onclick = () => { hideModal(); nsend({ t: 'brigBuy', what: 'emblem', k: +x.dataset.ek }); }); };
+  if ($('bBon')) $('bBon').onclick = () => { showModal(`<h3>+5% к выигрышу</h3><p style="text-align:center">Все в бригаде получают на 5% больше сигарет за победу онлайн. 30 дней, 10000 из общака.</p><div class="row"><button class="btn sec" data-close>Отмена</button><button class="btn hot" id="bonYes">Взять</button></div>`); $('bonYes').onclick = () => { hideModal(); nsend({ t: 'brigBuy', what: 'bonus' }); }; };
+  box.querySelectorAll('[data-bx]').forEach(x => x.onclick = () => { const id = x.dataset.bx, mem = b.members.find(y => y.id === id);
+    const opts = boss ? [['dep', 'Сделать заместителем'], ['smot', 'Сделать смотрящим'], ['member', 'Сделать бойцом'], ['owner', 'Передать главного'], ['kick', 'Выгнать']] : [['kick', 'Выгнать']];
+    showModal(`<h3>${esc(mem.name)}</h3>${opts.map(([r, t]) => `<button class="btn ${r === 'kick' ? 'ghost' : 'sec'}" style="width:100%;margin-bottom:6px" data-ro="${r}">${t}</button>`).join('')}<button class="btn ghost" style="width:100%" data-close>Отмена</button>`);
+    document.querySelectorAll('[data-ro]').forEach(y => y.onclick = () => { hideModal(); nsend({ t: 'brigRole', id, role: y.dataset.ro }); }); });
+  $('bLeave').onclick = () => { showModal(`<h3>Выйти из бригады?</h3><p style="text-align:center">Твои сигареты в общаке останутся бригаде.${boss ? ' Главным станет заместитель.' : ''}</p><div class="row"><button class="btn sec" data-close>Остаться</button><button class="btn hot" id="lvYes">Выйти</button></div>`); $('lvYes').onclick = () => { hideModal(); nsend({ t: 'brigLeave' }); }; };
+}
 
 </script>

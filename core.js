@@ -47,8 +47,8 @@ function createCore(cfg) {
     u.seen = Date.now(); save(u);
     return u;
   }
-  function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: u.eq, lvl: u.lvl || 1, mars: u.mars || 0, best: u.best || 0, longG: u.longG || 0, shortG: u.shortG || 0, created: u.created, num: String(u.id).replace(/\D/g, '').slice(-4).padStart(4, '0') }; }
-  function meView(u) { return { ...publicUser(u), cigs: u.cigs, owned: u.owned || [], lastDaily: u.lastDaily || 0, botWins: u.botWins || 0, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
+  function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: u.eq, lvl: u.lvl || 1, mars: u.mars || 0, best: u.best || 0, longG: u.longG || 0, shortG: u.shortG || 0, created: u.created, brig: (b => b ? { id: b.id, name: b.name, emblem: b.emblem || 0 } : null)(u.brig && meta.brig && meta.brig[u.brig]), num: String(u.id).replace(/\D/g, '').slice(-4).padStart(4, '0') }; }
+  function meView(u) { return { ...publicUser(u), unread: unread(u), brigInv: (u.brigInv || []).length, giftLeft: u.giftDay === today() ? 500 - (u.giftSum | 0) : 500, cigs: u.cigs, owned: u.owned || [], lastDaily: u.lastDaily || 0, botWins: u.botWins || 0, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
   // внешний вид и счёт игрока присылает само приложение (сырой тестовый вариант)
   // кошелёк живёт на сервере. С телефона принимается только внешний вид (и только из того, что куплено).
   // Один раз, при переходе со старой версии, сервер забирает с телефона сигареты, рейтинг и покупки.
@@ -152,6 +152,36 @@ function createCore(cfg) {
     }
   }
 
+
+  // ================= Этап 3: малявы, подарки, общак (бригады) =================
+  const MAT = /(х[уy][йеёяию]|п[иi]зд|[её]б[аеиуо]|ебл|бл[яd]|сук[аио]|муд[аио]к|п[иеё]д[оа]р|залуп|г[аo]нд[оo]н|шлюх|\bхер|д[оa]лб[оа][её]б|уеб|еб[ао]н)/i;
+  function clean(t) { return String(t || '').replace(/[\u0000-\u001f]/g, ' ').split(/(\s+)/).map(w => MAT.test(w) ? w[0] + '***' : w).join('').trim(); }
+  const dayKey = () => today();
+  function pushMal(to, m) {
+    const r = users[to]; if (!r) return;
+    m.id = m.id || crypto.randomBytes(5).toString('hex'); m.at = m.at || Date.now();
+    r.inbox = [m].concat(r.inbox || []).slice(0, 60); save(r);
+    if (online.has(to)) { send(to, { t: 'mal', m }); sendMe(to); }
+    else if (BOT_TOKEN && !String(to).startsWith('dev') && m.from && (r.malTg || 0) < Date.now() - 600e3) {   // не чаще раза в 10 минут
+      r.malTg = Date.now(); tg('sendMessage', { chat_id: to, text: `📩 Тебе малява от ${m.fn}${m.gift ? ' (подарок 🎁)' : ''}:\n\n${m.text.slice(0, 300)}`, reply_markup: { inline_keyboard: [[{ text: 'Открыть малявы', web_app: { url: appUrl('?tab=mal') } }]] } }).catch(() => { });
+    }
+  }
+  function unread(u) { return (u.inbox || []).filter(x => !x.read).length; }
+  // --- бригады ---
+  if (!meta.brig) meta.brig = {};
+  const BRIG = { max: 15, cost: 5000, emblem: 2000, bonus: 10000, bonusDays: 30, emblems: 9 };
+  function brigOf(u) { const b = u && u.brig && meta.brig[u.brig]; if (b && !b.members.includes(u.id)) { delete u.brig; return null; } return b || null; }
+  function brigRole(b, uid) { return !b ? '' : b.owner === uid ? 'owner' : (b.deps || []).includes(uid) ? 'dep' : (b.smot || []).includes(uid) ? 'smot' : 'member'; }
+  function brigView(b, full) {
+    const v = { id: b.id, name: b.name, emblem: b.emblem || 0, n: b.members.length, pot: b.pot | 0, bonus: (b.bonusTill || 0) > Date.now() ? b.bonusTill : 0, owner: b.owner, rating: b.members.reduce((a, x) => a + ((users[x] || {}).rating | 0), 0) };
+    if (full) { v.members = b.members.map(x => users[x]).filter(Boolean).map(x => ({ ...publicUser(x), online: online.has(x.id), role: brigRole(b, x.id), gave: (b.gave || {})[x.id] | 0 })); v.log = (b.log || []).slice(0, 20); v.deps = b.deps || []; v.smot = b.smot || []; }
+    return v;
+  }
+  function brigLog(b, t) { b.log = [{ at: Date.now(), t }].concat(b.log || []).slice(0, 40); }
+  function brigSend(b, msg) { b.members.forEach(x => send(x, msg)); }
+  function brigUpdate(b) { saveMeta(); b.members.forEach(x => { if (online.has(x)) { send(x, { t: 'brig', b: brigView(b, true) }); sendMe(x); } }); }
+  function brigBonus(u) { const b = brigOf(u); return b && (b.bonusTill || 0) > Date.now() ? 0.05 : 0; }
+
   function handle(uid, m) {
     const u = users[uid];
     switch (m.t) {
@@ -175,6 +205,113 @@ function createCore(cfg) {
       }
       case 'me': return sendMe(uid);
       case 'ping': return send(uid, { t: 'pong' });
+      // ---------- малявы ----------
+      case 'mals': (u.inbox || []).forEach(x => { x.read = 1; }); save(u); sendMe(uid); return send(uid, { t: 'mals', inbox: u.inbox || [], sent: u.sent || [] });
+      case 'mal': {
+        const to = String(m.to || ''), r = users[to]; if (!r || to === uid) return err(uid, 'Некому отправить');
+        if (u.muted && u.muted > Date.now()) return err(uid, 'Тебе пока запрещено писать малявы');
+        let text = clean(String(m.text || '').slice(0, 300)); if (text.length < 1) return err(uid, 'Пустая малява');
+        const now = Date.now(); if (now - (u.malAt || 0) < 4000) return err(uid, 'Не так быстро'); u.malAt = now;
+        if (u.malDay !== dayKey()) { u.malDay = dayKey(); u.malN = 0; } if (++u.malN > 150) return err(uid, 'На сегодня хватит маляв');
+        const msg = { from: uid, fn: u.name, text };
+        pushMal(to, msg);
+        u.sent = [{ id: msg.id, to, tn: r.name, text, at: msg.at }].concat(u.sent || []).slice(0, 40); save(u);
+        return send(uid, { t: 'toast', text: 'Малява ушла' });
+      }
+      case 'malReport': {
+        const x = (u.inbox || []).find(y => y.id === m.id); if (!x || !x.from || x.rep) return;
+        x.rep = 1; save(u);
+        meta.reports = [{ at: Date.now(), by: uid, bn: u.name, about: x.from, an: x.fn, text: x.text }].concat(meta.reports || []).slice(0, 200); saveMeta();
+        (meta.admins || []).forEach(a => tg('sendMessage', { chat_id: a, text: `🚨 Жалоба на маляву\nОт: ${u.name} (id ${uid})\nНа: ${x.fn} (id ${x.from})\n\n«${x.text}»\n\nЗаткнуть на сутки: /mute ${x.from}\nЗабанить: /ban ${x.from}` }).catch(() => { }));
+        return send(uid, { t: 'toast', text: 'Жалоба ушла админам' });
+      }
+      case 'malDel': u.inbox = (u.inbox || []).filter(y => y.id !== m.id); save(u); return send(uid, { t: 'mals', inbox: u.inbox, sent: u.sent || [] });
+      // ---------- подарки ----------
+      case 'gift': {
+        const to = String(m.to || ''), r = users[to]; if (!r || to === uid) return err(uid, 'Некому дарить');
+        if (!u.friends.includes(to)) return err(uid, 'Дарить можно только корешам');
+        const note = clean(String(m.text || '').slice(0, 120));
+        if (m.item) {
+          const it = ITEMS[m.item]; if (!it || !it.price || it.rank || it.ach) return err(uid, 'Это нельзя подарить');
+          if ((r.owned || []).includes(m.item)) return err(uid, 'У кореша это уже есть');
+          if (u.cigs < it.price) return err(uid, 'Не хватает сигарет');
+          u.cigs -= it.price; r.owned = (r.owned || []).concat([m.item]); save(u); save(r);
+          pushMal(to, { from: uid, fn: u.name, gift: { item: m.item }, text: `🎁 Подарил тебе: ${m.name ? String(m.name).slice(0, 40) : 'вещь'}. Уже лежит у тебя в барахолке.${note ? '\n' + note : ''}` });
+          sendMe(uid); sendMe(to); return send(uid, { t: 'toast', text: 'Подарок ушёл' });
+        }
+        const n = Math.floor(+m.cigs || 0); if (n < 10) return err(uid, 'Минимум 10 сигарет');
+        if (u.giftDay !== dayKey()) { u.giftDay = dayKey(); u.giftSum = 0; }
+        if (u.giftSum + n > 500) return err(uid, `Сегодня можно подогреть ещё на ${500 - u.giftSum} сигарет`);
+        if (u.cigs < n) return err(uid, 'Не хватает сигарет');
+        u.cigs -= n; u.giftSum += n; r.cigs += n; save(u); save(r);
+        pushMal(to, { from: uid, fn: u.name, gift: { cigs: n }, text: `🎁 Подогрел тебя: ${n} сигарет.${note ? '\n' + note : ''}` });
+        sendMe(uid); sendMe(to); return send(uid, { t: 'toast', text: `Подогрел на ${n}` });
+      }
+      // ---------- общак ----------
+      case 'brig': { const b = brigOf(u); return send(uid, { t: 'brig', b: b ? brigView(b, true) : null, invites: (u.brigInv || []).filter(i => meta.brig[i.id]).map(i => ({ ...i, ...brigView(meta.brig[i.id]) })) }); }
+      case 'brigTop': return send(uid, { t: 'brigTop', list: Object.values(meta.brig).map(b => brigView(b)).sort((a, b) => b.rating - a.rating || b.pot - a.pot).slice(0, 30) });
+      case 'brigCreate': {
+        if (brigOf(u)) return err(uid, 'Ты уже в бригаде');
+        const name = clean(String(m.name || '').replace(/\s+/g, ' ').slice(0, 20)).trim();
+        if (name.length < 3 || /\*/.test(name)) return err(uid, 'Название от 3 до 20 букв, без мата');
+        if (Object.values(meta.brig).some(b => b.name.toLowerCase() === name.toLowerCase())) return err(uid, 'Такая бригада уже есть');
+        if (u.cigs < BRIG.cost) return err(uid, `Нужно ${BRIG.cost} сигарет`);
+        u.cigs -= BRIG.cost; const id = crypto.randomBytes(4).toString('hex');
+        const b = meta.brig[id] = { id, name, owner: uid, deps: [], smot: [], members: [uid], pot: 0, gave: {}, emblem: 0, created: Date.now(), log: [] };
+        brigLog(b, `${u.name} собрал бригаду`); u.brig = id; u.brigInv = []; save(u); brigUpdate(b); return sendMe(uid);
+      }
+      case 'brigInvite': {
+        const b = brigOf(u); if (!b || brigRole(b, uid) === 'member') return err(uid, 'Звать могут создатель, заместитель и смотрящий');
+        const to = String(m.to || ''), r = users[to]; if (!r) return;
+        if (brigOf(r)) return err(uid, `${r.name} уже в бригаде`);
+        if (b.members.length >= BRIG.max) return err(uid, `В бригаде максимум ${BRIG.max} человек`);
+        r.brigInv = [{ id: b.id, by: u.name, at: Date.now() }].concat((r.brigInv || []).filter(i => i.id !== b.id)).slice(0, 10); save(r);
+        pushMal(to, { from: uid, fn: u.name, text: `🤝 Зову тебя в бригаду «${b.name}». Принять можно во вкладке «Кореша» → «Общак».`, brigInv: b.id });
+        return send(uid, { t: 'toast', text: 'Приглашение ушло' });
+      }
+      case 'brigJoin': {
+        if (brigOf(u)) return err(uid, 'Ты уже в бригаде');
+        const b = meta.brig[m.id]; if (!b || !(u.brigInv || []).some(i => i.id === m.id)) return err(uid, 'Приглашение устарело');
+        if (b.members.length >= BRIG.max) return err(uid, 'Бригада уже полная');
+        b.members.push(uid); u.brig = b.id; u.brigInv = []; save(u); brigLog(b, `${u.name} вступил в бригаду`); brigSend(b, { t: 'toast', text: `${u.name} теперь в бригаде` }); brigUpdate(b); return;
+      }
+      case 'brigDecline': u.brigInv = (u.brigInv || []).filter(i => i.id !== m.id); save(u); return handle(uid, { t: 'brig' });
+      case 'brigLeave': {
+        const b = brigOf(u); if (!b) return;
+        b.members = b.members.filter(x => x !== uid); b.deps = (b.deps || []).filter(x => x !== uid); b.smot = (b.smot || []).filter(x => x !== uid); delete u.brig; save(u);
+        if (!b.members.length) { delete meta.brig[b.id]; saveMeta(); return handle(uid, { t: 'brig' }); }
+        if (b.owner === uid) { b.owner = (b.deps[0] || b.members[0]); b.deps = b.deps.filter(x => x !== b.owner); brigLog(b, `${u.name} ушёл, главный теперь ${users[b.owner].name}`); }
+        else brigLog(b, `${u.name} ушёл из бригады`);
+        brigUpdate(b); return handle(uid, { t: 'brig' });
+      }
+      case 'brigRole': {   // role: dep | smot | member | kick
+        const b = brigOf(u); if (!b) return; const me = brigRole(b, uid), x = String(m.id || ''), xr = brigRole(b, x);
+        if (!b.members.includes(x) || x === uid) return;
+        if (m.role === 'kick') {
+          if (!(me === 'owner' || (me === 'dep' && (xr === 'member' || xr === 'smot')))) return err(uid, 'Нет прав');
+          b.members = b.members.filter(y => y !== x); b.deps = b.deps.filter(y => y !== x); b.smot = b.smot.filter(y => y !== x); if (users[x]) { delete users[x].brig; save(users[x]); send(x, { t: 'toast', text: `Тебя выгнали из бригады «${b.name}»` }); send(x, { t: 'brig', b: null, invites: [] }); }
+          brigLog(b, `${u.name} выгнал ${(users[x] || {}).name}`); return brigUpdate(b);
+        }
+        if (me !== 'owner') return err(uid, 'Роли раздаёт только создатель');
+        b.deps = b.deps.filter(y => y !== x); b.smot = b.smot.filter(y => y !== x);
+        if (m.role === 'dep') b.deps.push(x); if (m.role === 'smot') b.smot.push(x);
+        if (m.role === 'owner') { b.deps.push(uid); b.owner = x; }
+        const RN = { dep: 'заместитель', smot: 'смотрящий', member: 'боец', owner: 'создатель' };
+        brigLog(b, `${(users[x] || {}).name} теперь ${RN[m.role] || 'боец'}`); return brigUpdate(b);
+      }
+      case 'brigPot': {
+        const b = brigOf(u); if (!b) return; const n = Math.floor(+m.cigs || 0);
+        if (n < 10) return err(uid, 'Минимум 10 сигарет'); if (u.cigs < n) return err(uid, 'Не хватает сигарет');
+        u.cigs -= n; b.pot = (b.pot | 0) + n; b.gave = b.gave || {}; b.gave[uid] = (b.gave[uid] | 0) + n; save(u);
+        brigLog(b, `${u.name} закинул в общак ${n}`); brigUpdate(b); return;
+      }
+      case 'brigBuy': {   // what: emblem (k) | bonus
+        const b = brigOf(u); if (!b) return; if (brigRole(b, uid) !== 'owner') return err(uid, 'Тратить общак может только создатель');
+        if (m.what === 'emblem') { const k = Math.floor(+m.k); if (!(k >= 1 && k <= BRIG.emblems)) return; if (b.pot < BRIG.emblem) return err(uid, `В общаке нужно ${BRIG.emblem}`); b.pot -= BRIG.emblem; b.emblem = k; brigLog(b, `${u.name} поставил новый герб`); return brigUpdate(b); }
+        if (m.what === 'bonus') { if (b.pot < BRIG.bonus) return err(uid, `В общаке нужно ${BRIG.bonus}`); b.pot -= BRIG.bonus; b.bonusTill = Math.max(Date.now(), b.bonusTill || 0) + BRIG.bonusDays * 864e5; brigLog(b, `${u.name} взял +5% к выигрышу на ${BRIG.bonusDays} дней`); return brigUpdate(b); }
+        return;
+      }
+
       case 'watch': {
         const g = games.get(userGame.get(String(m.id))); if (!g || g.over) return err(uid, 'Эта партия уже закончилась');
         if (g.uids.includes(uid)) return;
@@ -393,7 +530,8 @@ function createCore(cfg) {
     if (g.over) return;
     const l = 1 - w, res = { winner: w, mult, reason, at: Date.now() };
     const uw = users[g.uids[w]], ul = users[g.uids[l]];
-    uw.cigs += g.stake * 2 + C.ECON.onlineWin * mult;
+    const bon = Math.round((g.stake + C.ECON.onlineWin * mult) * brigBonus(uw));
+    uw.cigs += g.stake * 2 + C.ECON.onlineWin * mult + bon; res.bon = bon;
     uw.rating += C.RATING.win[mult];
     ul.rating = Math.max(0, ul.rating + (reason === 'resign' ? C.RATING.resign : C.RATING.loss[mult]));
     uw.wins++; ul.losses++;
@@ -534,6 +672,7 @@ ${top}
 /give кто 500 — выдать сигареты (минус — забрать: /give кто -100)
 /rating кто 1200 — поставить рейтинг
 /ban кто причина — закрыть доступ, /unban кто — открыть
+/mute кто — запрет маляв на сутки, /reports — жалобы на малявы
 /log — журнал выдач и банов
 
 «кто» — @ник, id или имя игрока; «я» — ты сам.`;
@@ -559,6 +698,7 @@ ${top}
   function adminCmd(me, cmd, text, M) {
     const parts = text.split(/\s+/).slice(1);
     if (cmd === '/help') return M(ADMIN_HELP);
+    if (cmd === '/reports') { const l = (meta.reports || []).slice(0, 10); return M(l.length ? '🚨 Последние жалобы:\n\n' + l.map(x => `${dt(x.at)} ${x.bn} → на ${x.an} (id ${x.about}): «${x.text.slice(0, 80)}»`).join('\n\n') + '\n\n/mute id — запрет маляв на сутки' : 'Жалоб нет 👌'); }
     if (cmd === '/log') { const l = (meta.alog || []).slice(-20).reverse(); return M(l.length ? '📒 Журнал:\n\n' + l.map(x => `${dt(x.at)} ${users[x.by] ? users[x.by].name : x.by}: ${x.text}`).join('\n') : '📒 Журнал пуст'); }
     // кто может быть из нескольких слов: число в конце — сумма
     let num = null, who = parts.join(' ');
@@ -568,6 +708,7 @@ ${top}
     const u = findUser(who, me);
     if (!u) return M('Не нашёл игрока «' + who + '». Можно @ник, id или имя.');
     if (cmd === '/player') return M(card(u));
+    if (cmd === '/mute') { u.muted = Date.now() + 864e5; save(u); addLog(me.id, `запрет маляв на сутки: ${u.name}`); return M(`🤐 ${u.name} не сможет писать малявы сутки`); }
     if (cmd === '/give') { u.cigs = Math.max(0, u.cigs + num); save(u); addLog(me.id, `${num >= 0 ? 'выдал' : 'забрал'} ${Math.abs(num)} сиг. → ${u.name} (стало ${u.cigs})`); sendMe(u.id); send(u.id, { t: 'toast', text: num >= 0 ? `🎁 Тебе подогнали ${num} сигарет` : `Списано ${-num} сигарет` }); return M(`✅ ${u.name}: теперь ${u.cigs} сигарет`); }
     if (cmd === '/rating') { const old = u.rating; u.rating = Math.max(0, num); save(u); addLog(me.id, `рейтинг ${u.name}: ${old} → ${u.rating}`); sendMe(u.id); return M(`✅ ${u.name}: рейтинг ${u.rating} (${C.rankOf(u.rating)})`); }
     if (cmd === '/ban') { if (u.id === me.id) return M('Себя банить не надо 🙂'); u.banned = Date.now(); u.banReason = reason; save(u); addLog(me.id, `бан ${u.name}${reason ? ': ' + reason : ''}`); const sk = online.get(u.id); if (sk) { try { sk.send(JSON.stringify({ t: 'err', text: 'Доступ закрыт администратором', fatal: true })); sk.close(); } catch (e) { } } return M(`⛔ ${u.name} забанен`); }
@@ -641,7 +782,7 @@ ${top}
       }
       return M(adminText(), adminKb);
     }
-    if (me && isAdmin(me.id) && ['/player', '/give', '/rating', '/ban', '/unban', '/log', '/help'].includes(cmd)) return adminCmd(me, cmd, text, M);
+    if (me && isAdmin(me.id) && ['/player', '/give', '/rating', '/ban', '/unban', '/log', '/help', '/mute', '/reports'].includes(cmd)) return adminCmd(me, cmd, text, M);
     if (cmd === '/unadmin' && me && isAdmin(me.id)) { meta.admins = meta.admins.filter(x => x !== me.id); saveMeta(); return M('Ты больше не админ.'); }
     if (cmd === '/start' && /^fr_/i.test(payload || '') && me) {
       const fid = payload.slice(3), f = users[fid];
