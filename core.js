@@ -34,6 +34,8 @@ function createCore(cfg) {
   const today = () => new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); // по Москве
   const dirty = new Set(); let saveTimer = null;
   function save(u) { if (u) dirty.add(u.id); if (saveTimer) return; saveTimer = setTimeout(() => { saveTimer = null; const ids = [...dirty]; dirty.clear(); ids.forEach(id => users[id] && cfg.saveUser && cfg.saveUser(users[id])); }, 1000); }
+  // сервер перезапустился посреди партии (обновление) — партия пропала, ставку возвращаем
+  for (const u of Object.values(users)) if (u && u.hold) { u.cigs = (u.cigs || 0) + (u.hold.s | 0); u.refund = u.hold.s | 0; delete u.hold; save(u); }
   let botUsername = (cfg.BOT_USERNAME || '').replace(/^@/, '').trim();
 
   // ---------- игроки ----------
@@ -128,6 +130,8 @@ function createCore(cfg) {
       applyProf(u, m.prof);
       sendMe(uid);
       const gid = userGame.get(uid);
+      if (!gid || !games.has(gid)) send(uid, { t: 'nogame', refund: u.refund || 0 });
+      if (u.refund) { delete u.refund; save(u); }
       if (gid && games.has(gid)) { const g = games.get(gid); g.away[g.uids.indexOf(uid)] = 0; g.resync = true; sendGame(g); g.resync = false; }
       const code = String(m.room || start || '').replace(/^room_?/i, '').toUpperCase();
       if (code && !gid) joinRoom(uid, code);
@@ -264,7 +268,7 @@ function createCore(cfg) {
     meta.gamesTotal = (meta.gamesTotal || 0) + 1; if (meta.day !== today()) { meta.day = today(); meta.gamesDay = 0; } meta.gamesDay = (meta.gamesDay || 0) + 1; saveMeta();
     let a, b; do { a = r6(); b = r6(); } while (a === b);
     g.opening = [a, b]; g.turn = a > b ? 0 : 1;
-    if (stake) uids.forEach(x => { users[x].cigs -= stake; });
+    if (stake) uids.forEach(x => { users[x].cigs -= stake; users[x].hold = { g: g.id, s: stake }; });
     addFriends(uids[0], uids[1]);
     uids.forEach(x => save(users[x]));
     games.set(g.id, g);
@@ -355,6 +359,7 @@ function createCore(cfg) {
     if (mult > 1) uw.mars = (uw.mars || 0) + 1;
     uw.streak = (uw.streak || 0) + 1; uw.best = Math.max(uw.best || 0, uw.streak); ul.streak = 0;
     const vk = g.variant === 'short' ? 'shortG' : 'longG'; uw[vk] = (uw[vk] || 0) + 1; ul[vk] = (ul[vk] || 0) + 1;
+    delete uw.hold; delete ul.hold;
     g.over = res; g.phase = 'over'; g.deadline = 0;
     save(uw); save(ul);
     sendGame(g);
@@ -393,6 +398,7 @@ function createCore(cfg) {
     return '🏆 Доска почёта\n\n' + all.map((u, i) => `${i + 1}. ${u.name} — ${u.rating} (${C.rankOf(u.rating)}), побед: ${u.wins}`).join('\n');
   }
   function inviteFriend(u, fid, room) {
+    if (online.has(fid) && !userGame.has(fid)) { send(fid, { t: 'invite', code: room.code, from: u.name, variant: room.variant, stake: room.stake }); }   // кореш уже в игре: зовём прямо внутри (и на всякий случай ещё сообщением в боте)
     if (!BOT_TOKEN || !WEBAPP_URL || fid.startsWith('dev')) return;
     tg('sendMessage', {
       chat_id: fid,

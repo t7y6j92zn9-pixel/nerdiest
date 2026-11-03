@@ -861,12 +861,14 @@ const BOARDS = [
   ['Красные лаковые',2200,'nardy_zakrytye/05','nardy_otkrytye/05',{t:['#5c0d0a','#9e2a1e','#1f0c08','#ecd099','#00000018']}],['Чёрные с короной',0,'nardy_zakrytye/06','nardy_otkrytye/06',{rank:'Вор в законе',t:['#0f0d0c','#2e2825','#c9a23e','#8a7e72','#ffffff08',1]}],
   ['«По понятиям»',0,'nardy/ponyatiya_z','nardy/ponyatiya_o',{rank:'Вор',t:['#33241a','#6b5238','#b0302a','#e8d6ae','#0000001a',1]}],['«С иконой»',0,'nardy/ikona_z','nardy/ikona_o',{ach:'beads5',t:['#24150c','#7a5532','#d6ab4c','#3a2212','#0000001c',1]}],
   ['Из спичек',1200,'nardy_zakrytye/07','nardy_otkrytye/07',{t:['#b98a4e','#e9d3a2','#6b4020','#b03a2a','#a0703a22']}],['С драконом',3500,'nardy_zakrytye/08','nardy_otkrytye/08',{t:['#0f0c0b','#231c18','#c9a23e','#a5231b','#ffffff08',1]}],
-  ['Малахитовые',5000,'nardy_zakrytye/09','nardy_otkrytye/09',{t:['#0d4a35','#1f7a58','#d6ab4c','#efe6d0','#00000022',1]}],['Лагерные',2000,'nardy_zakrytye/10','nardy_otkrytye/10',{t:['#3a3836','#5b5753','#2a2826','#d8d0c0','#00000022']}]];
+  ['Малахитовые',5000,'nardy_zakrytye/09','nardy_otkrytye/09',{t:['#0d4a35','#1f7a58','#d6ab4c','#efe6d0','#00000022',1]}],['Лагерные',2000,'nardy_zakrytye/10','nardy_otkrytye/10',{t:['#3a3836','#5b5753','#2a2826','#d8d0c0','#00000022']}],
+  ['Шахматные',2500,'nardy_zakrytye/11','nardy_zakrytye/11',{t:['#141210','#d9b98a','#2a1a10','#e8d0a0','#00000018',1]}],['Козырные',3000,'nardy_zakrytye/12','nardy_zakrytye/12',{t:['#4a0c0c','#8e1f1a','#d6ab4c','#f0e2c0','#0000001a',1]}],
+  ['Кожаные с волком',1800,'nardy_zakrytye/13','nardy_zakrytye/13',{t:['#4a2a16','#8a5a34','#2a160a','#e3c79a','#00000018']}],['Перламутровые',6000,'nardy_zakrytye/14','nardy_zakrytye/14',{t:['#0c0b0a','#2a2622','#e8e4dc','#8a8478','#ffffff10',1]}]];
 BOARDS.forEach(([n,p,z,o,l],i)=>add({id:'d_'+i, cat:'nardy', sub:'nardy', slot:'board', name:n, price:p, img:z+'.webp', open:o+'.webp', ...(l||{})}));
 // шашки и кубики
-[['Обычные',0,null,null],['Хлебные',150,'01','02'],['Пуговицы',250,'03','04'],['Пробки',300,'05','06'],['Резное дерево',700,'07','08'],['Кость',900,'09','10'],['Янтарь',1500,'11','12'],['Мрамор',2000,'15','13'],['Монеты со звездой',3000,'17','18',{rank:'Положенец'}]]
+[['Обычные',0,null,null],['Хлебные',150,'01','02'],['Пуговицы',250,'03','04'],['Пробки',300,'05','06'],['Резное дерево',700,'07','08'],['Кость',900,'09','10'],['Янтарь',1500,'11','12'],['Мрамор',2000,'15','13'],['Монеты со звездой',3000,'17','18',{rank:'Положенец'}],['Костяная роза',1800,'29','30'],['Монеты СССР',2500,'31','32'],['Мрамор и малахит',3500,'33','34']]
   .forEach(([n,p,w,k,l],i)=>add({id:'s_'+i, cat:'nardy', sub:'shashki', slot:'checkers', name:n, price:p, img:w?`shashki_kubiki/${w}.webp`:null, w, k, ...(l||{})}));
-[['Обычные',0,null,'#fbf7ef','#2a1d14'],['Хлебные',150,'19','#dcb27a','#5a3416'],['Костяные',400,'21','#efe8d6','#3a2a1c'],['Деревянные',600,'23','#7a4b2a','#f0dcb4'],['Янтарные',1200,'25','#d9802a','#4a1c06'],['Слоновая кость',2000,'27','#f1e2b2','#7a5a1c']]
+[['Обычные',0,null,'#fbf7ef','#2a1d14'],['Хлебные',150,'19','#dcb27a','#5a3416'],['Костяные',400,'21','#efe8d6','#3a2a1c'],['Деревянные',600,'23','#7a4b2a','#f0dcb4'],['Янтарные',1200,'25','#d9802a','#4a1c06'],['Слоновая кость',2000,'27','#f1e2b2','#7a5a1c'],['Резные деревянные',500,'37','#8a5a34','#1a0c06'],['Стеклянные',1000,'36','#e8eef2','#c0201a'],['Оникс с золотом',1500,'35','#141414','#d6ab4c']]
   .forEach(([n,p,k,c1,c2],i)=>add({id:'k_'+i, cat:'nardy', sub:'kubiki', slot:'dice', name:n, price:p, img:k?`shashki_kubiki/${k}.webp`:null, c1, c2}));
 // хата
 [['Голяк',0],['Подшаманил',1500],['С телевизором',4000],['Ковёр и кровать',9000],['Блатная хата',20000,{rank:'Вор'}],['Барак',2500],['Качалка',6000],['Тёплая зимняя',3500],['Кабинет пахана',30000,{rank:'Положенец'}],['Золотая хата',45000,{rank:'Вор'}],['Кавказская',25000,{rank:'Блатной'}]]
@@ -921,12 +923,13 @@ const LAMPS = {1:[480,40],2:[240,45],3:[480,60],4:[520,415],5:[700,140],6:[800,7
 const STOL = {"1": [177, 818], "2": [193, 818], "3": [197, 803], "4": [178, 791], "5": [187, 821], "6": [187, 816], "7": [203, 791], "8": [181, 818], "9": [194, 809], "10": [191, 811], "11": [200, 816]};
 const STOL_DY = {1:0,2:-11,3:-26,4:-28,5:-12,6:-12,7:-32,8:-12,9:-12,10:-12,11:-12};
 const LAY = {"h1":[409,116],"h2":[424,122],"h3":[407,124],"h4":[429,110],"h5":[364,106],"h6":[404,99],"h7":[411,123],"h8":[404,105],"h9":[419,123],"n1":[398,296],"n2":[390,286],"n3":[392,262],"n4":[391,316],"n5":[398,273],"n6":[394,262],"n7":[391,262],"w1":[510,524],"r1":[162,616],"w2":[543,523],"r2":[162,616],"w3":[521,529],"r3":[162,616],"w4":[511,523],"r4":[162,616],"cig":[151,580],"m0":[548,756],"a1":[253,852],"b1":[465,630],"d0":[246,755],"m1":[549,759],"c1":[478,849],"a2":[248,851],"b2":[465,630],"d1":[225,754],"m2":[562,733],"c2":[467,848],"a3":[265,843],"b3":[465,630],"d2":[239,755],"m3":[549,758],"c3":[479,863],"a4":[238,861],"b4":[465,630],"d3":[241,770],"m4":[557,734],"c4":[450,855],"b5":[465,630],"d4":[255,767],"c5":[453,854],"b6":[465,630],"d5":[237,766],"c0":[443,861],"b7":[465,630],"d6":[235,758],"d7":[241,741]};
-Object.assign(LAY,{"g1":[430,220],"g2":[428,204],"g3":[408,173],"g4":[415,173],"g5":[410,179],"br1":[142,540],"br2":[143,542],"br3":[144,543],"br4":[142,542],"br5":[144,532],"sm1":[203,498],"sm2":[100,603],"sm3":[100,603],"sm4":[222,499],"d8":[229,779],"d9":[239,777],"d10":[244,766],"d11":[205,815]});
+Object.assign(LAY,{"g1":[430,220],"g2":[428,204],"g3":[408,173],"g4":[415,173],"g5":[410,179],"br1":[142,540],"br2":[143,542],"br3":[144,543],"br4":[142,542],"br5":[144,532],"sm1":[203,498],"sm2":[100,603],"sm3":[100,603],"sm4":[222,499],"d8":[225,754],"d9":[225,754],"d10":[225,754],"d11":[225,754],"d12":[225,754],"d13":[225,754],"d14":[225,754],"d15":[225,754]});
 // где на стене висит вещь (в каждой хате своё свободное место), где сидит питомец и где еда на столе
 const WALLPOS = {1:[255,175,150],2:[262,215,140],3:[262,175,115],4:[255,200,130],5:[715,118,115],6:[255,210,150],7:[250,330,140],8:[690,250,130],9:[225,105,120],10:[62,345,95],11:[680,115,120]};
 const PETW = [0,150,190,120,135,115,95,125,120];
 const PETPOS = {cx:795, bot:1166};
-const FOODPOS = {cx:620, bot:934};
+const FOODPOS = {cx:575, bot:934};
+const PACK_DX = -150;   // курево левее, чтобы справа влезала еда
 const FOODW = [0,56,88,62,84,76,90,60,78]; // ширина каждой еды, чтобы по размеру совпадала с кружкой и пачкой
 async function drawWall(x, eq, L){ const it=eq.wall&&item(eq.wall); if(!it||!it.k) return; const im=await img(it.img); const p=WALLPOS[L]||WALLPOS[1]; if(!im) return;
   let w=p[2], h=w*im.height/im.width; if(h>p[2]*1.25){ h=p[2]*1.25; w=h*im.width/im.height; }
@@ -986,9 +989,9 @@ async function composeHero(eq, opt){
   // стол: каждая вещь нарисована прямо на этом столе, с тенью
   const lv=(item(eq.level||'l_1')||{}).lvl||1, tdy=STOL_DY[lv]||0;
   { const tp=STOL[lv], ti=tp&&await img(`stol/${lv}.webp`); if(ti) x.drawImage(ti,tp[0],tp[1]); }
-  const T = async (id) => { const it=item(id); if(!it||!it.img) return; const key=id.replace('_',''), p=LAY[key]; if(!p) return; const im=await img(`nadeto/${key}.webp`); if(!im) return;
-    if (dust(id)) x.filter='grayscale(.7) brightness(.8) contrast(.9)'; x.drawImage(im,p[0],p[1]+tdy); x.filter='none'; };
-  await T(eq.board); await T(eq.mug); await T(eq.ash); await T(eq.pack);
+  const T = async (id,dx=0) => { const it=item(id); if(!it||!it.img) return; const key=id.replace('_',''), p=LAY[key]; if(!p) return; const im=await img(`nadeto/${key}.webp`); if(!im) return;
+    if (dust(id)) x.filter='grayscale(.7) brightness(.8) contrast(.9)'; x.drawImage(im,p[0]+dx,p[1]+tdy); x.filter='none'; };
+  await T(eq.board); await T(eq.mug); await T(eq.ash); await T(eq.pack,PACK_DX);
   { const fd=eq.food&&item(eq.food); if(fd&&fd.k){ const im=await img(fd.img); if(im){ const w=FOODW[fd.k]||75, h=w*im.height/im.width, b=FOODPOS.bot+tdy; contactShadow(x,FOODPOS.cx,b,w*0.9); x.drawImage(im,FOODPOS.cx-w/2,b-h,w,h); } } }
   if (opt.season){ for (const [px,py] of [[668,948],[700,940],[684,925]]){ const g=x.createRadialGradient(px-4,py-4,2,px,py,15); g.addColorStop(0,'#ffc15a'); g.addColorStop(1,'#d9600c'); x.fillStyle=g; x.beginPath(); x.arc(px,py,15,0,7); x.fill(); } x.fillStyle='#3d6b2a'; x.beginPath(); x.ellipse(686,909,7,3,-.5,0,7); x.fill(); }
 
@@ -1622,6 +1625,7 @@ function flipState(s, me) {
 }
 
 function netConnect() {
+  if (NET.kicked) return;
   const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
   NET.ws = ws;
   ws.onopen = () => {
@@ -1630,7 +1634,7 @@ function netConnect() {
     ws.send(JSON.stringify({ t: 'auth', initData: TGA ? TGA.initData : '', dev: dev ? { id: dev, name: dev } : null, room: NET.joinCode, prof: profOf() }));
     NET.joinCode = '';
   };
-  ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } NET.q = NET.q.then(() => netMsg(m)).catch(x => console.error(x)); };
+  ws.onmessage = e => { let m; try { m = JSON.parse(e.data); } catch (x) { return; } if (m.t === 'kicked') NET.kicked = true; if (m.t === 'pong') NET.lastPong = Date.now(); NET.q = NET.q.then(() => netMsg(m)).catch(x => console.error(x)); };
   ws.onclose = () => { if (NET.ws !== ws) return; NET.ws = null; if (NET.kicked) return; setTimeout(netConnect, Math.min(5000, 700 * (++NET.tries))); };
   NET.lastPong = Date.now();
 }
@@ -1670,6 +1674,8 @@ async function netMsg(m) {
     case 'err': if (G && G.net) G.pending = null; if (m.fatal) showModal(`<h3>Не получилось войти</h3><p style="text-align:center">${m.text}</p>`); else malyava(m.text); return;
     case 'toast': return malyava(m.text);
     case 'pong': NET.lastPong = Date.now(); return;
+    case 'nogame': if (G && G.net && !G.over) { G.over = true; clearInterval(G.timer); malyava('Партия прервалась: сервер обновлялся.' + (m.refund ? ` Ставка ${m.refund} возвращена.` : '')); hideModal(); go('menu'); } else if (m.refund) malyava(`Прошлая партия прервалась, ставка ${m.refund} возвращена`); return;
+    case 'invite': if (G && G.net && !G.over) return; showModal(`<h3>Тебя зовут</h3><p style="text-align:center"><b>${String(m.from).replace(/[<>&]/g,'')}</b> зовёт тебя в ${m.variant === 'short' ? 'короткие' : 'длинные'} нарды. ${m.stake ? 'Ставка: ' + m.stake + ' сигарет.' : 'Без ставки.'}</p><button class="btn hot" style="width:100%" id="invYes">Сесть за доску</button><button class="btn ghost" style="width:100%;margin-top:8px" id="invNo">Не сейчас</button>`); $('invYes').onclick = () => { hideModal(); nsend({ t: 'join', code: m.code }); }; $('invNo').onclick = hideModal; try { SFX.coin(); } catch (e) { } return;
     case 'kicked': NET.kicked = true; showModal(`<h3>Игра открыта в другом окне</h3><p style="text-align:center">Нарды можно держать открытыми только в одном месте, иначе ходы теряются.</p><button class="btn hot" style="width:100%" id="kickBack">Играть здесь</button>`); $('kickBack').onclick = () => { NET.kicked = false; hideModal(); netConnect(); }; return;
     case 'searching': NET.searching = true; NET.room = null; if (screen === 'play') renderPlay(); return;
     case 'room': NET.room = m; NET.searching = false; playMode = 'friend'; if (screen !== 'play') go('play'); else renderPlay(); return;
