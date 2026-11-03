@@ -184,6 +184,13 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .mode b{font-size:16px}.mode span span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
 .seg{display:grid;grid-template-columns:1fr 1fr;background:#000a;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px}
 .seg button{border:0;background:none;padding:9px;border-radius:8px;font-size:14px;color:var(--muted)}
+.seg3{grid-template-columns:1fr 1fr 1fr}
+.ctabs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin:0 0 8px}.ctabs button{border:0;border-radius:8px 8px 0 0;padding:8px 4px;background:#9b8760;color:#2a2219;font-size:13px}.ctabs button.on{background:#c9b58c;font-weight:700}
+.cpane{background:#c9b58c;color:#2a2219;border-radius:4px;padding:14px;box-shadow:inset 0 0 0 2px #9b8760;font-size:13px;min-height:200px}
+.cpane dl{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0}.cpane dt{color:#5a4a2a}.cpane dd{margin:0;font-weight:600}
+.hrow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px dashed #9b8760}.hrow .res{font-weight:800;width:22px;text-align:center}.hrow .w{color:#2f6a1e}.hrow .l{color:#8a1e14}.hrow small{display:block;color:#5a4a2a;font-size:11px}
+.lgame{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;background:#000a;border:1px solid var(--line);border-radius:12px;padding:10px 12px;margin-bottom:8px}.lgame b{display:block}.lgame span{font-size:12px;color:var(--muted)}
+.visit{position:relative;border-radius:12px;overflow:hidden}.visit canvas{width:100%;display:block}
 .seg button.on{background:var(--paper);color:var(--paper-ink);font-weight:700}
 .stakes{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 12px}
 .stakes button{background:#000a;border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:13px}
@@ -447,8 +454,10 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
     </section>
 
     <section class="screen" id="s-top" hidden>
-      <div class="honor"><h3>Доска почёта</h3><div class="top3" id="top3"></div></div>
-      <div class="paper sheet" id="topList"></div>
+      <div class="seg seg3" id="topSeg" hidden><button data-t="all" class="on">Все</button><button data-t="fr">Кореша</button><button data-t="live">Сейчас играют</button></div>
+      <div id="liveBox" hidden></div>
+      <div id="topMain"><div class="honor"><h3>Доска почёта</h3><div class="top3" id="top3"></div></div>
+      <div class="paper sheet" id="topList"></div></div>
       <h2 style="font-size:28px;margin-top:16px">Звания</h2>
       <p class="sub">Нашивка растёт с рейтингом за онлайн-партии.</p>
       <div class="ranks" id="ranksBox"></div>
@@ -461,6 +470,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
       <h2 style="font-size:24px;margin-top:16px">Заявки</h2>
       <div class="card empty"><b>Пусто</b>Даже вертухай не пишет. Позови кореша, будет с кем перекинуться.</div>
       <button class="btn sec" style="width:100%;margin-top:12px" id="addFriend">Позвать кореша из Телеграма</button>
+      <p class="sub" id="refNote" hidden style="text-align:center;margin-top:8px">Новичок по твоей ссылке сыграет 3 онлайн-партии — вам обоим по 300 сигарет.</p>
     </section>
 
     <section class="screen" id="s-game" hidden>
@@ -1866,5 +1876,109 @@ if (NET.on) {
   (function waitAssets() { if (ANCH) netConnect(); else setTimeout(waitAssets, 100); })();
   if (NET.joinCode || (TGA && TGA.initDataUnsafe && /^room_/i.test(TGA.initDataUnsafe.start_param || ''))) window.__skipLoad = true;
 }
+
+// ================= Этап 2: дело игрока (статистика, история), хата, зрители, рейтинг корешей, рефералка =================
+const esc = t => String(t == null ? '' : t).replace(/[<>&"]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' }[c]));
+const _showCase2 = showCase;
+function plural(n, a, b, c) { n = Math.abs(n) % 100; const k = n % 10; return n > 10 && n < 20 ? c : k === 1 ? a : k >= 2 && k <= 4 ? b : c; }
+showCase = async function (x, inGame) {
+  const net = NET.on && NET.uid && (!x || x.net);
+  const r = _showCase2(x, inGame);
+  if (!net) return r;
+  const id = x ? x.id : NET.uid, me = !x || id === NET.uid;
+  const body = $('modalBody'), cs = body.querySelector('.case'); if (!cs) return r;
+  cs.insertAdjacentHTML('beforebegin', `<div class="ctabs"><button data-t="d" class="on">Дело</button><button data-t="s">Статистика</button><button data-t="h">История</button></div>`);
+  cs.insertAdjacentHTML('afterend', `<div class="cpane" id="cpS" hidden><p>Загружаю…</p></div><div class="cpane" id="cpH" hidden><p>Загружаю…</p></div>
+    <div class="row" style="margin-top:8px"><button class="btn ghost" id="caseVisit">Зайти в хату</button>${!me && !inGame ? '<button class="btn ghost" id="caseWatch" hidden>Смотреть партию</button>' : ''}</div>`);
+  const panes = { d: cs, s: $('cpS'), h: $('cpH') };
+  body.querySelectorAll('.ctabs button').forEach(b => b.onclick = () => { body.querySelectorAll('.ctabs button').forEach(z => z.classList.toggle('on', z === b)); for (const k in panes) panes[k].hidden = k !== b.dataset.t; });
+  $('caseVisit').onclick = () => visitCell(x ? personOf(x) : personOf(null), me);
+  NET.caseFor = id; nsend({ t: 'profile', id });
+  return r;
+};
+function fillCase(m) {
+  if (NET.caseFor !== m.id || !$('cpS')) return;
+  const u = m.user, g = (u.wins | 0) + (u.losses | 0), pc = g ? Math.round(u.wins / g * 100) : 0, me = m.id === NET.uid;
+  $('cpS').innerHTML = `<dl><dt>Место в рейтинге</dt><dd>${m.place ? m.place + ' из ' + m.total : '—'}</dd><dt>Рейтинг</dt><dd>${u.rating} · ${rankOf(u.rating)}</dd>
+    <dt>Онлайн-партий</dt><dd>${g}</dd><dt>Побед</dt><dd>${u.wins | 0} (${pc}%)</dd><dt>Поражений</dt><dd>${u.losses | 0}</dd><dt>Марсов поставил</dt><dd>${u.mars | 0}</dd>
+    <dt>Лучшая серия</dt><dd>${u.best | 0} ${plural(u.best | 0, 'победа', 'победы', 'побед')} подряд</dd><dt>Длинные / короткие</dt><dd>${u.longG | 0} / ${u.shortG | 0}</dd>
+    ${me ? `<dt>Побед над ботом</dt><dd>${u.botWins | 0}</dd>` : ''}<dt>Привёл корешей</dt><dd>${m.refs}${m.refPaid ? ` (засчитано ${m.refPaid})` : ''}</dd>
+    <dt>Сейчас</dt><dd>${m.inGame ? 'играет партию' : u.online ? 'в сети' : 'не в сети'}</dd></dl>`;
+  const RS = { win: '', resign: 'сдался', timeout: 'время', left: 'ушёл' };
+  $('cpH').innerHTML = m.hist.length ? m.hist.map(h => { const dt = new Date(h.at); const when = dt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' ' + dt.toTimeString().slice(0, 5);
+    const how = h.m === 3 ? 'кокс' : h.m === 2 ? 'марс' : ''; const why = h.w ? (h.r === 'win' ? '' : h.r === 'resign' ? 'соперник сдался' : h.r === 'left' ? 'соперник ушёл' : 'по времени') : (h.r === 'win' ? '' : RS[h.r] || '');
+    return `<div class="hrow"><span class="res ${h.w ? 'w' : 'l'}">${h.w ? 'W' : 'L'}</span><span><b>${h.w ? 'Победа' : 'Поражение'}${how ? ' · ' + how : ''}</b> против ${esc(h.on)}<small>${h.v === 'short' ? 'короткие' : 'длинные'}${h.s ? ' · ставка ' + h.s : ''}${why ? ' · ' + why : ''} · ${when}</small></span><span style="font-weight:700">${h.d > 0 ? '+' : ''}${h.d}</span></div>`; }).join('')
+    : '<p style="text-align:center;margin-top:30px">Ещё ни одной онлайн-партии</p>';
+  const w = $('caseWatch'); if (w) { w.hidden = !m.inGame; w.onclick = () => { hideModal(); watchGame(m.id); }; }
+}
+async function visitCell(p, me) {
+  showModal(`<h3>${me ? 'Моя хата' : 'Хата: ' + esc(p.name)}</h3><div class="visit" id="visitBox"><p style="text-align:center">Стучусь…</p></div>
+    <p class="sub" style="text-align:center;margin:8px 0">${esc(rankOf(p.rating))} · ${(ITEMS.find(it => it.slot === 'level' && it.lvl === p.lvl) || item('l_1')).name}</p><button class="btn sec" style="width:100%" data-close>Выйти из хаты</button>`);
+  try { SFX.clang(); } catch (e) { }
+  const c = await heroOnBg(p.eq, p.lvl || 1, 880); const box = $('visitBox'); if (!box) return; box.innerHTML = ''; box.append(c);
+}
+// ---- зрители ----
+function watchGame(id) { if (G && G.net && !G.over && !G.watch) return malyava('Сначала доиграй свою партию'); nsend({ t: 'watch', id }); malyava('Заходим посмотреть…'); }
+async function netWatch(m) {
+  const p0 = netPerson(m.players[0]), p1 = netPerson(m.players[1]);
+  if (!G || !G.watch || G.gid !== m.id) {
+    if (m.over) return;
+    hideModal(); variant = m.variant;
+    await new Promise(res => startGame({ net: true, gid: m.id, opening: m.opening, opp: p1, stake: 0, online: true, ready: res })); G.stake = m.stake;
+    G.watch = true; G.self = p0; clearInterval(G.timer); G.timer = setInterval(renderClocks, 1000);
+    $('phrases').hidden = true; $('stkBtn').hidden = true; renderPlayers();
+  }
+  if (G.over) return;
+  G.dl = m.deadline ? Date.now() + m.deadline : 0; G.turn = m.turn; G.sel = null; G.tg = null;
+  const nm = m.turn === 0 ? p0.name : p1.name;
+  if (m.phase === 'anim' && m.last && m.last.p === 1) { await showOpp(m.last.moves, m.last.before); G.oppStart = null; G.oppShown = null; }
+  if (m.phase === 'move' && m.turn === 1) { G.oppStart = { s: E.clone(m.s), dice: m.dice.slice() }; G.oppShown = []; }
+  G.s = m.s; G.dice = (m.dice || []).slice(); G.shown = m.shown || []; G.rolledNow = m.phase === 'move' || m.phase === 'pass'; if (G.rolledNow) SFX.dice();
+  G.phase = 'bot';
+  if (m.phase === 'roll') setG(`${nm} бросает кубики…`); else if (m.phase === 'move') setG(`${nm} думает…`); else if (m.phase === 'pass') setG(`У ${nm} нет ходов`);
+  if (m.phase === 'over') { G.over = true; G.phase = 'over'; clearInterval(G.timer); const wn = m.over.winner === 0 ? p0.name : p1.name; setG(`Победил ${wn}${m.over.mult === 2 ? ' · марс' : m.over.mult === 3 ? ' · кокс' : ''}`); malyava(`Партия окончена: победил ${wn}`); }
+  renderGame(); $('resignBtn').textContent = 'Выйти';
+}
+const _netMsg2 = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'game' && m.watch) return netWatch(m);
+  if (m.t === 'game' && G && G.watch && !G.over) { G.over = true; clearInterval(G.timer); }   // началась своя партия — смотреть перестаём
+  if (m.t === 'peek' && G && G.watch) { if (G.gid !== m.id || G.turn !== 1 || !G.oppStart) return; return showOpp(m.moves, G.oppStart.s); }
+  if (m.t === 'profile') return fillCase(m);
+  if (m.t === 'live') { NET.live = m.list; if (screen === 'top' && NET.topTab === 'live') renderLive(); return; }
+  return _netMsg2(m);
+};
+const _renderPlayers2 = renderPlayers;
+renderPlayers = async function () {
+  if (!G || !G.watch) return _renderPlayers2();
+  const gp = async (el, who) => { const rk = rankOf(who.rating), ri = rankIdx(rk); el.innerHTML = `<div class="av"><img alt=""></div><div style="min-width:0"><b>${esc(who.name)}</b><span>${ri >= 0 ? `<img src="${A}nashivki/0${ri + 1}.webp" alt="">` : ''}${rk}</span></div>`; el.querySelector('.av img').src = await headURL(who.eq); el.onclick = () => showCase(who, true); };
+  await Promise.all([gp($('gpOpp'), G.opp), gp($('gpMe'), G.self)]);
+};
+const _renderGame2 = renderGame;
+renderGame = function () { const r = _renderGame2.apply(this, arguments); if (G && G.watch) $('resignBtn').textContent = 'Выйти'; return r; };
+{ const _rb = $('resignBtn').onclick; $('resignBtn').onclick = (e) => { if (G && G.watch) { nsend({ t: 'unwatch' }); G.over = true; clearInterval(G.timer); $('phrases').hidden = false; $('stkBtn').hidden = false; return go('menu'); } return _rb && _rb(e); }; }
+const _go2 = go;
+go = function (s, n) { if (G && G.watch && s !== 'game') { if (!G.over) nsend({ t: 'unwatch' }); G.over = true; clearInterval(G.timer); G.watch = false; $('phrases').hidden = false; $('stkBtn').hidden = false; } return _go2(s, n); };
+// ---- рейтинг: все / кореша / сейчас играют ----
+NET.topTab = 'all';
+const _renderTop2 = renderTop;
+renderTop = function () {
+  if (!NET.on) return _renderTop2();
+  const seg = $('topSeg'); seg.hidden = false;
+  seg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.t === NET.topTab); b.onclick = () => { NET.topTab = b.dataset.t; renderTop(); }; });
+  $('liveBox').hidden = NET.topTab !== 'live'; $('topMain').hidden = NET.topTab === 'live';
+  if (NET.topTab === 'live') { nsend({ t: 'live' }); return renderLive(); }
+  if (NET.topTab === 'fr') { const keep = NET.top; NET.top = NET.friends.slice(); NET.topFresh = true; const r = _renderTop2(); NET.top = keep; return r; }
+  return _renderTop2();
+};
+function renderLive() {
+  const L = NET.live;
+  $('liveBox').innerHTML = !L ? '<p class="sub" style="text-align:center">Загружаю…</p>' : !L.length ? '<div class="card empty"><b>Тихо</b>Сейчас никто не играет. Зайди попозже или начни партию сам.</div>'
+    : L.map((g, i) => `<div class="lgame"><div><b>${esc(g.p[0].name)} — ${esc(g.p[1].name)}</b><span>${g.v === 'short' ? 'короткие' : 'длинные'}${g.s ? ' · ставка ' + g.s : ''} · рейтинг ${g.p[0].rating} / ${g.p[1].rating}${g.w ? ' · 👀 ' + g.w : ''}</span></div><button class="btn sec" style="padding:8px 12px;font-size:13px" data-w="${i}">Смотреть</button></div>`).join('');
+  $('liveBox').querySelectorAll('[data-w]').forEach(b => b.onclick = () => watchGame(L[+b.dataset.w].id));
+}
+// ---- рефералка: подсказка в «Корешах» ----
+const _renderFriends2 = renderFriends;
+renderFriends = function () { const r = _renderFriends2.apply(this, arguments); if (NET.on && $('refNote')) $('refNote').hidden = false; return r; };
 
 </script>

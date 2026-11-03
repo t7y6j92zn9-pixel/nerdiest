@@ -126,7 +126,9 @@ function createCore(cfg) {
       const old = online.get(uid); if (old && old !== sock) { try { old.send(JSON.stringify({ t: 'kicked' })); } catch (e) { } try { old.close(); } catch (e) { } }
       online.set(uid, sock);
       const u = getUser(uid, [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 40), tg.username);
+      const fresh = !u.app;
       if (!u.app) { u.app = Date.now(); save(u); }
+      if (fresh) { const rm = String(start || '').match(/^ref_(\w+)$/i); const rr = rm ? rm[1] : (rooms.get(String(m.room || start || '').replace(/^room_?/i, '').toUpperCase()) || {}).host; setRef(u, rr); }
       applyProf(u, m.prof);
       sendMe(uid);
       const gid = userGame.get(uid);
@@ -144,7 +146,7 @@ function createCore(cfg) {
     const uid = sock.uid;
     if (uid && online.get(uid) === sock) {
       online.delete(uid);
-      leaveQueue(uid);
+      leaveQueue(uid); unwatch(uid);
       const gid = userGame.get(uid);
       if (gid && games.has(gid)) { const g = games.get(gid); g.away[g.uids.indexOf(uid)] = Date.now(); }
     }
@@ -173,6 +175,27 @@ function createCore(cfg) {
       }
       case 'me': return sendMe(uid);
       case 'ping': return send(uid, { t: 'pong' });
+      case 'watch': {
+        const g = games.get(userGame.get(String(m.id))); if (!g || g.over) return err(uid, 'Эта партия уже закончилась');
+        if (g.uids.includes(uid)) return;
+        if (userGame.has(uid)) return err(uid, 'Сначала доиграй свою партию');
+        unwatch(uid); (g.watchers = g.watchers || new Set()).add(uid); watching.set(uid, g.id);
+        g.uids.forEach(x => send(x, { t: 'toast', text: `${u.name} смотрит вашу партию 👀` }));
+        return send(uid, { ...gameView(g, 0), watch: true });
+      }
+      case 'unwatch': return unwatch(uid);
+      case 'live': {
+        const list = [...games.values()].filter(g => !g.over).map(g => ({ id: g.uids[0], v: g.variant, s: g.stake, w: g.watchers ? g.watchers.size : 0, p: g.uids.map(x => publicUser(users[x])) }))
+          .sort((a, b) => Math.max(b.p[0].rating, b.p[1].rating) - Math.max(a.p[0].rating, a.p[1].rating)).slice(0, 30);
+        return send(uid, { t: 'live', list });
+      }
+      case 'profile': {
+        const x = users[String(m.id || uid)]; if (!x) return;
+        const all = Object.values(users).filter(y => y.app).sort((a, b) => b.rating - a.rating || b.wins - a.wins);
+        return send(uid, { t: 'profile', id: x.id, user: { ...publicUser(x), online: online.has(x.id), botWins: x.id === uid ? (x.botWins || 0) : undefined },
+          hist: (x.hist || []).slice(0, 20), place: all.findIndex(y => y.id === x.id) + 1, total: all.length, refs: (x.refs || []).length, refPaid: x.refPaidN || 0,
+          inGame: userGame.has(x.id) && games.has(userGame.get(x.id)) && !games.get(userGame.get(x.id)).over });
+      }
       case 'sync': { const g = games.get(userGame.get(uid)); if (g && !g.over) { g.resync = true; send(uid, gameView(g, g.uids.indexOf(uid))); g.resync = false; } return; }
       case 'peek': { // ход ещё идёт: показать сопернику шашки сразу
         const g = games.get(userGame.get(uid)); if (!g || g.over || g.phase !== 'move' || g.uids[g.turn] !== uid || !Array.isArray(m.moves)) return;
@@ -251,6 +274,19 @@ function createCore(cfg) {
     rooms.delete(code);
     startGame([r.host, uid], r.variant, r.stake);
   }
+  const REF_GAMES = 3, REF_BONUS = 300;
+  // кто кого привёл: новичок + тот, кто позвал. После 3 онлайн-партий новичка — обоим по 300
+  function setRef(u, rid) {
+    rid = rid && String(rid); if (!rid || u.ref || rid === u.id || !users[rid]) return;
+    u.ref = rid; const r = users[rid]; r.refs = (r.refs || []).filter(x => x !== u.id).concat([u.id]); save(u); save(r);
+  }
+  function refCheck(u) {
+    u.onl = (u.onl || 0) + 1;
+    if (u.ref && !u.refPaid && u.onl >= REF_GAMES) {
+      const r = users[u.ref]; u.refPaid = Date.now(); u.cigs += REF_BONUS; if (r) { r.cigs += REF_BONUS; r.refPaidN = (r.refPaidN || 0) + 1; save(r); send(r.id, { t: 'toast', text: `${u.name} сыграл 3 партии — тебе +${REF_BONUS} сигарет за кореша!` }); sendMe(r.id); }
+      send(u.id, { t: 'toast', text: `Бонус новичка: +${REF_BONUS} сигарет!` });
+    }
+  }
   function addFriends(a, b) {
     const ua = users[a], ub = users[b]; if (!ua || !ub) return;
     ua.friends = [b, ...ua.friends.filter(x => x !== b)].slice(0, 50);
@@ -272,7 +308,7 @@ function createCore(cfg) {
     addFriends(uids[0], uids[1]);
     uids.forEach(x => save(users[x]));
     games.set(g.id, g);
-    uids.forEach(x => userGame.set(x, g.id));
+    uids.forEach(x => { unwatch(x); userGame.set(x, g.id); });
     beginPhase(g, 3500);
   }
   function beginPhase(g, delay) {
@@ -347,7 +383,12 @@ function createCore(cfg) {
       players: g.uids.map(x => ({ ...publicUser(users[x]), online: online.has(x) })),
     };
   }
-  function sendGame(g) { g.uids.forEach((x, i) => send(x, gameView(g, i))); }
+  const watching = new Map();   // uid зрителя -> id партии
+  function sendGame(g) {
+    g.uids.forEach((x, i) => send(x, gameView(g, i)));
+    if (g.watchers && g.watchers.size) { const v = { ...gameView(g, 0), watch: true }; for (const w of g.watchers) { if (watching.get(w) === g.id) send(w, v); else g.watchers.delete(w); } }
+  }
+  function unwatch(uid) { const gid = watching.get(uid); if (!gid) return; watching.delete(uid); const g = games.get(gid); if (g && g.watchers) g.watchers.delete(uid); }
   function endGame(g, w, mult, reason) {
     if (g.over) return;
     const l = 1 - w, res = { winner: w, mult, reason, at: Date.now() };
@@ -360,6 +401,8 @@ function createCore(cfg) {
     uw.streak = (uw.streak || 0) + 1; uw.best = Math.max(uw.best || 0, uw.streak); ul.streak = 0;
     const vk = g.variant === 'short' ? 'shortG' : 'longG'; uw[vk] = (uw[vk] || 0) + 1; ul[vk] = (ul[vk] || 0) + 1;
     delete uw.hold; delete ul.hold;
+    const dW = C.RATING.win[mult], dL = reason === 'resign' ? C.RATING.resign : C.RATING.loss[mult];
+    [[uw, ul, 1, dW], [ul, uw, 0, dL]].forEach(([a, b, win, d]) => { a.hist = [{ at: Date.now(), o: b.id, on: b.name, v: g.variant, s: g.stake, w: win, m: mult, r: reason, d }].concat(a.hist || []).slice(0, 30); refCheck(a); });
     g.over = res; g.phase = 'over'; g.deadline = 0;
     save(uw); save(ul);
     sendGame(g);
@@ -510,6 +553,7 @@ ${top}
 🛍 Вещей куплено: ${(u.owned || []).filter(id => ITEMS[id] && ITEMS[id].price).length}
 ⭐ Потратил звёзд: ${u.stars || 0}
 👥 Корешей: ${(u.friends || []).length}
+🤝 Привёл: ${(u.refs || []).length} (засчитано ${u.refPaidN || 0})${u.ref ? `\n➡️ Пришёл от: ${users[u.ref] ? users[u.ref].name : u.ref} (id ${u.ref})${u.refPaid ? ', бонус выдан' : ', ещё не 3 партии'}` : ''}
 📅 С нами с ${dt(u.created)}, был ${dt(u.seen)}${online.has(u.id) ? ' (сейчас в игре)' : ''}`;
   }
   function adminCmd(me, cmd, text, M) {
@@ -602,7 +646,7 @@ ${top}
     if (cmd === '/start' && /^fr_/i.test(payload || '') && me) {
       const fid = payload.slice(3), f = users[fid];
       if (f && fid !== me.id) {
-        const was = me.friends.includes(fid); addFriends(me.id, fid); save(me); save(f);
+        const was = me.friends.includes(fid); if (!me.app) setRef(me, fid); addFriends(me.id, fid); save(me); save(f);
         if (!was) { send(fid, { t: 'toast', text: `${me.name} теперь твой кореш` }); sendMe(fid); if (!online.has(fid)) tg('sendMessage', { chat_id: fid, text: `🤝 ${me.name} принял твоё приглашение, теперь вы кореша.` }).catch(() => { }); }
         return M(`🤝 Теперь ты кореш с ${f.name}. Он появится у тебя во вкладке «Кореша», оттуда можно звать друг друга на партию.`, menuKeyboard());
       }
