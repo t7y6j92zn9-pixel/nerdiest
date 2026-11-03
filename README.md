@@ -9,16 +9,19 @@
 - `catalog.js` — звания, ставки, награды.
 - `app/` — сама игра (страница и картинки).
 
-## Запуск на Render.com
+## Запуск на Hugging Face Spaces (бесплатно, без карты)
 
-1. Render → **New → Web Service** → выбрать этот репозиторий.
-2. Build Command: `npm install`, Start Command: `node server.js`, тариф Free.
-3. В **Environment** добавить:
-   - `BOT_TOKEN` — токен бота от @BotFather (только здесь, в код его не класть);
-   - `WEBAPP_URL` — адрес сервиса, например `https://nardy-xxxx.onrender.com`.
-4. После деплоя написать боту `/start`.
+1. huggingface.co → New Space → SDK **Docker**, шаблон Blank, Public.
+2. В Space: Files → Add file → Create new file `Dockerfile`, вставить содержимое `Dockerfile` из этого репозитория.
+3. Settings → Variables and secrets: секрет `BOT_TOKEN`, переменные `WEBAPP_URL` (адрес вида `https://имя-space.hf.space`) и `BOT_USERNAME` (имя бота без @).
+4. Включить webhook, открыв в браузере `https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=<WEBAPP_URL>/tg-hook`.
+5. Написать боту `/start`.
 
-На бесплатном тарифе сервер засыпает через 15 минут без игроков и просыпается примерно за минуту. Рейтинг на сервере сбрасывается при каждом обновлении; сигареты и вещи хранятся на телефоне игрока.
+Обновить игру после изменений в GitHub: Settings → Factory rebuild.
+
+## Запуск на Render.com (нужна карта)
+
+Web Service из репозитория, Build `npm install`, Start `node server.js`, переменные `BOT_TOKEN`, `WEBAPP_URL`.
 
 ## Проверка на компьютере
 

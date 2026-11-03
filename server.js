@@ -2,6 +2,7 @@
 // Настройки берутся из переменных окружения (на Render — раздел Environment):
 //   BOT_TOKEN  — токен бота от @BotFather (в код и в репозиторий его НЕ класть)
 //   WEBAPP_URL — адрес игры, например https://nardy.onrender.com
+//   BOT_USERNAME — имя бота без @ (нужно, если сервер не может сам спросить его у Телеграма)
 //   DEV=1      — вход из обычного браузера по ссылке ?dev=Имя (только для проверки)
 const http = require('http');
 const fs = require('fs');
@@ -318,10 +319,10 @@ function endGame(g, w, mult, reason) {
 }
 
 // ---------- Телеграм-бот ----------
-let botUsername = '';
+let botUsername = (process.env.BOT_USERNAME || '').replace(/^@/, '').trim();
 async function tg(method, body) {
   const r = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}),
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}), signal: AbortSignal.timeout(15000),
   });
   return r.json();
 }
@@ -356,36 +357,43 @@ function inviteFriend(u, fid, room) {
     reply_markup: { inline_keyboard: [[{ text: 'Сесть за доску', web_app: { url: appUrl('?room=' + room.code) } }]] },
   }).catch(() => { });
 }
-async function onUpdate(up) {
+// Ответ боту отдаётся прямо в ответ на webhook (так бот работает даже там, где сервер не может сам ходить в Телеграм).
+function onUpdate(up) {
   if (up.callback_query) {
     const q = up.callback_query;
-    await tg('answerCallbackQuery', { callback_query_id: q.id });
-    const chat = q.message && q.message.chat.id; if (!chat) return;
-    if (q.data === 'rules') await tg('sendMessage', { chat_id: chat, text: RULES });
-    if (q.data === 'top') await tg('sendMessage', { chat_id: chat, text: topText() });
-    return;
+    tg('answerCallbackQuery', { callback_query_id: q.id }).catch(() => { });
+    const chat_id = q.message && q.message.chat.id; if (!chat_id) return null;
+    if (q.data === 'rules') return { method: 'sendMessage', chat_id, text: RULES };
+    if (q.data === 'top') return { method: 'sendMessage', chat_id, text: topText() };
+    return null;
   }
-  const msg = up.message; if (!msg || !msg.text) return;
+  const msg = up.message; if (!msg || !msg.text) return null;
   const [cmd0, payload] = msg.text.trim().split(/\s+/);
   const cmd = cmd0.split('@')[0].toLowerCase();
-  const chat_id = msg.chat.id;
+  const chat_id = msg.chat.id, M = (text, reply_markup) => ({ method: 'sendMessage', chat_id, text, ...(reply_markup ? { reply_markup } : {}) });
+  if (!WEBAPP_URL) return M('Игра ещё не настроена: на сервере не задан WEBAPP_URL.');
   if (cmd === '/start' && /^room_/i.test(payload || '')) {
     const code = payload.replace(/^room_?/i, '').toUpperCase();
-    return tg('sendMessage', { chat_id, text: '🎲 Тебя позвали сыграть в нарды! Жми кнопку, чтобы сесть за доску.', reply_markup: { inline_keyboard: [[{ text: 'Сесть за доску', web_app: { url: appUrl('?room=' + code) } }]] } });
+    return M('🎲 Тебя позвали сыграть в нарды! Жми кнопку, чтобы сесть за доску.', { inline_keyboard: [[{ text: 'Сесть за доску', web_app: { url: appUrl('?room=' + code) } }]] });
   }
-  if (cmd === '/start' || cmd === '/menu') return tg('sendMessage', { chat_id, text: 'Здорово, арестант! Это «Нарды от Кондрата».\n\nОдевай своего персонажа, набивай наколки, обставляй хату и играй в нарды с корешами на сигареты.\n\n⚠️ Это первая тестовая версия: что-то может работать криво.', reply_markup: menuKeyboard() });
-  if (cmd === '/play') return tg('sendMessage', { chat_id, text: 'Садись за доску 👇', reply_markup: { inline_keyboard: [[{ text: '🎲 Играть', web_app: { url: appUrl() } }]] } });
-  if (cmd === '/rules') return tg('sendMessage', { chat_id, text: RULES });
-  if (cmd === '/top') return tg('sendMessage', { chat_id, text: topText() });
-  if (cmd === '/invite') return tg('sendMessage', { chat_id, text: 'Скинь корешу ссылку на бота, или открой игру → «Играть» → «Вызвать кореша»: там будет ссылка прямо на твою партию.', reply_markup: { inline_keyboard: [[menuKeyboard().inline_keyboard[2][0]]] } });
+  if (cmd === '/play') return M('Садись за доску 👇', { inline_keyboard: [[{ text: '🎲 Играть', web_app: { url: appUrl() } }]] });
+  if (cmd === '/rules') return M(RULES);
+  if (cmd === '/top') return M(topText());
+  if (cmd === '/invite') return M('Скинь корешу ссылку на бота, или открой игру → «Играть» → «Вызвать кореша»: там будет ссылка прямо на твою партию.', { inline_keyboard: [[menuKeyboard().inline_keyboard[2][0]]] });
+  return M('Здорово, арестант! Это «Нарды от Кондрата».\n\nОдевай своего персонажа, набивай наколки, обставляй хату и играй в нарды с корешами на сигареты.\n\n⚠️ Это первая тестовая версия: что-то может работать криво.', menuKeyboard());
 }
 function onHook(req, res) {
-  if (!HOOK_SECRET || req.headers['x-telegram-bot-api-secret-token'] !== HOOK_SECRET) { res.writeHead(403); return res.end(); }
+  const sec = req.headers['x-telegram-bot-api-secret-token'];
+  if (sec && sec !== HOOK_SECRET) { res.writeHead(403); return res.end(); }
   let body = ''; req.on('data', c => { body += c; if (body.length > 1e6) req.destroy(); });
-  req.on('end', () => { res.end('ok'); try { onUpdate(JSON.parse(body)).catch(e => console.error('bot', e.message)); } catch (e) { } });
+  req.on('end', () => {
+    let out = null; try { out = onUpdate(JSON.parse(body)); } catch (e) { console.error('bot', e.message); }
+    res.writeHead(200, { 'Content-Type': 'application/json' }); res.end(out ? JSON.stringify(out) : '{}');
+  });
 }
 async function botSetup() {
-  if (!BOT_TOKEN) return console.log('BOT_TOKEN не задан — бот не запущен');
+  if (!BOT_TOKEN) return console.log('BOT_TOKEN не задан — вход в игру через Телеграм работать не будет');
+  if (!WEBAPP_URL) console.log('WEBAPP_URL не задан — кнопки «Играть» не будет');
   try {
     const r = await tg('getMe');
     if (!r.ok) return console.log('Телеграм не принял токен:', r.description);
@@ -394,11 +402,11 @@ async function botSetup() {
       { command: 'start', description: 'Главное меню' }, { command: 'play', description: 'Играть в нарды' },
       { command: 'rules', description: 'Правила' }, { command: 'top', description: 'Доска почёта' }, { command: 'invite', description: 'Позвать кореша' },
     ] });
-    if (!WEBAPP_URL) { console.log('WEBAPP_URL не задан — кнопки «Играть» не будет, бот слушает через getUpdates'); return poll(); }
+    if (!WEBAPP_URL) return poll();
     await tg('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Играть', web_app: { url: appUrl() } } });
     const h = await tg('setWebhook', { url: WEBAPP_URL + HOOK_PATH, secret_token: HOOK_SECRET, allowed_updates: ['message', 'callback_query'] });
     console.log('Webhook:', h.ok ? 'включён' : h.description);
-  } catch (e) { console.log('Не удалось связаться с Телеграмом:', e.message); }
+  } catch (e) { console.log('Сервер не может сам связаться с Телеграмом (' + e.message + '). Webhook нужно включить по ссылке из инструкции.'); }
 }
 async function poll() {
   await tg('deleteWebhook', {}).catch(() => { });
@@ -406,7 +414,7 @@ async function poll() {
   for (; ;) {
     try {
       const r = await tg('getUpdates', { offset, timeout: 50, allowed_updates: ['message', 'callback_query'] });
-      for (const up of r.result || []) { offset = up.update_id + 1; await onUpdate(up).catch(() => { }); }
+      for (const up of r.result || []) { offset = up.update_id + 1; const o = onUpdate(up); if (o) { const { method, ...rest } = o; await tg(method, rest).catch(() => { }); } }
     } catch (e) { await new Promise(r => setTimeout(r, 5000)); }
   }
 }
