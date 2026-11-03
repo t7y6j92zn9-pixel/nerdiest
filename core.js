@@ -516,6 +516,8 @@ ${top}
     // кнопки под полем ввода
     const GREET = 'Здорово, арестант! Это «Нарды от Кондрата».\n\nОдевай своего персонажа, набивай наколки, обставляй хату и играй в нарды с корешами на сигареты.\n\n⚠️ Это тестовая версия: что-то может работать криво.';
     if (text === '📋 Меню') return M(GREET, menuKeyboard());
+    // кнопка снизу не может открыть игру со входом (так устроен Телеграм), поэтому даём кнопку в сообщении
+    if (text === '🎲 Играть') return M('Садись за доску 👇', { inline_keyboard: [[{ text: '🎲 Открыть нарды', web_app: { url: appUrl() } }]] });
     if (text === '🏆 Рейтинг') return M(topText());
     if (text === '📩 Поддержка') { if (me) { me.supWait = Date.now(); save(me); } return M(SUPPORT_PROMPT); }
     // игрок пишет в поддержку
@@ -563,9 +565,9 @@ ${top}
     if (cmd === '/rules') return M(RULES);
     if (cmd === '/top') return M(topText());
     if (cmd === '/invite') return M('Скинь корешу ссылку на бота, или открой игру → «Играть» → «Вызвать кореша»: там будет ссылка прямо на твою партию.', { inline_keyboard: [[menuKeyboard().inline_keyboard[2][0]]] });
-    if (cmd === '/start' || !me || !me.kbAt) { // поставить постоянные кнопки под полем ввода
-      if (me) { me.kbAt = Date.now(); save(me); }
-      tg('sendMessage', { chat_id, text: 'Кнопки внизу всегда под рукой 👇', reply_markup: { keyboard: [[{ text: '🎲 Играть', web_app: { url: appUrl() } }], [{ text: '📋 Меню' }, { text: '🏆 Рейтинг' }, { text: '📩 Поддержка' }]], resize_keyboard: true, is_persistent: true } }).catch(() => { });
+    if (cmd === '/start' || !me || me.kbV !== 2) { // поставить постоянные кнопки под полем ввода
+      if (me) { me.kbV = 2; save(me); }
+      tg('sendMessage', { chat_id, text: 'Кнопки внизу всегда под рукой 👇', reply_markup: { keyboard: [[{ text: '🎲 Играть' }], [{ text: '📋 Меню' }, { text: '🏆 Рейтинг' }, { text: '📩 Поддержка' }]], resize_keyboard: true, is_persistent: true } }).catch(() => { });
     }
     return M(GREET, menuKeyboard());
   }
