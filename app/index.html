@@ -187,13 +187,24 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .seg3{grid-template-columns:1fr 1fr 1fr}
 .cnt{display:inline-block;min-width:18px;padding:1px 5px;border-radius:9px;background:#c0261a;color:#fff;font-size:11px;font-weight:800;line-height:16px;text-align:center}
 .navcnt{position:absolute;top:2px;left:calc(50% + 8px)}
-.mal{background:#e9dfc6;color:#2a2219;border-radius:4px 14px 4px 14px;padding:10px 12px;margin-bottom:10px;box-shadow:0 2px 0 #0006;position:relative;transform:rotate(-.4deg)}
-.mal:nth-child(even){transform:rotate(.5deg)}
-.mal.new{box-shadow:0 0 0 2px #e0a33a,0 2px 0 #0006}
-.mal .hd{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:#6a5a3a;margin-bottom:4px}
-.mal .tx{white-space:pre-wrap;word-break:break-word;font-size:14px}
-.mal .act{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}.mal .act button{border:1px solid #9b8760;background:#d8cba8;color:#2a2219;border-radius:8px;padding:5px 10px;font-size:12px}
-.malform textarea{width:100%;min-height:90px;border-radius:10px;border:1px solid #fff3;background:#0006;color:inherit;font:inherit;padding:10px;box-sizing:border-box;resize:vertical}
+.mal{--ln:27px;position:relative;margin:16px 4px 14px;padding:14px 14px 10px 44px;color:#1f2d5c;font-family:var(--f-hand);
+  background:linear-gradient(90deg,transparent 33px,#d2525288 33px,#d2525288 35px,transparent 35px),repeating-linear-gradient(180deg,transparent 0 calc(var(--ln) - 1px),#7a9ac455 calc(var(--ln) - 1px) var(--ln)),linear-gradient(160deg,#f6f0dc,#eadfbf);
+  background-position:0 0,0 9px,0 0;box-shadow:0 3px 8px #0009,inset 0 0 30px #a08a5a40;transform:rotate(-1deg);
+  clip-path:polygon(0 4px,4% 0,9% 5px,15% 1px,22% 4px,30% 0,38% 5px,46% 1px,54% 4px,62% 0,70% 5px,78% 1px,86% 4px,93% 0,100% 5px,100% 100%,0 100%)}
+.mal:nth-child(even){transform:rotate(.8deg)}
+.mal::before{content:"";position:absolute;top:-2px;left:50%;width:70px;height:20px;margin-left:-35px;background:#e9e2c3aa;box-shadow:0 1px 2px #0003;transform:rotate(-3deg)}
+.mal::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 49.6%,#0000000d 50%,transparent 50.6%),linear-gradient(180deg,transparent 49.4%,#0000000f 50%,transparent 50.8%)}
+.mal.new{box-shadow:0 0 0 2px #e0a33a,0 3px 8px #0009}
+.mal.new .hd b::after{content:" • новая";color:#c0261a;font-size:15px}
+.mal .hd{display:flex;justify-content:space-between;gap:8px;font-size:19px;line-height:var(--ln);color:#3a3a5a}
+.mal .hd span{font-size:16px;color:#6a6a80}
+.mal .tx{white-space:pre-wrap;word-break:break-word;font-size:23px;line-height:var(--ln);font-weight:600}
+.mal .act{display:flex;gap:4px 14px;margin-top:4px;flex-wrap:wrap;position:relative;z-index:1}
+.mal .act button{border:0;background:none;color:#7a2a1a;font-family:var(--f-hand);font-size:19px;font-weight:700;padding:2px 0;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
+.mal .act span{font-size:16px!important}
+.malform textarea{width:100%;min-height:150px;border:0;border-radius:2px;box-sizing:border-box;resize:vertical;padding:6px 12px 6px 44px;color:#1f2d5c;font-family:var(--f-hand);font-size:23px;font-weight:600;line-height:27px;background:linear-gradient(90deg,transparent 33px,#d2525288 33px,#d2525288 35px,transparent 35px),repeating-linear-gradient(180deg,transparent 0 26px,#7a9ac455 26px 27px),linear-gradient(160deg,#f6f0dc,#eadfbf);background-attachment:local;box-shadow:0 3px 8px #0009}
+.malform textarea::placeholder{color:#8a8aa0}
+button,[data-go],.li2,.lgame,.mode{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .brighead{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:center}.brighead img{width:78px;height:78px}
 .bmem{display:grid;grid-template-columns:36px 1fr auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid #ffffff14}.bmem img{width:36px;height:36px;border-radius:50%}.bmem small{display:block;color:var(--muted);font-size:11px}
 .bemb{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.bemb button{background:#0006;border:1px solid var(--line);border-radius:12px;padding:6px}.bemb button.on{border-color:var(--accent2)}.bemb img{width:100%}
@@ -1695,7 +1706,7 @@ async function netMsg(m) {
       _saveP(); updCigs();
       if (NET.gotMe && rankIdx(rankOf(P.rating)) > rankIdx(oldRank) && screen !== 'game') rankUp(rankOf(P.rating));
       NET.gotMe = true;
-      if (screen === 'friends') renderFriends();
+      { const fk = JSON.stringify(NET.friends.map(f => [f.id, f.name, f.online, f.rating])); if (screen === 'friends' && NET.frTab !== 'mal' && NET.frTab !== 'brig' && fk !== NET.frKey) { NET.frKey = fk; NET.frQuiet = true; renderFriends(); NET.frQuiet = false; } else NET.frKey = fk; }
       return;
     }
     case 'err': if (G && G.net) G.pending = null; if (m.fatal) showModal(`<h3>Не получилось войти</h3><p style="text-align:center">${m.text}</p>`); else malyava(m.text); return;
@@ -2027,8 +2038,8 @@ renderFriends = function () {
   seg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.t === NET.frTab); b.onclick = () => { NET.frTab = b.dataset.t; renderFriends(); }; });
   $('frMain').hidden = NET.frTab !== 'fr'; $('malBox').hidden = NET.frTab !== 'mal'; $('brigBox').hidden = NET.frTab !== 'brig';
   updBadges();
-  if (NET.frTab === 'mal') { nsend({ t: 'mals' }); return renderMal(); }
-  if (NET.frTab === 'brig') { nsend({ t: 'brig' }); nsend({ t: 'brigTop' }); return renderBrig(); }
+  if (NET.frTab === 'mal') { if (!NET.frQuiet) nsend({ t: 'mals' }); return renderMal(); }
+  if (NET.frTab === 'brig') { if (!NET.frQuiet) { nsend({ t: 'brig' }); nsend({ t: 'brigTop' }); } return renderBrig(); }
   return _renderFriends3();
 };
 // ---- малявы ----
@@ -2042,7 +2053,7 @@ function renderMal() {
     : '<div class="card empty"><b>Пусто</b>Никто не пишет. Черкни кому-нибудь первым.</div>';
   else h += d.sent.length ? d.sent.map(x => `<div class="mal"><div class="hd"><b>→ ${esc(x.tn)}</b><span>${ago(x.at)}</span></div><div class="tx">${esc(x.text)}</div></div>`).join('') : '<div class="card empty"><b>Пусто</b>Ты ещё никому не писал.</div>';
   h += `<p class="sub" style="text-align:center;margin-top:8px">Написать можно любому: открой его дело в рейтинге или у корешей. Мат заменяется звёздочками.</p>`;
-  box.innerHTML = h;
+  if (box.dataset.h === h && box.childElementCount) return; box.dataset.h = h; box.innerHTML = h;
   box.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { NET.malTab = b.dataset.m; renderMal(); });
   $('malNew').onclick = () => pickFriend('Кому малява?', f => writeMal(f.id, f.name));
   box.querySelectorAll('[data-re]').forEach(b => b.onclick = () => { const x = d.inbox[+b.dataset.re]; writeMal(x.from, x.fn); });

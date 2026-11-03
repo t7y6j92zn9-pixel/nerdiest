@@ -206,7 +206,7 @@ function createCore(cfg) {
       case 'me': return sendMe(uid);
       case 'ping': return send(uid, { t: 'pong' });
       // ---------- малявы ----------
-      case 'mals': (u.inbox || []).forEach(x => { x.read = 1; }); save(u); sendMe(uid); return send(uid, { t: 'mals', inbox: u.inbox || [], sent: u.sent || [] });
+      case 'mals': if ((u.inbox || []).some(x => !x.read)) { u.inbox.forEach(x => { x.read = 1; }); save(u); sendMe(uid); } return send(uid, { t: 'mals', inbox: u.inbox || [], sent: u.sent || [] });
       case 'mal': {
         const to = String(m.to || ''), r = users[to]; if (!r || to === uid) return err(uid, 'Некому отправить');
         if (u.muted && u.muted > Date.now()) return err(uid, 'Тебе пока запрещено писать малявы');
