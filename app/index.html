@@ -6,14 +6,14 @@
 <title>Нарды от Кондрата</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Rubik:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Neucha&family=Rubik:wght@400;500;700&display=swap">
 <style>
 /* Макет: одно мобильное окно на стене камеры. Заголовки — ручкой по стене, кнопки — жестяные таблички и бумажки, валюта — пачка. */
 :root{
   --bg:#12130f; --wall:#1d1e19; --panel:#1f1f1acc; --panel2:#2b2a22; --line:#45412f;
   --text:#ece4d1; --muted:#a39a82; --accent:#e08a2c; --accent2:#f2b35a; --danger:#d0563c; --good:#8fb35c;
   --paper:#e9dfc4; --paper-ink:#2a2219; --ink:#2d4560;
-  --f-hand:"Caveat","Segoe Print","Comic Sans MS",cursive; --f-body:"Rubik",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --f-hand:"Caveat","Segoe Print","Comic Sans MS",cursive; --f-read:"Neucha","Caveat","Segoe Print",cursive; --f-body:"Rubik",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   color-scheme:dark;
 }
 /* цветовая тема по уровню хаты */
@@ -191,12 +191,31 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .quest b{display:block}.quest .pb{height:7px;border-radius:4px;background:#ffffff1a;margin-top:6px;overflow:hidden}.quest .pb i{display:block;height:100%;background:linear-gradient(90deg,#c9862a,#f0c060)}
 .quest.done{opacity:.55}
 .streak{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:8px 0}.streak div{text-align:center;border-radius:8px;padding:6px 0;background:#0007;border:1px solid var(--line);font-size:11px;color:var(--muted)}.streak div b{display:block;color:var(--ink,#eee);font-size:13px}.streak div.got{background:#5a3a12;border-color:#c9862a;color:#e8d0a0}.streak div.got b{color:#ffe7b0}.streak div.now{outline:2px solid var(--accent2)}
-.wheelwrap{position:relative;width:min(84vw,330px);aspect-ratio:1;margin:10px auto 14px}
-.wheel{position:absolute;inset:0;border-radius:50%;border:8px solid #5a3a12;box-shadow:0 0 0 3px #c9a23e,0 8px 24px #000c,inset 0 0 20px #0008;transition:transform 4.2s cubic-bezier(.12,.62,.1,1)}
-.wheel span{position:absolute;left:50%;top:50%;width:0;height:0;font-weight:800;font-size:17px;color:#fff;text-shadow:0 2px 3px #000}
-.wheel span i{position:absolute;left:-40px;width:80px;text-align:center;font-style:normal;top:calc(-1 * min(84vw,330px) * .37)}
-.wheelpin{position:absolute;left:50%;top:-12px;margin-left:-14px;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:30px solid #e8c45a;filter:drop-shadow(0 2px 2px #000);z-index:2}
-.wheelhub{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px;border-radius:50%;background:radial-gradient(#f0d070,#8a6a1a);box-shadow:0 2px 6px #000;z-index:2}
+.wheelwrap{position:relative;width:min(86vw,340px);max-width:100%;aspect-ratio:1;margin:14px auto 14px}
+.wheelwrap canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 10px 18px #000c)}
+.wheelpin{position:absolute;left:50%;top:-10px;width:34px;height:52px;margin-left:-17px;z-index:2;filter:drop-shadow(0 3px 3px #000c);transform-origin:50% 18%}
+.wheelpin.tick{animation:pinTick .12s ease-out}
+@keyframes pinTick{40%{transform:rotate(-14deg)}}
+.daily.tasksonly{padding:0;background:none;border:0;box-shadow:none}
+.tasksbig{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;font-size:19px;padding:14px;position:relative}
+.tasksbig .cnt{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;line-height:20px;min-width:22px}
+.flycig{position:fixed;width:30px;height:30px;z-index:9999;pointer-events:none;object-fit:contain;filter:drop-shadow(0 2px 3px #000a)}
+.pack.pulse{animation:packPulse .5s ease-out}
+@keyframes packPulse{40%{transform:scale(1.25)}}
+.achpop{text-align:center;margin:6px 0 12px}.achpop .medal{width:84px;height:84px;margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;font-size:40px;background:radial-gradient(circle at 35% 30%,#ffe9a8,#c9932e 55%,#6a4a12);box-shadow:0 0 0 4px #3a2a10,0 0 24px #f0c06088}
+.achpop b{display:block;font-size:22px}.achpop p{margin:6px 0 0;color:var(--muted)}
+.bseg{grid-template-columns:1fr 1fr}
+.bchat{display:flex;flex-direction:column;gap:8px}
+.bclist{height:max(300px,calc(100vh - 330px));overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:12px 10px;border-radius:6px;
+  background:repeating-linear-gradient(180deg,transparent 0 31px,#7a9ac430 31px 32px),linear-gradient(160deg,#f3ecd6,#e6dab8);box-shadow:inset 0 0 26px #a08a5a50,0 3px 10px #0008;display:flex;flex-direction:column;gap:8px}
+.bcm{max-width:84%;align-self:flex-start;background:#fffaf0cc;border:1px solid #c9b88a;border-radius:4px 12px 12px 12px;padding:6px 10px 5px;color:#14204e;box-shadow:0 1px 2px #0002}
+.bcm.me{align-self:flex-end;background:#f6e2b8;border-radius:12px 4px 12px 12px}
+.bcm .n{display:flex;justify-content:space-between;gap:10px;font-size:12px;font-weight:700;color:#7a2a1a}.bcm .n span{font-weight:400;color:#857a62}
+.bcm .t{font-family:var(--f-read);font-size:19px;line-height:1.25;white-space:pre-wrap;word-break:break-word}
+.bcempty{margin:auto;text-align:center;color:#6a6a80;font-family:var(--f-read);font-size:19px}
+.bcform{display:flex;gap:8px;align-items:flex-end}
+.bcform textarea{flex:1;min-width:0;min-height:44px;max-height:120px;resize:none;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#f3ecd6;color:#14204e;font-family:var(--f-read);font-size:18px;line-height:1.3}
+.bcform .btn{flex:0 0 auto;min-width:60px}
 .ach{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:#000a;border:1px solid var(--line);margin-bottom:8px}
 .ach .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#ffffff10}.ach.got .ic{background:radial-gradient(#f0d070,#8a6a1a)}
 .ach small{display:block;color:var(--muted);font-size:12px}.ach:not(.got){opacity:.6}
@@ -212,13 +231,13 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .mal::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,transparent 49.6%,#0000000d 50%,transparent 50.6%),linear-gradient(180deg,transparent 49.4%,#0000000f 50%,transparent 50.8%)}
 .mal.new{box-shadow:0 0 0 2px #e0a33a,0 3px 8px #0009}
 .mal.new .hd b::after{content:" • новая";color:#c0261a;font-size:15px}
-.mal .hd{display:flex;justify-content:space-between;gap:8px;font-size:19px;line-height:var(--ln);color:#3a3a5a}
+.mal .hd{display:flex;justify-content:space-between;gap:8px;font-size:19px;line-height:var(--ln);color:#3a3a5a}.mal .hd b{font-family:var(--f-read);font-weight:400;font-size:18px;color:#7a2a1a}
 .mal .hd span{font-size:16px;color:#6a6a80}
-.mal .tx{white-space:pre-wrap;word-break:break-word;font-size:23px;line-height:var(--ln);font-weight:600}
+.mal .tx{white-space:pre-wrap;word-break:break-word;font-family:var(--f-read);font-size:20px;line-height:var(--ln);font-weight:400;color:#14204e}
 .mal .act{display:flex;gap:4px 14px;margin-top:4px;flex-wrap:wrap;position:relative;z-index:1}
 .mal .act button{border:0;background:none;color:#7a2a1a;font-family:var(--f-hand);font-size:19px;font-weight:700;padding:2px 0;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px}
 .mal .act span{font-size:16px!important}
-.malform textarea{width:100%;min-height:150px;border:0;border-radius:2px;box-sizing:border-box;resize:vertical;padding:6px 12px 6px 44px;color:#1f2d5c;font-family:var(--f-hand);font-size:23px;font-weight:600;line-height:27px;background:linear-gradient(90deg,transparent 33px,#d2525288 33px,#d2525288 35px,transparent 35px),repeating-linear-gradient(180deg,transparent 0 26px,#7a9ac455 26px 27px),linear-gradient(160deg,#f6f0dc,#eadfbf);background-attachment:local;box-shadow:0 3px 8px #0009}
+.malform textarea{width:100%;min-height:150px;border:0;border-radius:2px;box-sizing:border-box;resize:vertical;padding:6px 12px 6px 44px;color:#14204e;font-family:var(--f-read);font-size:20px;font-weight:400;line-height:27px;background:linear-gradient(90deg,transparent 33px,#d2525288 33px,#d2525288 35px,transparent 35px),repeating-linear-gradient(180deg,transparent 0 26px,#7a9ac455 26px 27px),linear-gradient(160deg,#f6f0dc,#eadfbf);background-attachment:local;box-shadow:0 3px 8px #0009}
 .malform textarea::placeholder{color:#8a8aa0}
 button,[data-go],.li2,.lgame,.mode{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .brighead{display:grid;grid-template-columns:78px 1fr;gap:12px;align-items:center}.brighead img{width:78px;height:78px}
@@ -1044,7 +1063,7 @@ async function composeHero(eq, opt){
     tx.globalCompositeOperation='destination-in'; tx.drawImage(await skinMask(file),0,0);
     x.save(); x.globalCompositeOperation='multiply'; x.globalAlpha=.9; x.drawImage(t,0,0); x.restore();
   }
-  const dust = id => (P.dust||{})[id];
+  const dust = () => false;
   // стол: нарды, пепельница, пачка, кружка
   // стол: каждая вещь нарисована прямо на этом столе, с тенью
   const lv=(item(eq.level||'l_1')||{}).lvl||1, tdy=STOL_DY[lv]||0;
@@ -1071,7 +1090,7 @@ async function composeHero(eq, opt){
   return c;
 }
 const heroCache = new Map(), headCache = new Map();
-function heroKey(eq,opt){ return JSON.stringify([eq,opt||{},P.dust||{}]); }
+function heroKey(eq,opt){ return JSON.stringify([eq,opt||{}]); }
 async function heroCanvas(eq,opt){ const k=heroKey(eq,opt); if(!heroCache.has(k)){ if(heroCache.size>40) heroCache.clear(); heroCache.set(k,composeHero(eq,opt)); } return heroCache.get(k); }
 async function headURL(eq){ const k=heroKey(eq); if(headCache.has(k)) return headCache.get(k); const c=await heroCanvas(eq); const h=document.createElement('canvas'); h.width=160; h.height=174; h.getContext('2d').drawImage(c,382,118,204,222,0,0,160,174); const u=h.toDataURL('image/webp',.85); headCache.set(k,u); return u; }
 async function heroOnBg(eq, lvl, w){ const c=document.createElement('canvas'); c.width=w||W; c.height=Math.round((w||W)*H/W); const x=c.getContext('2d'); x.drawImage(await img(`hata/uroven_${lvl}.webp`),0,0,c.width,c.height); { x.save(); x.scale(c.width/W,c.height/H); await drawWall(x,eq,lvl); x.restore(); } x.drawImage(await heroCanvas(Object.assign({},eq,{level:'l_'+lvl})),0,0,c.width,c.height); return c; }
@@ -1080,7 +1099,7 @@ async function heroOnBg(eq, lvl, w){ const c=document.createElement('canvas'); c
 const KEY='kondrat_proto_v3';
 const DEFAULT_EQ = {glasses:'g_0', bracelet:'br_0', smoke:'sm_0', food:'fd_0', wall:'wl_0', pet:'pt_0', outfit:'o_00_golyi', hat:'h_0', neck:'n_0', ring:'r_0', watch:'w_0', beads:'b_0', tats:{}, board:'d_0', checkers:'s_0', dice:'k_0', mug:'m_1', ash:'a_0', pack:'c_0', level:'l_1'};
 function fresh(){ return { since:Date.now(), name:'Кондрат', num:'0715', cigs:2500, rating:0, wins:0, losses:0, botWins:0, games:0, streak:0, mars:0,
-  owned:ITEMS.filter(x=>x.price===0&&!x.rank&&!x.ach&&!x.stars).map(x=>x.id), eq:JSON.parse(JSON.stringify(DEFAULT_EQ)), lastDaily:0, ach:{}, dust:{'d_0':1}, set:{music:true, sfx:true, tod:'auto', season:false} }; }
+  owned:ITEMS.filter(x=>x.price===0&&!x.rank&&!x.ach&&!x.stars).map(x=>x.id), eq:JSON.parse(JSON.stringify(DEFAULT_EQ)), lastDaily:0, ach:{}, set:{music:true, sfx:true, tod:'auto', season:false} }; }
 let P = fresh();
 try { const r=localStorage.getItem(KEY); if(r) P=Object.assign(fresh(),JSON.parse(r)); } catch(e){}
 P.eq.ring='r_0'; if(P.eq.tats){ delete P.eq.tats.kist; delete P.eq.tats.palcy; } for(const k of ['hat','neck','watch','beads','board','mug','ash','pack','level','outfit','checkers','dice']) if(P.eq[k]&&!item(P.eq[k])) P.eq[k]=DEFAULT_EQ[k];
@@ -1279,7 +1298,7 @@ async function renderShop(){
   if(!shopSel||!items.find(x=>x.id===shopSel)) shopSel=(items.find(x=>equippedId(x)===x.id)||items[0]).id;
   const grid=$('shopGrid');
   grid.innerHTML = (await Promise.all(items.map(async x=>{ const lk=locked(x); const full=x.slot==='level';
-    return `<button class="item${x.id===shopSel?' sel':''}${(P.dust||{})[x.id]?' dust':''}" data-id="${x.id}"><span class="th${full?' full':''}">${await thumb(x)}</span><span class="nm">${x.name}</span>${priceTag(x)}
+    return `<button class="item${x.id===shopSel?' sel':''}" data-id="${x.id}"><span class="th${full?' full':''}">${await thumb(x)}</span><span class="nm">${x.name}</span>${priceTag(x)}
       ${lk&&!owns(x.id)?`<span class="lockb"><img src="${A}knopki/07.webp" alt="">${lk}</span>`:''}</button>`; }))).join('');
   grid.querySelectorAll('.item').forEach(b=>b.onclick=()=>{ shopSel=b.dataset.id; SFX.click(); renderPreview(); grid.querySelectorAll('.item').forEach(x=>x.classList.toggle('sel',x===b)); });
   renderPreview();
@@ -1295,7 +1314,6 @@ async function renderPreview(opt){
   } else if (!own) btn = lk ? `<button class="btn ghost" disabled>Откроется: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Взять за ${it.price}</button>${P.cigs<it.price?'<p style="margin:6px 0 0;font-size:12px;color:var(--danger)">Не хватает сигарет</p>':''}`;
   else if (it.slot==='tat') btn = `<button class="btn ${on?'sec':'hot'}" id="eqBtn">${on?'Свести наколку':'Набить снова'}</button>`;
   else btn = on ? `<button class="btn sec" disabled>${it.slot==='level'?'Ты здесь живёшь':it.slot==='pet'?'Живёт с тобой':it.slot==='wall'?'Висит':['food','mug','ash','board'].includes(it.slot)?'На столе':'Надето'}</button>` : `<button class="btn hot" id="eqBtn">${({level:'Переехать',board:'Положить на стол',food:'Поставить на стол',wall:'Повесить',pet:'Завести',smoke:'Взять в руку',mug:'Поставить на стол',ash:'Поставить на стол'})[it.slot]||'Надеть'}</button>`;
-  if ((P.dust||{})[it.id]) btn += `<button class="btn sec" id="cleanBtn" style="margin-top:8px;width:100%">Почистить за 10</button>`;
   let note='';
   if (it.slot==='tat') note = it.place==='spina' ? 'Место: спина. Видно в личном деле.' : `Место: ${PLACES[it.place].toLowerCase()}. ${['kist','palcy','neck'].includes(it.place)?'Видно всегда.':'Видно, когда тело не закрыто одеждой.'}`;
   else if (it.slot==='phrase') note = it.free?'Бесплатная, есть у всех.':lk?'Откроется: '+lk:'Фраза для партии.';
@@ -1305,7 +1323,6 @@ async function renderPreview(opt){
   else if (it.slot==='pet') note = it.k ? 'Сидит на полу в хате. Нажми на него в хате, чтобы погладить.' : 'Без питомца.';
   else if (it.slot==='wall') note = 'Висит на стене в хате.';
   else note = own ? 'Уже твоё.' : 'Примерка бесплатная.';
-  if ((P.dust||{})[it.id]) note = 'Вещь запылилась. Почисти, и будет как новая.';
   const showHero = !['phrase','sticker','checkers','dice'].includes(it.slot) && !(it.slot==='tat'&&it.place==='spina');
   $('shopPreview').innerHTML = `<div class="pv" id="pvBox">${showHero?'<div class="scene" id="pvScene"></div>':`<div class="big">${it.img?`<img src="${A+it.img}" alt="">`:`<b style="color:#2a2219;font-size:18px;padding:10px;text-align:center">«${it.name}»</b>`}</div>`}</div><div><h3>${it.name}</h3><p>${note}</p>${btn}</div>`;
   if (it.slot==='checkers' && it.w) $('pvBox').querySelector('.big').innerHTML=`<div style="display:flex;gap:8px"><img src="${A}shashki_kubiki/${it.w}.webp" style="width:44%"><img src="${A}shashki_kubiki/${it.k}.webp" style="width:44%"></div>`;
@@ -1313,7 +1330,6 @@ async function renderPreview(opt){
   if (showHero) await buildScene($('pvScene'), tryEq(it), {});
   const b1=$('buyBtn'); if(b1) b1.onclick=()=>buy(it);
   const b2=$('eqBtn'); if(b2) b2.onclick=()=>{ if(it.slot==='tat'&&on) delete P.eq.tats[it.place]; else applyEq(it); saveP(); SFX.click(); if(it.slot==='tat'&&!on) inkAnim(it); else renderShop(); };
-  const b3=$('cleanBtn'); if(b3) b3.onclick=()=>{ if(P.cigs<10) return malyava('Не хватает сигарет'); P.cigs-=10; eco('clean'); delete P.dust[it.id]; heroCache.clear(); saveP(); SFX.coin(); malyava('Почищено, блестит'); renderShop(); };
 }
 function buyStars(it){ SFX.click(); if(typeof NET!=='undefined'&&NET.on){ nsend({t:'stars',id:it.sid}); malyava('Открываю оплату…'); } else malyava('Покупка за звёзды работает в игре через Телеграм'); }
 function applyEq(it){ if(it.slot==='tat') P.eq.tats[it.place]=it.id; else if(it.slot==='level') P.eq.level=it.id; else if(it.slot!=='phrase'&&it.slot!=='sticker') P.eq[it.slot]=it.id;
@@ -1629,7 +1645,7 @@ $('setBtn').onclick=()=>{
     <div class="rowi"><span>Время суток</span>${tg('tod',[['auto','Как у тебя'],['day','День'],['night','Ночь']])}</div>
     ${window.NET&&NET.on?'':`<p style="margin:12px 0 6px;color:var(--muted);font-size:12px">ДЛЯ ПРОВЕРКИ ПРОТОТИПА</p>
     <div class="row"><button class="btn sec" id="tCigs">+5000 сигарет</button><button class="btn sec" id="tRate">+400 рейтинга</button></div>
-    <div class="row" style="margin-top:8px"><button class="btn sec" id="tDust">Запылить вещи</button><button class="btn sec" id="tRank">Показать нашивку</button></div>
+    <div class="row" style="margin-top:8px"><button class="btn sec" id="tRank">Показать нашивку</button></div>
     <button class="btn ghost" id="tReset" style="width:100%;margin-top:10px">Начать заново</button>`}</div>
     ${window.NET&&NET.on?'<button class="btn sec" id="supBtn" style="width:100%;margin-top:12px">Написать в поддержку</button>':''}
     <button class="btn hot" style="width:100%;margin-top:12px" data-close>Готово</button>`);
@@ -1641,7 +1657,6 @@ $('setBtn').onclick=()=>{
   if(!$('tCigs')) return;
   $('tCigs').onclick=()=>{ P.cigs+=5000; saveP(); updCigs(); SFX.coin(); };
   $('tRate').onclick=()=>{ const o=rankOf(P.rating); P.rating+=400; saveP(); if(rankOf(P.rating)!==o) rankUp(rankOf(P.rating)); else malyava('Рейтинг: '+P.rating); };
-  $('tDust').onclick=()=>{ P.owned.concat(Object.values(P.eq).filter(v=>typeof v==='string')).forEach(id=>{ const it=item(id); if(it&&['board','mug','checkers'].includes(it.slot)) P.dust[id]=1; }); saveP(); heroCache.clear(); malyava('Нарды и кружка запылились'); if(screen==='home') renderHome(); };
   $('tRank').onclick=()=>rankUp(rankOf(P.rating));
   $('tReset').onclick=()=>{ P=fresh(); saveP(); heroCache.clear(); hideModal(); go('home',true); };
 };
@@ -2170,22 +2185,23 @@ renderHome = async function () {
 };
 function homeDaily() {
   const me = NET.me, c = $('dailyCard'); if (!c || !me) return;
-  const ready = me.dailyReady, st = ready ? (me.streakD | 0) : me.streakD | 0, n = me.tasksReady | 0;
-  c.innerHTML = `<div><b>Передачка с воли</b><div class="sub" style="margin:2px 0 0">${ready ? 'Забирай — каждый день подряд больше' : `Серия: ${st} ${plural(st, 'день', 'дня', 'дней')} подряд. Завтра ещё`}</div></div>
-    <div class="row" style="gap:6px;flex:0 0 auto"><button class="btn${ready ? ' hot' : ' ghost'}" id="dailyBtn" ${ready ? '' : 'disabled'}>${ready ? 'Забрать' : 'Завтра'}</button><button class="btn sec" id="tasksBtn" style="position:relative">Задания${n ? ` <span class="cnt">${n}</span>` : ''}</button></div>`;
-  if (ready) $('dailyBtn').onclick = () => { $('dailyBtn').disabled = true; nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
+  const n = (me.tasksReady | 0) + (me.dailyReady ? 1 : 0);
+  c.classList.add('tasksonly');
+  const h = `<button class="btn hot tasksbig" id="tasksBtn">Задания${n ? ` <span class="cnt">${n}</span>` : ''}</button>`;
+  if (!$('tasksBtn') || c.dataset.h !== h) { c.dataset.h = h; c.innerHTML = h; }
   $('tasksBtn').onclick = () => go('tasks');
 }
 const _netMsg4 = netMsg;
 netMsg = async function (m) {
   if (m.t === 'tasks') { NET.tasks = m; if (screen === 'tasks') renderTasks(); return; }
   if (m.t === 'spun') return wheelSpun(m);
-  if (m.t === 'promoOk') { if ($('promoIn')) $('promoIn').value = ''; showModal(`<div class="vict"><h3>Промокод принят</h3><p style="font-size:20px;font-weight:700;text-align:center">+${m.amt} сигарет</p><button class="btn hot" style="width:100%" data-close>Забрать</button></div>`); try { SFX.coin(); cigRain(); } catch (e) { } return; }
+  if (m.t === 'promoOk') { if ($('promoIn')) $('promoIn').value = ''; holdCigs(60000); showModal(`<div class="vict"><h3>Промокод принят</h3><p style="font-size:20px;font-weight:700;text-align:center">+${m.amt} сигарет</p><button class="btn hot" style="width:100%" data-close data-fly>Забрать</button></div>`); try { SFX.coin(); } catch (e) { } return; }
   const r = await _netMsg4(m);
   if (m.t === 'me' && screen === 'home') homeDaily();
   return r;
 };
 function renderTasks() {
+  if (NET.spinning && NET.taskTab === 'w' && $('wheelCv')) { NET.taskDirty = true; return; }   // не перерисовываем колесо посреди прокрута
   const seg = $('taskSeg'); seg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.t === NET.taskTab); b.onclick = () => { NET.taskTab = b.dataset.t; renderTasks(); }; });
   const d = NET.tasks, box = $('taskBox'); if (!d) { box.innerHTML = '<p class="sub" style="text-align:center">Загружаю…</p>'; return; }
   let h = '';
@@ -2201,9 +2217,9 @@ function renderTasks() {
   } else if (NET.taskTab === 'w') {
     const W = d.wheel, n = W.sectors.length, cols = ['#7a1e14', '#1f4a2a', '#24324f', '#6a4a12', '#4a1a4a', '#1f3f4a', '#5a1414', '#8a6a12'];
     const grad = W.sectors.map((_, i) => `${cols[i % cols.length]} ${i * 360 / n}deg ${(i + 1) * 360 / n}deg`).join(',');
-    h += `<div class="wheelwrap"><div class="wheelpin"></div><div class="wheel" id="wheel" style="background:conic-gradient(${grad});transform:rotate(${NET.wheelRot || 0}deg)">${W.sectors.map((t, i) => `<span style="transform:rotate(${(i + .5) * 360 / n}deg)"><i>${t === 'вещь' ? '🎁' : t}</i></span>`).join('')}</div><div class="wheelhub"></div></div>
+    h += `<div class="wheelwrap"><canvas id="wheelCv" width="680" height="680"></canvas>${PIN_SVG}</div>
       <button class="btn hot" style="width:100%" id="wSpin">${W.free ? 'Крутить бесплатно' : W.spins ? `Крутить (осталось ${W.spins})` : 'Бесплатный прокрут завтра'}</button>
-      <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · 50 ⭐</button>
+      <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · 50 ⭐</button>${NET.me && NET.me.admin ? '<button class="btn ghost" style="width:100%;margin-top:8px" id="wTest">Тест-прокрут (только для админа, без награды)</button>' : ''}
       <p class="sub" style="text-align:center;margin-top:8px">Один прокрут в день бесплатно. Выпадает от 25 до 1000 сигарет или вещь с барахолки.</p>`;
   } else if (NET.taskTab === 's') {
     const S = d.season;
@@ -2217,9 +2233,11 @@ function renderTasks() {
     h += `<p class="sub">Открой достижение — получишь сигареты и титул. Титул видно под твоим именем в партии и в деле.</p>` + d.achs.map(a => `<div class="ach${a.got ? ' got' : ''}"><span class="ic">${a.got ? '🏅' : '🔒'}</span><span><b>${a.t}</b><small>${a.d}${a.r ? ` · +${a.r}` : ''} · титул «${a.title}»</small></span>${a.got ? (cur === a.k ? '<button class="btn ghost" data-tt="" style="padding:6px 10px;font-size:12px">Снять</button>' : `<button class="btn sec" data-tt="${a.k}" style="padding:6px 10px;font-size:12px">Титул</button>`) : ''}</div>`).join('');
   }
   if (box.dataset.h === h && box.childElementCount) return; box.dataset.h = h; box.innerHTML = h;
+  if ($('wheelCv')) drawWheel(NET.wheelRot || 0, d.wheel.sectors);
+  if ($('wTest')) $('wTest').onclick = () => { if (NET.spinning) return; NET.spinning = true; nsend({ t: 'spin', test: 1 }); };
   if ($('promoGo')) $('promoGo').onclick = () => { const v = $('promoIn').value.trim(); if (!v) return $('promoIn').focus(); nsend({ t: 'promo', code: v }); };
-  if ($('tDaily')) $('tDaily').onclick = () => { $('tDaily').disabled = true; nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
-  box.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => { b.disabled = true; nsend({ t: 'qClaim', i: +b.dataset.qc }); try { SFX.coin(); } catch (e) { } });
+  if ($('tDaily')) $('tDaily').onclick = () => { $('tDaily').disabled = true; flyCigs($('tDaily')); nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
+  box.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => { b.disabled = true; flyCigs(b); nsend({ t: 'qClaim', i: +b.dataset.qc }); try { SFX.coin(); } catch (e) { } });
   if ($('wSpin')) $('wSpin').onclick = () => { if (NET.spinning) return; const W = d.wheel; if (!W.free && !W.spins) return malyava('Бесплатный прокрут завтра. Можно взять ещё за 50 ⭐'); NET.spinning = true; $('wSpin').disabled = true; nsend({ t: 'spin' }); };
   if ($('wBuy')) $('wBuy').onclick = () => buyStars({ sid: 'spin' });
   box.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => nsend({ t: 'setTitle', k: b.dataset.tt }));
@@ -2250,5 +2268,203 @@ renderPlayers = async function () {
 };
 const _fillCase4 = fillCase;
 fillCase = function (m) { _fillCase4(m); const t = m.user && m.user.title; if (t && $('cpS')) $('cpS').querySelector('dl').insertAdjacentHTML('afterbegin', `<dt>Титул</dt><dd>${esc(t)}</dd>`); };
+
+// ================= Правки после этапа 6: чат общака, колесо, полёт сигарет, попап достижений =================
+// --- сигареты летят в пачку, баланс докручивается ---
+function holdCigs(ms) { NET.cigHold = Date.now() + ms; }
+function countCigs(to) {
+  const el = $('cigN'); if (!el) return;
+  const from = parseInt(el.textContent, 10);
+  cancelAnimationFrame(NET.cigRaf);
+  if (isNaN(from) || from === to || Math.abs(to - from) > 200000) { el.textContent = to; return; }
+  const t0 = performance.now(), D = Math.min(900, 300 + Math.abs(to - from));
+  const step = t => { const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(from + (to - from) * e); if (k < 1) NET.cigRaf = requestAnimationFrame(step); };
+  NET.cigRaf = requestAnimationFrame(step);
+}
+updCigs = function () { document.body.dataset.lvl = lvl(); if ((NET.cigHold || 0) > Date.now()) return; countCigs(P.cigs); };
+function flyCigs(src, n) {
+  n = n || 10; const pk = $('packBtn'); if (!pk) return;
+  let r = src && src.getBoundingClientRect ? src.getBoundingClientRect() : src;
+  if (!r || !r.width) r = { left: innerWidth / 2 - 20, top: innerHeight / 2 - 20, width: 40, height: 40 };
+  const t = pk.getBoundingClientRect(), sx = r.left + r.width / 2, sy = r.top + r.height / 2, tx = t.left + t.width / 2, ty = t.top + t.height / 2, D = 800;
+  holdCigs(D + n * 50 + 400);
+  for (let i = 0; i < n; i++) {
+    const im = document.createElement('img'); im.src = A + 'sigarety/02.webp'; im.className = 'flycig'; im.alt = '';
+    im.style.left = (sx - 15) + 'px'; im.style.top = (sy - 15) + 'px'; document.body.appendChild(im);
+    const jx = (Math.random() - .5) * 90, jy = -30 - Math.random() * 50, mx = (sx + tx) / 2 + (Math.random() - .5) * 140 - sx, my = Math.min(sy, ty) - 40 - Math.random() * 90 - sy;
+    const a = im.animate([
+      { transform: 'translate(0,0) rotate(0deg) scale(.5)', opacity: 0 },
+      { transform: `translate(${jx}px,${jy}px) rotate(${Math.random() * 120}deg) scale(1.15)`, opacity: 1, offset: .22 },
+      { transform: `translate(${mx}px,${my}px) rotate(${220 + Math.random() * 160}deg) scale(1)`, opacity: 1, offset: .58 },
+      { transform: `translate(${tx - sx}px,${ty - sy}px) rotate(540deg) scale(.35)`, opacity: .85 }],
+      { duration: D, delay: i * 50, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' });
+    a.onfinish = () => {
+      im.remove();
+      try { if (i % 2 === 0) SFX.checker(); } catch (e) { }
+      if (i === n - 1) { NET.cigHold = 0; pk.classList.remove('pulse'); void pk.offsetWidth; pk.classList.add('pulse'); try { SFX.coin(); } catch (e) { } updCigs(); }
+    };
+  }
+}
+// кнопки в окнах с data-fly — сигареты летят от кнопки
+const _showModal7 = showModal;
+showModal = function () {
+  const r = _showModal7.apply(this, arguments);
+  $('modalBody').querySelectorAll('[data-fly]').forEach(b => { b.addEventListener('pointerdown', () => { b._r = b.getBoundingClientRect(); }); b.addEventListener('click', () => flyCigs(b._r || null)); });
+  return r;
+};
+
+// --- колесо фортуны: рисуем на канвасе, крутим плавно ---
+const PIN_SVG = `<svg class="wheelpin" id="wheelPin" viewBox="0 0 34 52" aria-hidden="true"><defs><linearGradient id="pinG" x1="0" x2="1"><stop offset="0" stop-color="#7a5a14"/><stop offset=".5" stop-color="#ffe9a6"/><stop offset="1" stop-color="#7a5a14"/></linearGradient></defs><path d="M7 13 L17 50 L27 13 Z" fill="url(#pinG)" stroke="#2a1c06" stroke-width="2" stroke-linejoin="round"/><circle cx="17" cy="11" r="10" fill="url(#pinG)" stroke="#2a1c06" stroke-width="2"/><circle cx="17" cy="11" r="3.5" fill="#2a1c06"/></svg>`;
+function wheelBase(sectors) {
+  const key = sectors.join('|'); if (NET.wheelImg && NET.wheelKey === key) return NET.wheelImg;
+  const S = 680, R = S / 2, c = document.createElement('canvas'); c.width = c.height = S;
+  const x = c.getContext('2d'), n = sectors.length, seg = 2 * Math.PI / n, r1 = R * .84;
+  x.translate(R, R);
+  // деревянный обод
+  let g = x.createRadialGradient(0, 0, R * .8, 0, 0, R); g.addColorStop(0, '#2a1606'); g.addColorStop(.35, '#6e4520'); g.addColorStop(.7, '#4a2c10'); g.addColorStop(1, '#1e1004');
+  x.fillStyle = g; x.beginPath(); x.arc(0, 0, R - 2, 0, 7); x.fill();
+  x.strokeStyle = '#00000038'; x.lineWidth = 1.5; for (let k = 0; k < 6; k++) { x.beginPath(); x.arc(0, 0, r1 + 6 + k * 7, 0, 7); x.stroke(); }
+  // сектора: сукно — красное, чёрное, зелёное
+  const cols = ['#7c1b12', '#161412', '#1f3d26', '#161412'];
+  for (let i = 0; i < n; i++) {
+    const a0 = -Math.PI / 2 + i * seg; x.fillStyle = sectors[i] === '1000' ? '#8a6510' : cols[i % 4];
+    x.beginPath(); x.moveTo(0, 0); x.arc(0, 0, r1, a0, a0 + seg); x.closePath(); x.fill();
+  }
+  // фактура сукна и затемнение к центру
+  x.save(); x.beginPath(); x.arc(0, 0, r1, 0, 7); x.clip();
+  for (let k = 0; k < 5000; k++) { const a = Math.random() * 7, d = Math.sqrt(Math.random()) * r1; x.fillStyle = Math.random() < .5 ? '#ffffff0d' : '#0000001a'; x.fillRect(Math.cos(a) * d, Math.sin(a) * d, 2, 2); }
+  g = x.createRadialGradient(0, 0, R * .12, 0, 0, r1); g.addColorStop(0, '#000a'); g.addColorStop(.45, '#0000'); g.addColorStop(.85, '#0000'); g.addColorStop(1, '#0008');
+  x.fillStyle = g; x.fillRect(-R, -R, S, S); x.restore();
+  // латунные разделители
+  for (let i = 0; i < n; i++) {
+    const a = -Math.PI / 2 + i * seg; x.save(); x.rotate(a);
+    x.strokeStyle = '#000a'; x.lineWidth = 7; x.beginPath(); x.moveTo(R * .17, 2); x.lineTo(r1, 2); x.stroke();
+    x.strokeStyle = '#d4ad4a'; x.lineWidth = 4; x.beginPath(); x.moveTo(R * .17, 0); x.lineTo(r1, 0); x.stroke(); x.restore();
+  }
+  x.strokeStyle = '#d4ad4a'; x.lineWidth = 6; x.beginPath(); x.arc(0, 0, r1, 0, 7); x.stroke();
+  // колючая проволока по ободу
+  const rw = R * .915;
+  for (const ph of [0, Math.PI]) { x.strokeStyle = '#9aa0a6'; x.lineWidth = 2.6; x.beginPath(); for (let a = 0; a <= 2 * Math.PI + .01; a += .02) { const rr = rw + Math.sin(a * 60 + ph) * 3.5; a === 0 ? x.moveTo(rr * Math.cos(a), rr * Math.sin(a)) : x.lineTo(rr * Math.cos(a), rr * Math.sin(a)); } x.stroke(); }
+  for (let k = 0; k < 24; k++) { const a = k / 24 * 2 * Math.PI + .1; x.save(); x.rotate(a); x.translate(rw, 0); x.strokeStyle = '#c8ccd0'; x.lineWidth = 2.4; x.beginPath(); x.moveTo(-9, -7); x.lineTo(9, 7); x.moveTo(-9, 7); x.lineTo(9, -7); x.stroke(); x.fillStyle = '#6a6e72'; x.beginPath(); x.arc(0, 0, 3.5, 0, 7); x.fill(); x.restore(); }
+  // надписи
+  x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+  for (let i = 0; i < n; i++) {
+    const mid = -Math.PI / 2 + (i + .5) * seg, t = sectors[i], item = t === 'вещь';
+    x.save(); x.rotate(mid + Math.PI / 2);
+    x.font = `700 ${item ? 40 : t.length > 3 ? 50 : 56}px Rubik, Arial, sans-serif`; x.lineWidth = 8; x.strokeStyle = '#000c';
+    const big = item ? 'ВЕЩЬ' : t; x.strokeText(big, 0, -R * .6); x.fillStyle = t === '1000' ? '#fff3c4' : '#f3d98a'; x.fillText(big, 0, -R * .6);
+    x.font = '600 21px Rubik, Arial, sans-serif'; x.lineWidth = 5; const sm = item ? 'с барахолки' : 'сигарет';
+    x.strokeText(sm, 0, -R * .6 + 40); x.fillStyle = '#e8d6a8'; x.fillText(sm, 0, -R * .6 + 40);
+    x.restore();
+  }
+  NET.wheelImg = c; NET.wheelKey = key; return c;
+}
+function drawWheel(rot, sectors) {
+  const cv = $('wheelCv'); if (!cv) return; const x = cv.getContext('2d'), S = cv.width, R = S / 2;
+  x.clearRect(0, 0, S, S); x.save(); x.translate(R, R); x.rotate(rot * Math.PI / 180); x.drawImage(wheelBase(sectors), -R, -R); x.restore();
+  // ступица с воровской звездой (не крутится)
+  x.save(); x.translate(R, R);
+  let g = x.createRadialGradient(-12, -14, 4, 0, 0, R * .17); g.addColorStop(0, '#fff0b0'); g.addColorStop(.5, '#c9962e'); g.addColorStop(1, '#5a3c0c');
+  x.fillStyle = '#120c04'; x.beginPath(); x.arc(0, 0, R * .175, 0, 7); x.fill();
+  x.fillStyle = g; x.beginPath(); x.arc(0, 0, R * .155, 0, 7); x.fill();
+  x.fillStyle = '#1a1006'; x.beginPath();
+  for (let k = 0; k < 16; k++) { const a = -Math.PI / 2 + k * Math.PI / 8, rr = k % 2 ? R * .045 : R * .13; k ? x.lineTo(rr * Math.cos(a), rr * Math.sin(a)) : x.moveTo(rr * Math.cos(a), rr * Math.sin(a)); }
+  x.closePath(); x.fill(); x.fillStyle = '#d4ad4a'; x.beginPath(); x.arc(0, 0, R * .03, 0, 7); x.fill();
+  x.restore();
+}
+wheelSpun = function (m) {
+  const d = NET.tasks, sectors = (d && d.wheel && d.wheel.sectors) || ['25', '100', '50', 'вещь', '200', '75', '500', '1000'];
+  const n = sectors.length, seg = 360 / n, from = NET.wheelRot || 0;
+  const target = from - (from % 360) + 360 * 7 + (360 - (m.k + .5) * seg) + (Math.random() - .5) * seg * .6;
+  if (!m.test && m.cigs) holdCigs(30000);
+  const t0 = performance.now(), D = 5600; let last = Math.floor(from / seg);
+  const done = () => {
+    NET.wheelRot = target % 360; drawWheel(NET.wheelRot, sectors); NET.spinning = false;
+    let what = m.item === 'test' ? 'вещь с барахолки' : m.item ? `вещь «${(item(m.item) || {}).name || 'с барахолки'}». Уже у тебя в барахолке!` : `${m.cigs} сигарет!`;
+    if (m.test) showModal(`<div class="vict"><h3>Тест-прокрут</h3><p style="font-size:20px;font-weight:700;text-align:center">Выпало бы: ${what}</p><p class="sub" style="text-align:center">Это проверка, награда не начисляется.</p><button class="btn hot" style="width:100%" data-close>Ясно</button></div>`);
+    else showModal(`<div class="vict"><h3>${m.cigs >= 1000 ? 'Джекпот!' : 'Выпало'}</h3><p style="font-size:20px;font-weight:700;text-align:center">${what}</p><button class="btn hot" style="width:100%" data-close ${m.cigs ? 'data-fly' : ''}>Забрать</button></div>`);
+    try { SFX.coin(); if (m.cigs >= 500) cigRain(); } catch (e) { }
+    if (m.item && m.item !== 'test' && !P.owned.includes(m.item)) P.owned.push(m.item);
+    if (NET.taskDirty) { NET.taskDirty = false; renderTasks(); }
+    const b = $('wSpin'); if (b) b.disabled = false;
+  };
+  const step = t => {
+    const k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 4), rot = from + (target - from) * e;
+    if ($('wheelCv')) drawWheel(rot, sectors);
+    const s = Math.floor(rot / seg); if (s !== last) { last = s; const p = $('wheelPin'); if (p) { p.classList.remove('tick'); void p.getBBox; p.classList.add('tick'); } try { if (k < .97) SFX.checker(); } catch (e2) { } }
+    if (k < 1) requestAnimationFrame(step); else done();
+  };
+  requestAnimationFrame(step);
+};
+
+// --- достижение открыто: окно сразу (после партии, если идёт игра) ---
+function showAch(list) {
+  if (screen === 'game' || (G && !G.over)) { NET.achQ = (NET.achQ || []).concat(list); return; }
+  const a = list[0], more = list.length - 1, sum = list.reduce((s, x) => s + (x.r | 0), 0);
+  if (sum) holdCigs(15000);
+  showModal(`<div class="vict"><h3>Достижение!</h3><div class="achpop"><div class="medal">🏅</div><b>«${esc(a.t)}»</b><p>${esc(a.d)}</p><p style="color:var(--text);font-weight:700">${sum ? `+${sum} сигарет · ` : ''}титул «${esc(a.title)}»</p>${more ? `<p>и ещё ${more} ${plural(more, 'достижение', 'достижения', 'достижений')}</p>` : ''}</div>
+    <button class="btn hot" style="width:100%" data-close ${sum ? 'data-fly' : ''}>Забрать</button><button class="btn sec" style="width:100%;margin-top:8px" id="achSet">Поставить титул под имя</button>
+    <p class="sub" style="text-align:center;margin-top:8px">Все достижения и титулы: Задания → Достижения</p></div>`);
+  $('achSet').onclick = () => { if (sum) flyCigs($('achSet')); nsend({ t: 'setTitle', k: a.k }); hideModal(); malyava('Титул «' + a.title + '» стоит под твоим именем'); };
+}
+
+// --- базар бригады (чат общака) ---
+NET.brigTab = 'info';
+const bcTime = t => { const d = new Date(t), n = new Date(), hm = d.toTimeString().slice(0, 5); return d.toDateString() === n.toDateString() ? hm : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' ' + hm; };
+function bSegHTML() { const n = (NET.me && NET.me.bchat) | 0; return `<div class="seg bseg" id="bSeg"><button data-bt="info" class="${NET.brigTab !== 'chat' ? 'on' : ''}">Бригада</button><button data-bt="chat" class="${NET.brigTab === 'chat' ? 'on' : ''}">Базар${n && NET.brigTab !== 'chat' ? ` <span class="cnt">${n}</span>` : ''}</button></div>`; }
+function bindBSeg() { const s = $('bSeg'); if (!s) return; s.querySelectorAll('button').forEach(b => b.onclick = () => { if (NET.brigTab === b.dataset.bt) return; NET.brigTab = b.dataset.bt; if (NET.brigTab === 'chat') { NET.bcList = null; nsend({ t: 'bchatGet' }); } $('brigBox').innerHTML = ''; renderBrig(); }); }
+const _renderBrig7 = renderBrig;
+renderBrig = function () {
+  const d = NET.brigD;
+  if (!d || !d.b) { NET.brigTab = 'info'; return _renderBrig7(); }
+  if (NET.brigTab === 'chat') return renderBChat();
+  _renderBrig7(); $('brigBox').insertAdjacentHTML('afterbegin', bSegHTML()); bindBSeg();
+};
+function renderBChat() {
+  const box = $('brigBox');
+  if (!$('bcList')) {
+    box.innerHTML = bSegHTML() + `<div class="bchat"><div class="bclist" id="bcList"></div><div class="bcform"><textarea id="bcIn" rows="1" maxlength="300" placeholder="Написать своим…"></textarea><button class="btn hot" id="bcSend">Отпр.</button></div></div>`;
+    bindBSeg(); NET.bcRendered = 0;
+    const go2 = () => { const t = $('bcIn').value.trim(); if (!t) return; nsend({ t: 'bchat', text: t }); $('bcIn').value = ''; $('bcIn').style.height = ''; };
+    $('bcSend').onclick = go2;
+    $('bcIn').onkeydown = e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); go2(); } };
+    $('bcIn').oninput = e => { e.target.style.height = 'auto'; e.target.style.height = Math.min(120, e.target.scrollHeight) + 'px'; };
+  } else { const s = $('bSeg'); if (s) { s.outerHTML = bSegHTML(); bindBSeg(); } }
+  fillBChat();
+}
+function bcItem(x) {
+  const me = x.uid === NET.uid, rl = x.role && x.role !== 'member' ? ' · ' + BRIG_ROLE[x.role] : '';
+  return `<div class="bcm${me ? ' me' : ''}"><div class="n"><b>${me ? 'Ты' : esc(x.fn)}${rl}</b><span>${bcTime(x.at)}</span></div><div class="t">${esc(x.text)}</div></div>`;
+}
+function fillBChat() {
+  const el = $('bcList'); if (!el) return; const l = NET.bcList;
+  if (!l) { el.innerHTML = '<div class="bcempty">Загружаю…</div>'; NET.bcRendered = 0; return; }
+  if (!l.length) { el.innerHTML = '<div class="bcempty">Тут пока тихо.<br>Напиши первым — братва прочитает.</div>'; NET.bcRendered = 0; return; }
+  if (!NET.bcRendered || NET.bcRendered > l.length) { el.innerHTML = l.map(bcItem).join(''); el.scrollTop = el.scrollHeight; }
+  else if (l.length > NET.bcRendered) { const near = el.scrollHeight - el.scrollTop - el.clientHeight < 120; el.insertAdjacentHTML('beforeend', l.slice(NET.bcRendered).map(bcItem).join('')); if (near) el.scrollTop = el.scrollHeight; }
+  NET.bcRendered = l.length;
+}
+const chatOpen = () => screen === 'friends' && NET.frTab === 'brig' && NET.brigTab === 'chat' && !!$('bcList');
+const _updBadges7 = updBadges;
+updBadges = function () {
+  _updBadges7();
+  const me = NET.me || {}, c = me.bchat | 0, set = (id, v) => { const el = $(id); if (el) { el.hidden = !v; el.textContent = v; } };
+  set('navCnt', (me.unread | 0) + (me.brigInv | 0) + c); set('brigCnt', (me.brigInv | 0) + c);
+  const s = $('bSeg'); if (s && screen === 'friends' && NET.frTab === 'brig') { s.outerHTML = bSegHTML(); bindBSeg(); }
+};
+const _netMsg7 = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'bchatAll') { NET.bcList = m.list; NET.bcRendered = 0; if (chatOpen()) fillBChat(); return; }
+  if (m.t === 'bchat') {
+    if (NET.bcList) NET.bcList.push(m.m);
+    if (chatOpen()) { fillBChat(); if (m.m.uid !== NET.uid) nsend({ t: 'bchatSeen' }); }
+    else if (m.m.uid !== NET.uid) { try { SFX.checker(); } catch (e) { } }
+    return;
+  }
+  if (m.t === 'achGot') return showAch(m.list);
+  const r = await _netMsg7(m);
+  if (m.t === 'me' && NET.achQ && NET.achQ.length && screen !== 'game' && !(G && !G.over)) { const q = NET.achQ; NET.achQ = []; setTimeout(() => showAch(q), 1200); }
+  return r;
+};
 
 </script>

@@ -13,6 +13,9 @@ export class Lobby extends DurableObject {
       for (const [, v] of await ctx.storage.list({ prefix: 'u:' })) if (v && v.id) users[v.id] = v;
       this.users = users;
       this.meta = (await ctx.storage.get('meta')) || {};
+      const chats = {}; for (const [k, v] of await ctx.storage.list({ prefix: 'c:' })) chats[k.slice(2)] = v;
+      if (this.meta.chats) { Object.assign(chats, this.meta.chats); delete this.meta.chats; }
+      this.chats = chats;
     });
   }
   getCore(origin) {
@@ -28,6 +31,7 @@ export class Lobby extends DurableObject {
         if (old.length) await this.ctx.storage.delete(old.slice(0, 128));
       },
       getPhoto: async id => { const v = await this.ctx.storage.get('p:' + id); return v ? v.b : null; },
+      chats: this.chats, saveChat: (id, l) => l ? this.ctx.storage.put('c:' + id, l) : this.ctx.storage.delete('c:' + id),
       schedule: ms => this.ctx.storage.setAlarm(Date.now() + ms),   // рассылка идёт порциями: каждая порция — отдельный запуск
     });
     this.ctx.waitUntil(this.core.fetchName());
