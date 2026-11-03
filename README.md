@@ -4,10 +4,20 @@
 
 ## Что внутри
 
-- `server.js` — сервер: раздаёт игру, ведёт онлайн-партии (кубики бросает сервер), Телеграм-бот с меню.
+- `core.js` — логика: онлайн-партии (кубики бросает сервер), игроки, Телеграм-бот с меню.
+- `worker.js` — запуск на Cloudflare; `server.js` — запуск на обычном сервере (Node).
 - `engine.js` — правила нард (общие для сервера и игры).
 - `catalog.js` — звания, ставки, награды.
 - `app/` — сама игра (страница и картинки).
+
+## Запуск на Cloudflare Workers (бесплатно, без карты, адрес постоянный)
+
+1. dash.cloudflare.com → Workers & Pages → Create → **Import a repository** → GitHub → этот репозиторий. Настройки сборки не трогать (`npx wrangler deploy`).
+2. После первой сборки: воркер `nardy` → Settings → Variables and Secrets → Add → тип **Secret**, имя `BOT_TOKEN`.
+3. Открыть в браузере `https://nardy.<твой-поддомен>.workers.dev/setup` — сервер сам подключит бота (webhook, кнопка «Играть», команды).
+4. Написать боту `/start`.
+
+Файлы: `worker.js` (вход для Cloudflare), `core.js` (вся логика), `wrangler.toml` (настройки).
 
 ## Запуск на Back4app Containers (бесплатно)
 

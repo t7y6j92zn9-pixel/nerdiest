@@ -1238,9 +1238,10 @@ const EX = ['Сеня Шрам','Валера Чифир','Гоша Кубик',
 async function renderTop(){
   const all=((window.NET&&NET.top)||EX).map(x=>({...x})).concat([{name:P.name,rating:P.rating,wins:P.wins,eq:P.eq,me:true}]).sort((a,b)=>b.rating-a.rating);
   const t3=all.slice(0,3);
-  $('top3').innerHTML=[1,0,2].map(i=>`<div class="frame"><span class="pl">${i+1}</span><img id="hf${i}" alt=""><b>${t3[i].name}</b><span>${t3[i].rating}</span></div>`).join('');
-  $('top3').querySelectorAll('.frame').forEach((el,k)=>{ const x=t3[[1,0,2][k]]; el.style.cursor='pointer'; el.onclick=()=>showCase(x.me?null:x); });
-  t3.forEach(async(x,i)=>{ const c=await heroOnBg(x.eq, x.lvl||lvl(), 360); const h=document.createElement('canvas'); h.width=300; h.height=340; h.getContext('2d').drawImage(c,90,15,180,204,0,0,300,340); $('hf'+i).src=h.toDataURL('image/webp',.85); });
+  const ord=[1,0,2].filter(i=>t3[i]);
+  $('top3').innerHTML=ord.map(i=>`<div class="frame"><span class="pl">${i+1}</span><img id="hf${i}" alt=""><b>${t3[i].name}</b><span>${t3[i].rating}</span></div>`).join('');
+  $('top3').querySelectorAll('.frame').forEach((el,k)=>{ const x=t3[ord[k]]; el.style.cursor='pointer'; el.onclick=()=>showCase(x.me?null:x); });
+  t3.forEach(async(x,i)=>{ const c=await heroOnBg(x.eq, x.lvl||lvl(), 360); const h=document.createElement('canvas'); h.width=300; h.height=340; h.getContext('2d').drawImage(c,90,15,180,204,0,0,300,340); if($('hf'+i)) $('hf'+i).src=h.toDataURL('image/webp',.85); });
   $('topList').innerHTML=all.slice(3).map((x,i)=>`<div class="li${x.me?' me':''}"><span class="n">${i+4}</span><span class="av"><img data-h="${i+3}" alt=""></span><span><b>${x.name}${x.me?' (ты)':''}</b><br><span style="font-size:11px">${rankOf(x.rating)} · ${x.wins} побед</span></span><span class="r">${x.rating}</span></div>`).join('');
   all.slice(3).forEach(async(x,i)=>{ const el=$('topList').querySelector(`[data-h="${i+3}"]`); if(el) el.src=await headURL(x.eq); });
   $('topList').querySelectorAll('.li').forEach((el,i)=>{ const x=all[i+3]; el.style.cursor='pointer'; el.onclick=()=>showCase(x.me?null:(EX.find(e=>e.name===x.name)||x)); });
@@ -1505,7 +1506,7 @@ function flipState(s, me) {
 }
 
 function netConnect() {
-  const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host);
+  const ws = new WebSocket((location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws');
   NET.ws = ws;
   ws.onopen = () => {
     NET.tries = 0;
