@@ -38,11 +38,19 @@ function createCore(cfg) {
   // сервер перезапустился посреди партии (обновление) — партия пропала, ставку возвращаем
   for (const u of Object.values(users)) if (u && u.hold) { u.cigs = (u.cigs || 0) + (u.hold.s | 0); u.refund = u.hold.s | 0; delete u.hold; save(u); }
   let botUsername = (cfg.BOT_USERNAME || '').replace(/^@/, '').trim();
+  // ---------- этап 6: статистика по дням ----------
+  function dayStat(k, n) {
+    const d = today(); meta.days = meta.days || {}; const x = meta.days[d] = meta.days[d] || {};
+    x[k] = (x[k] || 0) + (n == null ? 1 : n);
+    const keys = Object.keys(meta.days); if (keys.length > 60) keys.sort().slice(0, keys.length - 60).forEach(k2 => delete meta.days[k2]);
+    saveMeta();
+  }
 
   // ---------- игроки ----------
   function getUser(id, name, username) {
     let u = users[id];
-    if (!u) u = users[id] = { id, name: name || 'Игрок', username: username || '', cigs: 2500, rating: 0, wins: 0, losses: 0, eq: null, lvl: 1, friends: [], created: Date.now() };
+    if (!u) { u = users[id] = { id, name: name || 'Игрок', username: username || '', cigs: 2500, rating: 0, wins: 0, losses: 0, eq: null, lvl: 1, friends: [], created: Date.now() }; dayStat('new'); }
+    if (u.dauDay !== today()) { u.dauDay = today(); dayStat('dau'); }
     if (name) u.name = name;
     if (username) u.username = username;
     u.seen = Date.now(); save(u);
@@ -80,7 +88,7 @@ function createCore(cfg) {
     meta.paid = meta.paid || {}; if (meta.paid[charge]) return false; meta.paid[charge] = uid;
     if (!Array.isArray(u.owned)) u.owned = [];
     u.cigs += p.cigs || 0; if (p.spins) u.spins = (u.spins | 0) + p.spins; (p.items || []).forEach(x => { if (ITEMS[x] && !u.owned.includes(x)) u.owned.push(x); });
-    u.stars = (u.stars || 0) + (paid || p.stars);
+    u.stars = (u.stars || 0) + (paid || p.stars); dayStat('stars', paid || p.stars);
     meta.sales = (meta.sales || []).concat([{ at: Date.now(), uid, id, stars: paid || p.stars, charge }]).slice(-1000);
     addLog('оплата', `${u.name} купил «${p.title}» за ${paid || p.stars} ⭐`);
     save(u); saveMeta(); sendMe(uid); send(uid, { t: 'paid', id, title: p.title });
@@ -283,6 +291,7 @@ function createCore(cfg) {
       }
       case 'me': return sendMe(uid);
       case 'ping': return send(uid, { t: 'pong' });
+      case 'promo': return usePromo(uid, m.code);
       case 'tasks': seasonRoll(); achCheck(u); return send(uid, tasksView(u));
       case 'qClaim': {
         const q = quests(u), x = q.list[m.i | 0]; if (!x) return; const Q = QPOOL[x.i];
@@ -535,8 +544,9 @@ function createCore(cfg) {
     for (const [c, r] of rooms) if (uids.includes(r.host)) rooms.delete(c);
     const g = {
       id: crypto.randomBytes(6).toString('hex'), uids, variant, stake, s: E.newState(variant), turn: 0, dice: [], shown: [],
-      phase: 'roll', last: null, seq: 0, away: [0, 0], timeouts: [0, 0], deadline: 0, over: null, opening: null, chatAt: {},
+      phase: 'roll', last: null, seq: 0, away: [0, 0], timeouts: [0, 0], deadline: 0, over: null, opening: null, chatAt: {}, at: Date.now(), moves: 0,
     };
+    dayStat('games'); if (stake) dayStat('stakes', stake);
     meta.gamesTotal = (meta.gamesTotal || 0) + 1; if (meta.day !== today()) { meta.day = today(); meta.gamesDay = 0; } meta.gamesDay = (meta.gamesDay || 0) + 1; saveMeta();
     let a, b; do { a = r6(); b = r6(); } while (a === b);
     g.opening = [a, b]; g.turn = a > b ? 0 : 1;
@@ -584,6 +594,7 @@ function createCore(cfg) {
   function finishMove(g, p, n, moves) {
     const before = g.s;
     g.s = n; g.s.first[p] = false; g.last = { p, moves, before };
+    g.moves = (g.moves | 0) + 1;
     if (n.off[p] === 15) { g.phase = 'anim'; sendGame(g); return setTimeout(() => endGame(g, p, E.winMult(n, p), 'win'), 300); }
     g.dice = []; g.phase = 'anim';
     sendGame(g);
@@ -641,9 +652,95 @@ function createCore(cfg) {
     const dW = C.RATING.win[mult], dL = reason === 'resign' ? C.RATING.resign : C.RATING.loss[mult];
     seasonRoll(); [[uw, ul, 1, dW], [ul, uw, 0, dL]].forEach(([a, b, win, d]) => { seasonAdd(a, d); qEvent(a, 'play'); qEvent(a, g.variant === 'short' ? 'short' : 'long'); if (win) { qEvent(a, 'win'); if (mult > 1) qEvent(a, 'mars'); } setTimeout(() => achCheck(a), 1500); a.hist = [{ at: Date.now(), o: b.id, on: b.name, v: g.variant, s: g.stake, w: win, m: mult, r: reason, d }].concat(a.hist || []).slice(0, 30); refCheck(a); });
     g.over = res; g.phase = 'over'; g.deadline = 0;
+    try { susCheck(g, w, reason); } catch (e) { log('sus ' + (e && e.message)); }
     save(uw); save(ul);
     sendGame(g);
     g.uids.forEach(x => { userGame.delete(x); sendMe(x); });
+  }
+
+  // ---------- этап 6: подозрительные партии (слив сигарет на другой аккаунт) ----------
+  function susCheck(g, w, reason) {
+    if (!g.stake) return;
+    const uw = users[g.uids[w]], ul = users[g.uids[1 - w]], dur = Date.now() - (g.at || Date.now()), flags = [];
+    if (reason !== 'win' && (dur < 90e3 || (g.moves | 0) < 6)) flags.push(`быстро сдался (${Math.round(dur / 1000)} сек, ходов ${g.moves | 0})`);
+    const d = today(); meta.pairs = meta.pairs && meta.pairs.d === d ? meta.pairs : { d, p: {} };
+    const key = g.uids.slice().sort().join(':'), pr = meta.pairs.p[key] = meta.pairs.p[key] || { n: 0, w: {}, sum: 0 };
+    pr.n++; pr.w[uw.id] = (pr.w[uw.id] | 0) + 1; pr.sum += g.stake;
+    if (pr.n >= 4 && pr.w[uw.id] === pr.n) flags.push(`сегодня ${pr.n} партий на ставку подряд, все выиграл ${uw.name} (ушло ${pr.sum})`);
+    if (g.stake >= 500 && reason !== 'win') flags.push('крупная ставка без доигрыша');
+    if (!flags.length) return;
+    const it = { at: Date.now(), w: uw.id, wn: uw.name, l: ul.id, ln: ul.name, stake: g.stake, reason, flags };
+    meta.sus = [it].concat(meta.sus || []).slice(0, 200); saveMeta();
+    if (BOT_TOKEN && (g.stake >= 250 || pr.n >= 4)) for (const a of meta.admins || []) tg('sendMessage', { chat_id: a, text: `🚨 Подозрительная партия\n${uw.name} (id ${uw.id}) выиграл у ${ul.name} (id ${ul.id}) ${g.stake} сиг.\n• ${flags.join('\n• ')}\n\n/sus — все, /player id — карточка` }).catch(() => { });
+  }
+  function susText() {
+    const l = (meta.sus || []).slice(0, 12);
+    return l.length ? '🚨 Подозрительные партии:\n\n' + l.map(x => `${dt(x.at)} ${x.wn} ← ${x.ln}: ставка ${x.stake}\n  ${x.flags.join('; ')}\n  ids: ${x.w} ← ${x.l}`).join('\n\n') + '\n\nЕсли это слив — /give кто -сумма, /ban кто причина' : 'Подозрительных партий нет 👌';
+  }
+
+  // ---------- этап 6: промокоды ----------
+  function usePromo(uid, code) {
+    const u = users[uid]; code = String(code || '').trim().toUpperCase().slice(0, 24);
+    const now = Date.now(); u.promoTry = (u.promoTry || []).filter(t => now - t < 60e3);
+    if (u.promoTry.length >= 5) return err(uid, 'Слишком часто. Подожди минуту');
+    u.promoTry.push(now); save(u);
+    const pc = (meta.promos || {})[code];
+    if (!code || !pc) return err(uid, 'Нет такого промокода');
+    if (pc.until && now > pc.until) return err(uid, 'Промокод уже не действует');
+    if (pc.uses && pc.n >= pc.uses) return err(uid, 'Промокод уже закончился');
+    if (pc.by[uid]) return err(uid, 'Ты уже вводил этот промокод');
+    pc.by[uid] = now; pc.n = (pc.n | 0) + 1; saveMeta();
+    u.cigs += pc.amt; delete u.promoTry; save(u); dayStat('promo');
+    sendMe(uid); send(uid, { t: 'promoOk', amt: pc.amt, code });
+  }
+  function promosText() {
+    const l = Object.entries(meta.promos || {});
+    return l.length ? '🎟 Промокоды:\n\n' + l.map(([c, p]) => `${c} — ${p.amt} сиг., введён ${p.n | 0}${p.uses ? ' из ' + p.uses : ''} раз${p.until ? ', до ' + dt(p.until) : ''}${p.until && Date.now() > p.until ? ' (истёк)' : ''}`).join('\n') + '\n\nУдалить: /promodel КОД' : 'Промокодов нет.\n\nСоздать: /promo КОД СУММА [СКОЛЬКО_РАЗ] [ДНЕЙ]\nНапример: /promo ZONA 500 100 7';
+  }
+
+  // ---------- этап 6: графики ----------
+  function statsText() {
+    const days = []; for (let i = 13; i >= 0; i--) days.push(new Date(Date.now() + 3 * 3600e3 - i * 864e5).toISOString().slice(0, 10));
+    const D = meta.days || {};
+    const block = (k, name) => {
+      const v = days.map(d => (D[d] && D[d][k]) || 0), mx = Math.max(1, ...v);
+      return `${name} (за 14 дней: ${v.reduce((a, b) => a + b, 0)})\n` + days.map((d, i) => `${d.slice(8, 10)}.${d.slice(5, 7)} ${'▇'.repeat(Math.round(v[i] / mx * 12)) || '·'} ${v[i]}`).join('\n');
+    };
+    return '📈 Графики по дням (Москва)\n\n' + [block('dau', '👥 Заходили'), block('new', '🆕 Новые игроки'), block('games', '🎲 Партии'), block('stars', '⭐ Звёзды')].join('\n\n');
+  }
+
+  // ---------- этап 6: рассылка ----------
+  const bcTargets = () => Object.values(users).filter(u => u.bot && !u.banned && !u.botBlocked && !String(u.id).startsWith('dev'));
+  async function bcastStep() {
+    const b = meta.bc; if (!b || !b.run) return false;
+    const part = b.q.splice(0, 25);
+    for (const id of part) {
+      try {
+        const r = await tg('sendMessage', { chat_id: id, text: b.text, reply_markup: { inline_keyboard: [[{ text: '🎲 Открыть нарды', web_app: { url: appUrl() } }]] } });
+        if (r && r.ok) b.ok++; else { b.fail++; if (r && r.error_code === 403 && users[id]) { users[id].botBlocked = Date.now(); save(users[id]); } }
+      } catch (e) { b.fail++; }
+    }
+    saveMeta();
+    if (b.q.length) return true;
+    b.run = false; meta.bcLog = [{ at: b.at, by: b.by, text: b.text.slice(0, 60), ok: b.ok, fail: b.fail }].concat(meta.bcLog || []).slice(0, 20); saveMeta();
+    addLog(b.by, `рассылка: доставлено ${b.ok}, не дошло ${b.fail}`);
+    tg('sendMessage', { chat_id: b.by, text: `📢 Рассылка закончена.\n✅ Доставлено: ${b.ok}\n❌ Не дошло: ${b.fail} (заблокировали бота)` }).catch(() => { });
+    return false;
+  }
+  function bcastKick() {
+    if (cfg.schedule) return cfg.schedule(100);
+    const loop = async () => { if (await bcastStep()) setTimeout(loop, 1100); };
+    setTimeout(loop, 50);
+  }
+  function bcastStart(adminId) {
+    const b = meta.bcDraft; if (!b) return 'Нечего отправлять. Напиши /broadcast текст';
+    if (meta.bc && meta.bc.run) return 'Рассылка уже идёт, подожди';
+    const ts = bcTargets();
+    meta.bc = { text: b.text, by: adminId, at: Date.now(), q: ts.map(u => u.id), ok: 0, fail: 0, run: true }; delete meta.bcDraft; saveMeta();
+    // в игре — системная малява всем, кто открывал игру
+    for (const u of Object.values(users)) if (u.app && !u.banned) pushMal(u.id, { fn: 'Администрация', text: b.text.slice(0, 1000), sys: true });
+    bcastKick();
+    return `📢 Пошла рассылка: ${ts.length} в бота + малява в игре. Пришлю отчёт.`;
   }
 
   // ---------- Телеграм-бот ----------
@@ -732,7 +829,8 @@ ${top}
 
 Команды: /help`;
   }
-  const adminKb = { inline_keyboard: [[{ text: '🔄 Обновить', callback_data: 'adm' }, { text: '📬 Обращения', callback_data: 'tickets' }], [{ text: '🎲 Играть', web_app: { url: WEBAPP_URL + '/' } }]] };
+  const adminKb = { inline_keyboard: [[{ text: '🔄 Обновить', callback_data: 'adm' }, { text: '📬 Обращения', callback_data: 'tickets' }], [{ text: '📈 Графики', callback_data: 'stats' }, { text: '🚨 Подозрительные', callback_data: 'sus' }], [{ text: '🎟 Промокоды', callback_data: 'promos' }, { text: '📢 Рассылка', callback_data: 'bchelp' }], [{ text: '🎲 Играть', web_app: { url: WEBAPP_URL + '/' } }]] };
+  const BC_HELP = '📢 Рассылка всем игрокам\n\nНапиши: /broadcast и текст (можно в несколько строк). Я покажу, как это будет выглядеть, и спрошу подтверждение.\n\nСообщение придёт в бота всем, кто его запускал, и малявой в игре.';
   const ADMIN_PASS = String(cfg.ADMIN_PASS || '').trim();
   const isAdmin = id => Array.isArray(meta.admins) && meta.admins.includes(String(id));
   function touchBotUser(from) {
@@ -774,6 +872,11 @@ ${top}
 /mute кто — запрет маляв на сутки, /reports — жалобы на малявы
 /log — журнал выдач и банов
 
+/broadcast текст — рассылка всем игрокам
+/promo КОД СУММА [РАЗ] [ДНЕЙ] — промокод, /promos — список, /promodel КОД — удалить
+/sus — подозрительные партии
+/stats — графики по дням
+
 «кто» — @ник, id или имя игрока; «я» — ты сам.`;
   function findUser(q, me) {
     q = String(q || '').trim(); if (!q) return null;
@@ -797,6 +900,25 @@ ${top}
   function adminCmd(me, cmd, text, M) {
     const parts = text.split(/\s+/).slice(1);
     if (cmd === '/help') return M(ADMIN_HELP);
+    if (cmd === '/stats') return M(statsText());
+    if (cmd === '/sus') return M(susText());
+    if (cmd === '/promos') return M(promosText());
+    if (cmd === '/promodel') { const c = String(parts[0] || '').toUpperCase(); if (!meta.promos || !meta.promos[c]) return M('Нет такого промокода'); delete meta.promos[c]; saveMeta(); addLog(me.id, `удалил промокод ${c}`); return M(`🗑 Промокод ${c} удалён`); }
+    if (cmd === '/promo') {
+      const c = String(parts[0] || '').toUpperCase(), amt = parseInt(parts[1], 10), uses = parseInt(parts[2] || '0', 10) || 0, days = parseInt(parts[3] || '0', 10) || 0;
+      if (!/^[A-ZА-ЯЁ0-9_]{3,24}$/.test(c) || !(amt > 0 && amt <= 100000)) return M('Пример: /promo ZONA 500 100 7\n(код ZONA, 500 сигарет, 100 раз, 7 дней). Последние два числа можно не писать — тогда без ограничений.');
+      meta.promos = meta.promos || {}; if (meta.promos[c]) return M('Такой код уже есть. Удали: /promodel ' + c);
+      meta.promos[c] = { amt, uses, until: days ? Date.now() + days * 864e5 : 0, n: 0, by: {}, at: Date.now(), who: me.id }; saveMeta();
+      addLog(me.id, `промокод ${c}: ${amt} сиг.${uses ? ', ' + uses + ' раз' : ''}${days ? ', ' + days + ' дн.' : ''}`);
+      return M(`🎟 Промокод ${c} создан: ${amt} сигарет${uses ? `, можно ввести ${uses} раз(а)` : ''}${days ? `, действует ${days} дн.` : ''}\nИгрок вводит его в игре: Задания → внизу «Промокод».`);
+    }
+    if (cmd === '/broadcast') {
+      const body = text.replace(/^\/broadcast(@\w+)?\s*/i, '').trim().slice(0, 3500);
+      if (!body) return M(BC_HELP);
+      if (meta.bc && meta.bc.run) return M('Рассылка уже идёт, подожди отчёт.');
+      meta.bcDraft = { text: body, by: me.id, at: Date.now() }; saveMeta();
+      return M(`Так будет выглядеть:\n\n${body}\n\n———\nОтправить ${bcTargets().length} игрокам в бота и малявой всем в игре?`, { inline_keyboard: [[{ text: `✅ Отправить всем (${bcTargets().length})`, callback_data: 'bc_go' }], [{ text: '✖️ Отмена', callback_data: 'bc_no' }]] });
+    }
     if (cmd === '/reports') { const l = (meta.reports || []).slice(0, 10); return M(l.length ? '🚨 Последние жалобы:\n\n' + l.map(x => `${dt(x.at)} ${x.bn} → на ${x.an} (id ${x.about}): «${x.text.slice(0, 80)}»`).join('\n\n') + '\n\n/mute id — запрет маляв на сутки' : 'Жалоб нет 👌'); }
     if (cmd === '/log') { const l = (meta.alog || []).slice(-20).reverse(); return M(l.length ? '📒 Журнал:\n\n' + l.map(x => `${dt(x.at)} ${users[x.by] ? users[x.by].name : x.by}: ${x.text}`).join('\n') : '📒 Журнал пуст'); }
     // кто может быть из нескольких слов: число в конце — сумма
@@ -833,6 +955,12 @@ ${top}
       if (q.data === 'rules') return { method: 'sendMessage', chat_id, text: RULES };
       if (q.data === 'adm' && isAdmin(q.from.id)) return { method: 'editMessageText', chat_id, message_id: q.message.message_id, text: adminText(), reply_markup: adminKb };
       if (q.data === 'tickets' && isAdmin(q.from.id)) return { method: 'sendMessage', chat_id, text: ticketsText() };
+      if (q.data === 'stats' && isAdmin(q.from.id)) return { method: 'sendMessage', chat_id, text: statsText() };
+      if (q.data === 'sus' && isAdmin(q.from.id)) return { method: 'sendMessage', chat_id, text: susText() };
+      if (q.data === 'promos' && isAdmin(q.from.id)) return { method: 'sendMessage', chat_id, text: promosText() };
+      if (q.data === 'bchelp' && isAdmin(q.from.id)) return { method: 'sendMessage', chat_id, text: BC_HELP };
+      if (q.data === 'bc_go' && isAdmin(q.from.id)) return { method: 'editMessageText', chat_id, message_id: q.message.message_id, text: bcastStart(String(q.from.id)) };
+      if (q.data === 'bc_no' && isAdmin(q.from.id)) { delete meta.bcDraft; saveMeta(); return { method: 'editMessageText', chat_id, message_id: q.message.message_id, text: 'Рассылка отменена.' }; }
       if (q.data === 'top') return { method: 'sendMessage', chat_id, text: topText() };
       if (q.data === 'sup') { const u = touchBotUser(q.from); if (u) { u.supWait = Date.now(); save(u); } return { method: 'sendMessage', chat_id, text: SUPPORT_PROMPT }; }
       return null;
@@ -881,7 +1009,7 @@ ${top}
       }
       return M(adminText(), adminKb);
     }
-    if (me && isAdmin(me.id) && ['/player', '/give', '/rating', '/ban', '/unban', '/log', '/help', '/mute', '/reports'].includes(cmd)) return adminCmd(me, cmd, text, M);
+    if (me && isAdmin(me.id) && ['/player', '/give', '/rating', '/ban', '/unban', '/log', '/help', '/mute', '/reports', '/stats', '/sus', '/promo', '/promos', '/promodel', '/broadcast'].includes(cmd)) return adminCmd(me, cmd, text, M);
     if (cmd === '/unadmin' && me && isAdmin(me.id)) { meta.admins = meta.admins.filter(x => x !== me.id); saveMeta(); return M('Ты больше не админ.'); }
     if (cmd === '/start' && /^fr_/i.test(payload || '') && me) {
       const fid = payload.slice(3), f = users[fid];
@@ -936,7 +1064,7 @@ ${top}
     }
   }
 
-  return { onMessage, onClose, tick, busy, onUpdate, hookAllowed, botSetup, fetchName, getPhoto, HOOK_PATH, get botUsername() { return botUsername; } };
+  return { onMessage, onClose, tick, busy, onUpdate, hookAllowed, botSetup, fetchName, getPhoto, bcastStep, HOOK_PATH, get botUsername() { return botUsername; } };
 }
 
 module.exports = { createCore };

@@ -187,6 +187,7 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .seg3{grid-template-columns:1fr 1fr 1fr}
 .seg4{grid-template-columns:repeat(4,1fr)}.seg4 button{padding:9px 2px;font-size:13px}
 .quest{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:#000a;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.promo{margin-top:12px}.promo input{flex:1;min-width:0;font:inherit;font-size:17px;letter-spacing:.12em;text-transform:uppercase;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#0008;color:#f3e6c8}
 .quest b{display:block}.quest .pb{height:7px;border-radius:4px;background:#ffffff1a;margin-top:6px;overflow:hidden}.quest .pb i{display:block;height:100%;background:linear-gradient(90deg,#c9862a,#f0c060)}
 .quest.done{opacity:.55}
 .streak{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:8px 0}.streak div{text-align:center;border-radius:8px;padding:6px 0;background:#0007;border:1px solid var(--line);font-size:11px;color:var(--muted)}.streak div b{display:block;color:var(--ink,#eee);font-size:13px}.streak div.got{background:#5a3a12;border-color:#c9862a;color:#e8d0a0}.streak div.got b{color:#ffe7b0}.streak div.now{outline:2px solid var(--accent2)}
@@ -2069,7 +2070,7 @@ function renderMal() {
   const tab = NET.malTab || 'in';
   let h = `<div class="row" style="margin-bottom:10px"><button class="btn hot" id="malNew">Написать маляву</button></div>
     <div class="seg" style="margin-bottom:10px"><button data-m="in" class="${tab === 'in' ? 'on' : ''}">Входящие</button><button data-m="out" class="${tab === 'out' ? 'on' : ''}">Отправленные</button></div>`;
-  if (tab === 'in') h += d.inbox.length ? d.inbox.map((x, i) => `<div class="mal${x.read ? '' : ' new'}"><div class="hd"><b>${x.from ? esc(x.fn) : 'Система'}</b><span>${ago(x.at)}</span></div><div class="tx">${esc(x.text)}</div>
+  if (tab === 'in') h += d.inbox.length ? d.inbox.map((x, i) => `<div class="mal${x.read ? '' : ' new'}"><div class="hd"><b>${x.from ? esc(x.fn) : esc(x.fn || 'Система')}</b><span>${ago(x.at)}</span></div><div class="tx">${esc(x.text)}</div>
       <div class="act">${x.brigInv ? `<button data-bj="${i}">Вступить</button>` : ''}${x.from ? `<button data-re="${i}">Ответить</button>` : ''}${x.from && !x.gift && !x.rep ? `<button data-rp="${i}">Пожаловаться</button>` : ''}${x.rep ? '<span style="font-size:12px;color:#8a1e14">жалоба отправлена</span>' : ''}<button data-del="${i}">Выкинуть</button></div></div>`).join('')
     : '<div class="card empty"><b>Пусто</b>Никто не пишет. Черкни кому-нибудь первым.</div>';
   else h += d.sent.length ? d.sent.map(x => `<div class="mal"><div class="hd"><b>→ ${esc(x.tn)}</b><span>${ago(x.at)}</span></div><div class="tx">${esc(x.text)}</div></div>`).join('') : '<div class="card empty"><b>Пусто</b>Ты ещё никому не писал.</div>';
@@ -2179,6 +2180,7 @@ const _netMsg4 = netMsg;
 netMsg = async function (m) {
   if (m.t === 'tasks') { NET.tasks = m; if (screen === 'tasks') renderTasks(); return; }
   if (m.t === 'spun') return wheelSpun(m);
+  if (m.t === 'promoOk') { if ($('promoIn')) $('promoIn').value = ''; showModal(`<div class="vict"><h3>Промокод принят</h3><p style="font-size:20px;font-weight:700;text-align:center">+${m.amt} сигарет</p><button class="btn hot" style="width:100%" data-close>Забрать</button></div>`); try { SFX.coin(); cigRain(); } catch (e) { } return; }
   const r = await _netMsg4(m);
   if (m.t === 'me' && screen === 'home') homeDaily();
   return r;
@@ -2195,6 +2197,7 @@ function renderTasks() {
       <h2 style="font-size:24px;margin-top:14px">На сегодня</h2>`;
     h += d.quests.map((q, i) => `<div class="quest${q.c ? ' done' : ''}"><div><b>${q.t}</b><span class="sub" style="margin:0">${q.p} из ${q.n} · награда ${q.r}</span><div class="pb"><i style="width:${q.p / q.n * 100}%"></i></div></div>${q.c ? '<span>✓</span>' : `<button class="btn ${q.p >= q.n ? 'hot' : 'ghost'}" data-qc="${i}" ${q.p >= q.n ? '' : 'disabled'} style="padding:8px 12px;font-size:13px">Забрать</button>`}</div>`).join('');
     h += `<p class="sub" style="text-align:center">Сделай все три — ещё +${d.qAllR} сверху. Новые задания каждый день в полночь по Москве.</p>`;
+    h += `<div class="card promo"><b>Промокод</b><p class="sub" style="margin:4px 0 8px">Есть код от администрации? Вводи — получишь сигареты.</p><div class="row" style="gap:8px"><input id="promoIn" maxlength="24" placeholder="КОД" autocomplete="off" autocapitalize="characters"><button class="btn hot" id="promoGo">Ввести</button></div></div>`;
   } else if (NET.taskTab === 'w') {
     const W = d.wheel, n = W.sectors.length, cols = ['#7a1e14', '#1f4a2a', '#24324f', '#6a4a12', '#4a1a4a', '#1f3f4a', '#5a1414', '#8a6a12'];
     const grad = W.sectors.map((_, i) => `${cols[i % cols.length]} ${i * 360 / n}deg ${(i + 1) * 360 / n}deg`).join(',');
@@ -2214,6 +2217,7 @@ function renderTasks() {
     h += `<p class="sub">Открой достижение — получишь сигареты и титул. Титул видно под твоим именем в партии и в деле.</p>` + d.achs.map(a => `<div class="ach${a.got ? ' got' : ''}"><span class="ic">${a.got ? '🏅' : '🔒'}</span><span><b>${a.t}</b><small>${a.d}${a.r ? ` · +${a.r}` : ''} · титул «${a.title}»</small></span>${a.got ? (cur === a.k ? '<button class="btn ghost" data-tt="" style="padding:6px 10px;font-size:12px">Снять</button>' : `<button class="btn sec" data-tt="${a.k}" style="padding:6px 10px;font-size:12px">Титул</button>`) : ''}</div>`).join('');
   }
   if (box.dataset.h === h && box.childElementCount) return; box.dataset.h = h; box.innerHTML = h;
+  if ($('promoGo')) $('promoGo').onclick = () => { const v = $('promoIn').value.trim(); if (!v) return $('promoIn').focus(); nsend({ t: 'promo', code: v }); };
   if ($('tDaily')) $('tDaily').onclick = () => { $('tDaily').disabled = true; nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
   box.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => { b.disabled = true; nsend({ t: 'qClaim', i: +b.dataset.qc }); try { SFX.coin(); } catch (e) { } });
   if ($('wSpin')) $('wSpin').onclick = () => { if (NET.spinning) return; const W = d.wheel; if (!W.free && !W.spins) return malyava('Бесплатный прокрут завтра. Можно взять ещё за 50 ⭐'); NET.spinning = true; $('wSpin').disabled = true; nsend({ t: 'spin' }); };

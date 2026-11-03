@@ -28,6 +28,7 @@ export class Lobby extends DurableObject {
         if (old.length) await this.ctx.storage.delete(old.slice(0, 128));
       },
       getPhoto: async id => { const v = await this.ctx.storage.get('p:' + id); return v ? v.b : null; },
+      schedule: ms => this.ctx.storage.setAlarm(Date.now() + ms),   // рассылка идёт порциями: каждая порция — отдельный запуск
     });
     this.ctx.waitUntil(this.core.fetchName());
     return this.core;
@@ -36,8 +37,13 @@ export class Lobby extends DurableObject {
     if (this.iv) return;
     this.iv = setInterval(() => { this.core.tick(); if (!this.core.busy()) { clearInterval(this.iv); this.iv = null; } }, 1000);
   }
+  async alarm() {
+    const core = this.getCore(this.env.WEBAPP_URL || (await this.ctx.storage.get('origin')) || '');
+    if (await core.bcastStep()) await this.ctx.storage.setAlarm(Date.now() + 1100);
+  }
   async fetch(req) {
     const url = new URL(req.url), core = this.getCore(url.origin);
+    if (this.origin !== url.origin) { this.origin = url.origin; this.ctx.storage.put('origin', url.origin); }
     if (url.pathname === core.HOOK_PATH) {
       if (!core.hookAllowed(req.headers.get('x-telegram-bot-api-secret-token'))) return new Response('', { status: 403 });
       let out = null; try { out = core.onUpdate(await req.json()); } catch (e) { console.log('bot', e.message); }
