@@ -13,8 +13,8 @@
 ## Запуск на Cloudflare Workers (бесплатно, без карты, адрес постоянный)
 
 1. dash.cloudflare.com → Workers & Pages → Create → **Import a repository** → GitHub → этот репозиторий. Настройки сборки не трогать (`npx wrangler deploy`).
-2. После первой сборки: воркер `nardy` → Settings → Variables and Secrets → Add → тип **Secret**, имя `BOT_TOKEN`.
-3. Открыть в браузере `https://nardy.<твой-поддомен>.workers.dev/setup` — сервер сам подключит бота (webhook, кнопка «Играть», команды).
+2. После первой сборки: воркер `nerdiest` → Settings → Variables and Secrets → Add → тип **Secret**, имя `BOT_TOKEN`.
+3. Открыть в браузере `https://nerdiest.<твой-поддомен>.workers.dev/setup` — сервер сам подключит бота (webhook, кнопка «Играть», команды).
 4. Написать боту `/start`.
 
 Файлы: `worker.js` (вход для Cloudflare), `core.js` (вся логика), `wrangler.toml` (настройки).
