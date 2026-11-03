@@ -1088,7 +1088,7 @@ function scheduleMoments(box){ clearTimeout(momentTimer); const next=()=>{ momen
 let screen='home';
 function go(s, noSlam){
   if (screen==='game' && s!=='game' && G && !G.over){ return confirmLeave(); }
-  const doit=()=>{ if(s!=='home'){ const hb=$('homeScene'); if(hb&&hb._fx) rainOff(hb._fx); } screen=s; document.querySelectorAll('.screen').forEach(el=>el.hidden=el.id!=='s-'+s);
+  const doit=()=>{ drag=null; killGhosts(); if(s!=='home'){ const hb=$('homeScene'); if(hb&&hb._fx) rainOff(hb._fx); } screen=s; document.querySelectorAll('.screen').forEach(el=>el.hidden=el.id!=='s-'+s);
     document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.go===s));
     if(s==='home') renderHome(); if(s==='shop') renderShop(); if(s==='top') renderTop(); if(s==='friends') renderFriends(); if(s==='play') renderPlay();
     window.scrollTo(0,0); };
@@ -1097,6 +1097,9 @@ function go(s, noSlam){
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.go)));
 function showModal(html){ $('modalBody').innerHTML=html; $('modal').hidden=false; $('modalBody').querySelectorAll('[data-close]').forEach(b=>b.onclick=hideModal); }
 function hideModal(){ $('modal').hidden=true; }
+// закрыл фото или «поделиться» после партии — возвращаемся к итогам, а не к пустой доске
+function endBack(){ hideModal(); if(screen==='game'&&G&&G.over&&window.lastEnd) lastEnd(); }
+window.lastEnd=null;
 $('modal').addEventListener('click',e=>{ if(e.target.id==='modal' && !(G&&G.over&&screen==='game')) hideModal(); });
 function confirmLeave(){ showModal(`<h3>Уйти?</h3><p style="text-align:center">Партия будет засчитана как поражение.</p><div class="row"><button class="btn sec" data-close>Остаться</button><button class="btn hot" id="leaveYes">Уйти</button></div>`);
   $('leaveYes').onclick=()=>{ hideModal(); gameOver(1,true); }; }
@@ -1368,7 +1371,7 @@ async function gameOver(w, resigned, mOv){
   saveP(); renderGame();
   const title=w===0?(mult===3?'Кокс!':mult===2?'Марс!':'Победа!'):resigned?'Сдался':(mult>1?'Тебе марс…':'Поражение');
   const winnerEq = w===0?P.eq:G.opp.eq, winnerName = w===0?P.name:G.opp.name;
-  setTimeout(async()=>{
+  window.lastEnd=async()=>{
     showModal(`<div class="vict"><h3>${title}</h3><div class="hero" id="vHero"></div><p style="margin:6px 0 2px;color:var(--muted)">За столом победил ${winnerName}</p>
       <p style="font-size:18px;font-weight:700;margin:4px 0 12px">${lines.join(' · ')||'Без наград'}</p>
       <div class="row"><button class="btn sec" id="toHome">В хату</button><button class="btn hot" id="again">Реванш</button></div>
@@ -1378,8 +1381,8 @@ async function gameOver(w, resigned, mOv){
     $('toHome').onclick=()=>{ hideModal(); go('home'); }; $('again').onclick=()=>{ hideModal(); if(G.net){ playMode='quick'; return go('play'); } startGame(G.opp.bot?{bot:true}:{opp:G.opp,stake:G.stake,online:G.online}); };
     if($('photoBtn')) $('photoBtn').onclick=()=>photo(title, lines);
     $('shareBtn').onclick=()=>shareGame(title, lines, w);
-    if(rankOf(P.rating)!==oldRank && rankIdx(rankOf(P.rating))>rankIdx(oldRank)) setTimeout(()=>rankUp(rankOf(P.rating)),2600);
-  }, resigned?50:800);
+  };
+  setTimeout(()=>{ lastEnd(); if(rankOf(P.rating)!==oldRank && rankIdx(rankOf(P.rating))>rankIdx(oldRank)) setTimeout(()=>rankUp(rankOf(P.rating)),2600); }, resigned?50:800);
 }
 function cigRain(){ const r=document.createElement('div'); r.className='cigrain'; for(let i=0;i<30;i++){ const c=document.createElement('img'); c.src=A+'sigarety/02.webp'; c.style.left=Math.random()*100+'%';
   c.style.animationDuration=(1.6+Math.random()*1.6)+'s'; c.style.animationDelay=(Math.random()*1.2)+'s'; c.style.setProperty('--r',(Math.random()*720-360)+'deg'); r.append(c); } document.body.append(r); setTimeout(()=>r.remove(),4500); }
@@ -1392,8 +1395,8 @@ async function photo(title, lines){
   const c=document.createElement('canvas'); c.width=600; c.height=700; const x=c.getContext('2d'); const h=await heroOnBg(P.eq,lvl(),600);
   x.drawImage(h,0,0,600,796,0,-40,600,796); x.fillStyle='#000a'; x.fillRect(0,600,600,100); x.fillStyle='#f2b35a'; x.font='700 44px Caveat, cursive'; x.fillText(title+' '+lines.join(' · '),20,662);
   showModal(`<h3>Фото на память</h3><div class="photo" id="ph"><p>${P.name} · ${new Date().toLocaleDateString('ru-RU')}</p></div>
-    <button class="btn hot" style="width:100%" id="shareBtn">Отправить в Телеграм</button><button class="btn ghost" style="width:100%;margin-top:8px" data-close>Закрыть</button>`);
-  $('ph').prepend(c); $('shareBtn').onclick=()=>malyava('В Телеграме откроется выбор чата с этой карточкой');
+    <button class="btn hot" style="width:100%" id="shareBtn">Отправить в Телеграм</button><button class="btn ghost" style="width:100%;margin-top:8px" id="phClose">Закрыть</button>`);
+  $('phClose').onclick=endBack; $('ph').prepend(c); $('shareBtn').onclick=()=>malyava('В Телеграме откроется выбор чата с этой карточкой');
 }
 function rankUp(name){ const i=rankIdx(name); SFX.buzz();
   showModal(`<h3>Новое звание</h3><div class="patchsew"><img src="${A}nashivki/0${i+1}.webp" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="4" y="4" width="92" height="92" rx="8"/></svg><span class="needle"></span></div>
@@ -1408,7 +1411,7 @@ function targetsFor(sel){ if(sel===null) return {}; if(G.tg&&G.tg.sel===sel) ret
       const rest=E.removeOne(dice,s.d); if(t<24&&rest.length&&seq.length<4) walk(s.n,rest,E.legalSteps(s.n,0,rest),t,seq); } };
   walk(G.s,G.dice,G.steps,i,[]); G.tg={sel,out}; return out; }
 function ckStyle(col){ const sk=item(P.eq.checkers); if(!sk.w) return ''; const f = col==='w'?sk.w:sk.k; return ` skin" style="--img:url(${A}shashki_kubiki/${f}.webp)`; }
-function renderGame(){ const f=FLY; FLY=null; let r0=null;
+function renderGame(){ const f=FLY; FLY=null; let r0=null; if(!drag) document.querySelectorAll('.dragck').forEach(x=>x.remove());
   if(f&&!drag){ const el=ckAt(f.from); if(el) r0=el.getBoundingClientRect(); }
   renderGame0();
   if(r0&&f.to!=='off'){ const el=ckAt(f.to); if(el){ const r1=el.getBoundingClientRect(), dx=r0.left-r1.left, dy=r0.top-r1.top; if(Math.abs(dx)+Math.abs(dy)>2){ el.classList.remove('moved'); el.style.zIndex=6; el.style.transition='none'; el.style.transform=`translate(${dx}px,${dy}px)`; void el.offsetWidth; el.style.transition='transform .3s cubic-bezier(.25,.8,.35,1)'; el.style.transform=''; setTimeout(()=>{ el.style.zIndex=''; el.classList.add('moved'); },300); } } }
@@ -1416,7 +1419,7 @@ function renderGame(){ const f=FLY; FLY=null; let r0=null;
 let FLY=null;
 function ckAt(a){ const box=a==='bar'?$('board').querySelector('[data-a="bar"]'):$('board').querySelector(`.pt[data-a="${a}"]`); if(!box) return null; const l=box.querySelectorAll('.ck:not(.ghost)'); return l[l.length-1]||null; }
 function haptic(k){ try{ const h=window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback; if(h) h.impactOccurred(k||'light'); }catch(e){} }
-function renderGame0(){
+function renderGame0(){ if(G) $('resignBtn').textContent=G.over?'Итоги партии':'Сдаться';
   if(!G) return; updCigs();
   const S=G.s, tg=G.phase==='move'?targetsFor(G.sel):{}; const src=new Set(G.phase==='move'?G.steps.map(s=>s.i===-1?'bar':E.absOf(G.v,0,s.i)):[]);
   const MY=G.myCol||'w', OP=MY==='w'?'k':'w';
@@ -1467,7 +1470,8 @@ $('board').addEventListener('click',boardClickGuard); $('tray').addEventListener
 // зажал шашку — тащи пальцем, отпустил над подсвеченной лункой — ход
 let drag=null, dragEnd=0;
 function dropTarget(x,y){ const el=document.elementFromPoint(x,y); const t=el&&el.closest('[data-a]'); if(!t||!($('board').contains(t)||$('tray').contains(t))) return null; const r=t.dataset.a; return r==='off'?'off':r==='bar'?'bar':+r; }
-$('board').addEventListener('pointerdown',e=>{ if(!G||G.phase!=='move'||e.button>0) return; const ck=e.target.closest('.ck.can,.ck.sel'); if(!ck) return; const box=ck.closest('[data-a]'); if(!box) return;
+function killGhosts(){ document.querySelectorAll('.dragck').forEach(x=>x.remove()); document.querySelectorAll('.hov').forEach(x=>x.classList.remove('hov')); }
+$('board').addEventListener('pointerdown',e=>{ if(drag){ drag=null; killGhosts(); } if(!G||G.phase!=='move'||e.button>0) return; const ck=e.target.closest('.ck.can,.ck.sel'); if(!ck) return; const box=ck.closest('[data-a]'); if(!box) return;
   const raw=box.dataset.a; drag={a:raw==='bar'?'bar':+raw, x0:e.clientX, y0:e.clientY, id:e.pointerId, moved:false, ghost:null, src:ck}; });
 window.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; const dx=e.clientX-drag.x0, dy=e.clientY-drag.y0;
   if(!drag.moved){ if(Math.hypot(dx,dy)<7) return; drag.moved=true;
@@ -1479,13 +1483,16 @@ window.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) retu
   const t=dropTarget(e.clientX,e.clientY), tg=targetsFor(G.sel); document.querySelectorAll('.hov').forEach(x=>x.classList.remove('hov'));
   if(t!==null&&tg[t]){ const el=t==='off'?$('tray').querySelector('[data-a="off"]'):$('board').querySelector(`.pt[data-a="${t}"]`); if(el) el.classList.add('hov'); } },{passive:false});
 function dragFinish(e){ if(!drag||e.pointerId!==drag.id) return; const d=drag; drag=null; if(!d.moved) return; dragEnd=Date.now();
-  if(d.ghost) d.ghost.remove(); document.querySelectorAll('.hov').forEach(x=>x.classList.remove('hov'));
+  killGhosts();
   if(!G||G.phase!=='move'){ return renderGame(); }
   const t=e.type==='pointerup'?dropTarget(e.clientX,e.clientY):null, tg=targetsFor(G.sel);
   if(t!==null&&tg[t]) return playerStep(tg[t], true);
   renderGame(); }
 window.addEventListener('pointerup',dragFinish); window.addEventListener('pointercancel',dragFinish);
-$('resignBtn').onclick=()=>{ if(!G||G.over) return; showModal(`<h3>Сдаться?</h3><p style="text-align:center">${G.stake?`Ставка ${G.stake} сигарет уйдёт сопернику.`:'Партия будет засчитана как поражение.'} В рейтинге −30.</p><div class="row"><button class="btn sec" data-close>Играть дальше</button><button class="btn hot" id="resYes">Сдаться</button></div>`); $('resYes').onclick=()=>{ hideModal(); resign(); }; };
+// страховка: если палец «потерялся» (свернули приложение, второй палец, системный жест) — тень шашки не должна висеть
+function dragReset(){ if(drag){ drag=null; dragEnd=Date.now(); } killGhosts(); if(G) renderGame(); }
+window.addEventListener('blur',dragReset); document.addEventListener('visibilitychange',dragReset); window.addEventListener('lostpointercapture',e=>{ if(drag&&e.pointerId===drag.id) dragReset(); });
+$('resignBtn').onclick=()=>{ if(G&&G.over&&window.lastEnd) return lastEnd(); if(!G||G.over) return; showModal(`<h3>Сдаться?</h3><p style="text-align:center">${G.stake?`Ставка ${G.stake} сигарет уйдёт сопернику.`:'Партия будет засчитана как поражение.'} В рейтинге −30.</p><div class="row"><button class="btn sec" data-close>Играть дальше</button><button class="btn hot" id="resYes">Сдаться</button></div>`); $('resYes').onclick=()=>{ hideModal(); resign(); }; };
 $('rulesBtn').onclick=()=>showModal(G&&G.v==='short'?`<h3>Короткие нарды</h3><ul><li>Шашки ходят навстречу друг другу, против часовой стрелки.</li><li>Одиночную шашку соперника можно сбить: она уходит на бар и заходит заново.</li><li>Пока у тебя шашка на баре, сначала вводи её.</li><li>На пункт с двумя и больше шашками соперника вставать нельзя.</li><li>Все 15 в доме — можно выбрасывать.</li><li>Марс — двойная победа, кокс — тройная.</li></ul><button class="btn hot" style="width:100%" data-close>Понятно</button>`:`<h3>Длинные нарды</h3><ul><li>У каждого 15 шашек на «голове». Ходят по кругу против часовой стрелки.</li><li>Ходишь на числа кубиков: одной шашкой или двумя. Дубль — 4 хода.</li><li>Бить нельзя. На пункт с чужой шашкой вставать нельзя.</li><li>С головы за ход снимается одна шашка (первый ход с 6-6, 4-4, 3-3 — две).</li><li>Нельзя строить забор из 6 подряд, если впереди нет шашки соперника.</li><li>Все 15 в доме — можно выбрасывать. Марс — победа вдвойне.</li></ul><button class="btn hot" style="width:100%" data-close>Понятно</button>`);
 
 // ---------- Настройки ----------
@@ -1596,7 +1603,7 @@ async function netMsg(m) {
     case 'chat': if (G && G.net && !G.over) _react(1, m.img ? { img: m.img } : { text: m.text }); return;
     case 'game': return netGame(m);
     case 'peek': return netPeek(m);
-    case 'prepared': try { TGA.shareMessage(m.id, ok => { if (ok) malyava('Фото отправлено'); }); } catch (e) { malyava('Обнови Телеграм, чтобы пересылать фото'); } return;
+    case 'prepared': try { TGA.shareMessage(m.id, ok => { if (ok) { malyava('Фото отправлено'); endBack(); } }); } catch (e) { malyava('Обнови Телеграм, чтобы пересылать фото'); } return;
   }
 }
 
@@ -1712,8 +1719,8 @@ photo = async function (title, lines) {
   const c = document.createElement('canvas'); c.width = 600; c.height = 700; const x = c.getContext('2d'); const h = await heroOnBg(P.eq, lvl(), 600);
   x.drawImage(h, 0, 0, 600, 796, 0, -40, 600, 796); x.fillStyle = '#000a'; x.fillRect(0, 600, 600, 100); x.fillStyle = '#f2b35a'; x.font = '700 44px Caveat, cursive'; x.fillText(title + ' ' + lines.join(' · '), 20, 662);
   showModal(`<h3>Фото на память</h3><div class="photo" id="ph"><p>${P.name} · ${new Date().toLocaleDateString('ru-RU')}</p></div>
-    <button class="btn hot" style="width:100%" id="shareBtn">Отправить в Телеграм</button><button class="btn ghost" style="width:100%;margin-top:8px" data-close>Закрыть</button>`);
-  $('ph').prepend(c);
+    <button class="btn hot" style="width:100%" id="shareBtn">Отправить в Телеграм</button><button class="btn ghost" style="width:100%;margin-top:8px" id="phClose">Закрыть</button>`);
+  $('phClose').onclick = endBack; $('ph').prepend(c);
   $('shareBtn').onclick = () => { malyava('Готовлю фото…'); nsend({ t: 'photo', data: c.toDataURL('image/jpeg', .82), caption: `${P.name}: ${title} ${lines.join(' · ')}\n«Нарды от Кондрата»` }); };
 };
 window.netInvite = x => { playMode = 'friend'; nsend({ t: 'create', variant, stake: 0, friend: x.id, prof: profOf() }); malyava('Кореш получит приглашение в боте'); };
