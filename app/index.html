@@ -938,8 +938,8 @@ Object.assign(LAY,{"g1":[430,220],"g2":[428,204],"g3":[408,173],"g4":[415,173],"
 const WALLPOS = {1:[255,175,150],2:[262,215,140],3:[262,175,115],4:[255,200,130],5:[715,118,115],6:[255,210,150],7:[250,330,140],8:[690,250,130],9:[225,105,120],10:[62,345,95],11:[680,115,120]};
 const PETW = [0,150,190,120,135,115,95,125,120];
 const PETPOS = {cx:795, bot:1166};
-const FOODPOS = {cx:575, bot:934};
-const PACK_DX = -150;   // курево левее, чтобы справа влезала еда
+const FOODPOS = {cx:620, bot:934};
+const PACK_CX = 498;   // курево по центру между пепельницей и едой
 const FOODW = [0,56,88,62,84,76,90,60,78]; // ширина каждой еды, чтобы по размеру совпадала с кружкой и пачкой
 async function drawWall(x, eq, L){ const it=eq.wall&&item(eq.wall); if(!it||!it.k) return; const im=await img(it.img); const p=WALLPOS[L]||WALLPOS[1]; if(!im) return;
   let w=p[2], h=w*im.height/im.width; if(h>p[2]*1.25){ h=p[2]*1.25; w=h*im.width/im.height; }
@@ -1000,8 +1000,8 @@ async function composeHero(eq, opt){
   const lv=(item(eq.level||'l_1')||{}).lvl||1, tdy=STOL_DY[lv]||0;
   { const tp=STOL[lv], ti=tp&&await img(`stol/${lv}.webp`); if(ti) x.drawImage(ti,tp[0],tp[1]); }
   const T = async (id,dx=0) => { const it=item(id); if(!it||!it.img) return; const key=id.replace('_',''), p=LAY[key]; if(!p) return; const im=await img(`nadeto/${key}.webp`); if(!im) return;
-    if (dust(id)) x.filter='grayscale(.7) brightness(.8) contrast(.9)'; x.drawImage(im,p[0]+dx,p[1]+tdy); x.filter='none'; };
-  await T(eq.board); await T(eq.mug); await T(eq.ash); await T(eq.pack,PACK_DX);
+    if (dust(id)) x.filter='grayscale(.7) brightness(.8) contrast(.9)'; if(dx==='pack') dx=PACK_CX-(p[0]+im.width/2); x.drawImage(im,p[0]+dx,p[1]+tdy); x.filter='none'; };
+  await T(eq.board); await T(eq.mug); await T(eq.ash); await T(eq.pack,'pack');
   { const fd=eq.food&&item(eq.food); if(fd&&fd.k){ const im=await img(fd.img); if(im){ const w=FOODW[fd.k]||75, h=w*im.height/im.width, b=FOODPOS.bot+tdy; contactShadow(x,FOODPOS.cx,b,w*0.9); x.drawImage(im,FOODPOS.cx-w/2,b-h,w,h); } } }
   if (opt.season){ for (const [px,py] of [[668,948],[700,940],[684,925]]){ const g=x.createRadialGradient(px-4,py-4,2,px,py,15); g.addColorStop(0,'#ffc15a'); g.addColorStop(1,'#d9600c'); x.fillStyle=g; x.beginPath(); x.arc(px,py,15,0,7); x.fill(); } x.fillStyle='#3d6b2a'; x.beginPath(); x.ellipse(686,909,7,3,-.5,0,7); x.fill(); }
 
