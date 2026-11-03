@@ -185,6 +185,21 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .seg{display:grid;grid-template-columns:1fr 1fr;background:#000a;border:1px solid var(--line);border-radius:10px;padding:3px;margin-bottom:12px}
 .seg button{border:0;background:none;padding:9px;border-radius:8px;font-size:14px;color:var(--muted)}
 .seg3{grid-template-columns:1fr 1fr 1fr}
+.seg4{grid-template-columns:repeat(4,1fr)}.seg4 button{padding:9px 2px;font-size:13px}
+.quest{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;background:#000a;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px}
+.quest b{display:block}.quest .pb{height:7px;border-radius:4px;background:#ffffff1a;margin-top:6px;overflow:hidden}.quest .pb i{display:block;height:100%;background:linear-gradient(90deg,#c9862a,#f0c060)}
+.quest.done{opacity:.55}
+.streak{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:8px 0}.streak div{text-align:center;border-radius:8px;padding:6px 0;background:#0007;border:1px solid var(--line);font-size:11px;color:var(--muted)}.streak div b{display:block;color:var(--ink,#eee);font-size:13px}.streak div.got{background:#5a3a12;border-color:#c9862a;color:#e8d0a0}.streak div.got b{color:#ffe7b0}.streak div.now{outline:2px solid var(--accent2)}
+.wheelwrap{position:relative;width:min(84vw,330px);aspect-ratio:1;margin:10px auto 14px}
+.wheel{position:absolute;inset:0;border-radius:50%;border:8px solid #5a3a12;box-shadow:0 0 0 3px #c9a23e,0 8px 24px #000c,inset 0 0 20px #0008;transition:transform 4.2s cubic-bezier(.12,.62,.1,1)}
+.wheel span{position:absolute;left:50%;top:50%;width:0;height:0;font-weight:800;font-size:17px;color:#fff;text-shadow:0 2px 3px #000}
+.wheel span i{position:absolute;left:-40px;width:80px;text-align:center;font-style:normal;top:calc(-1 * min(84vw,330px) * .37)}
+.wheelpin{position:absolute;left:50%;top:-12px;margin-left:-14px;width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:30px solid #e8c45a;filter:drop-shadow(0 2px 2px #000);z-index:2}
+.wheelhub{position:absolute;left:50%;top:50%;width:54px;height:54px;margin:-27px;border-radius:50%;background:radial-gradient(#f0d070,#8a6a1a);box-shadow:0 2px 6px #000;z-index:2}
+.ach{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:#000a;border:1px solid var(--line);margin-bottom:8px}
+.ach .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#ffffff10}.ach.got .ic{background:radial-gradient(#f0d070,#8a6a1a)}
+.ach small{display:block;color:var(--muted);font-size:12px}.ach:not(.got){opacity:.6}
+.ttl{display:block;font-size:11px;color:var(--accent2);font-style:italic}
 .cnt{display:inline-block;min-width:18px;padding:1px 5px;border-radius:9px;background:#c0261a;color:#fff;font-size:11px;font-weight:800;line-height:16px;text-align:center}
 .navcnt{position:absolute;top:2px;left:calc(50% + 8px)}
 .mal{--ln:27px;position:relative;margin:16px 4px 14px;padding:14px 14px 10px 44px;color:#1f2d5c;font-family:var(--f-hand);
@@ -452,6 +467,12 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
       <div class="stats" id="homeStats"></div>
       <div class="card daily" id="dailyCard"></div>
       <button class="btn hot bigplay" data-go="play">Сесть за нарды</button>
+    </section>
+
+    <section class="screen" id="s-tasks" hidden>
+      <h2>Задания</h2>
+      <div class="seg seg4" id="taskSeg"><button data-t="q" class="on">Задания</button><button data-t="w">Колесо</button><button data-t="s">Сезон</button><button data-t="a">Достижения</button></div>
+      <div id="taskBox"></div>
     </section>
 
     <section class="screen" id="s-shop" hidden>
@@ -1652,7 +1673,7 @@ function cleanEq(eq) {
     if (eq.tats && typeof eq.tats === 'object') for (const k in eq.tats) if (PLACES[k] && item(eq.tats[k])) e.tats[k] = eq.tats[k]; }
   e.ring = 'r_0'; return e;
 }
-function netPerson(p) { return { net: true, losses: p.losses | 0, mars: p.mars | 0, best: p.best | 0, longG: p.longG | 0, shortG: p.shortG | 0, created: p.created, num: p.num, id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
+function netPerson(p) { return { title: p.title || '', brig: p.brig || null, net: true, losses: p.losses | 0, mars: p.mars | 0, best: p.best | 0, longG: p.longG | 0, shortG: p.shortG | 0, created: p.created, num: p.num, id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
 // партия на сервере хранится «как есть»; если я второй игрок — разворачиваю доску, чтобы я всегда был снизу
 function flipState(s, me) {
   const n = E.clone(s); if (me !== 1) return n;
@@ -2135,5 +2156,95 @@ function renderBrig() {
     document.querySelectorAll('[data-ro]').forEach(y => y.onclick = () => { hideModal(); nsend({ t: 'brigRole', id, role: y.dataset.ro }); }); });
   $('bLeave').onclick = () => { showModal(`<h3>Выйти из бригады?</h3><p style="text-align:center">Твои сигареты в общаке останутся бригаде.${boss ? ' Главным станет заместитель.' : ''}</p><div class="row"><button class="btn sec" data-close>Остаться</button><button class="btn hot" id="lvYes">Выйти</button></div>`); $('lvYes').onclick = () => { hideModal(); nsend({ t: 'brigLeave' }); }; };
 }
+
+// ================= Этап 4: задания, серия входов, колесо, сезон, достижения =================
+NET.taskTab = 'q';
+const _go4 = go;
+go = function (s, n) { const r = _go4(s, n); if (s === 'tasks' && screen === 'tasks') { nsend({ t: 'tasks' }); renderTasks(); } return r; };
+const _renderHome4 = renderHome;
+renderHome = async function () {
+  const r = await _renderHome4.apply(this, arguments);
+  if (NET.on && NET.me) homeDaily();
+  return r;
+};
+function homeDaily() {
+  const me = NET.me, c = $('dailyCard'); if (!c || !me) return;
+  const ready = me.dailyReady, st = ready ? (me.streakD | 0) : me.streakD | 0, n = me.tasksReady | 0;
+  c.innerHTML = `<div><b>Передачка с воли</b><div class="sub" style="margin:2px 0 0">${ready ? 'Забирай — каждый день подряд больше' : `Серия: ${st} ${plural(st, 'день', 'дня', 'дней')} подряд. Завтра ещё`}</div></div>
+    <div class="row" style="gap:6px;flex:0 0 auto"><button class="btn${ready ? ' hot' : ' ghost'}" id="dailyBtn" ${ready ? '' : 'disabled'}>${ready ? 'Забрать' : 'Завтра'}</button><button class="btn sec" id="tasksBtn" style="position:relative">Задания${n ? ` <span class="cnt">${n}</span>` : ''}</button></div>`;
+  if (ready) $('dailyBtn').onclick = () => { $('dailyBtn').disabled = true; nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
+  $('tasksBtn').onclick = () => go('tasks');
+}
+const _netMsg4 = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'tasks') { NET.tasks = m; if (screen === 'tasks') renderTasks(); return; }
+  if (m.t === 'spun') return wheelSpun(m);
+  const r = await _netMsg4(m);
+  if (m.t === 'me' && screen === 'home') homeDaily();
+  return r;
+};
+function renderTasks() {
+  const seg = $('taskSeg'); seg.querySelectorAll('button').forEach(b => { b.classList.toggle('on', b.dataset.t === NET.taskTab); b.onclick = () => { NET.taskTab = b.dataset.t; renderTasks(); }; });
+  const d = NET.tasks, box = $('taskBox'); if (!d) { box.innerHTML = '<p class="sub" style="text-align:center">Загружаю…</p>'; return; }
+  let h = '';
+  if (NET.taskTab === 'q') {
+    const D = d.daily;
+    h += `<div class="card"><b>Передачка с воли</b><p class="sub" style="margin:4px 0 0">Заходи каждый день подряд — передачка растёт. Пропустил день — серия с начала.</p>
+      <div class="streak">${D.table.map((v, i) => `<div class="${i + 1 < D.streak || (!D.ready && i + 1 === D.streak) ? 'got' : ''}${D.ready && i + 1 === Math.min(D.streak, 7) ? ' now' : ''}">день ${i + 1}<b>${v}</b></div>`).join('')}</div>
+      <button class="btn ${D.ready ? 'hot' : 'ghost'}" style="width:100%" id="tDaily" ${D.ready ? '' : 'disabled'}>${D.ready ? `Забрать ${D.reward}` : 'Уже забрал, приходи завтра'}</button></div>
+      <h2 style="font-size:24px;margin-top:14px">На сегодня</h2>`;
+    h += d.quests.map((q, i) => `<div class="quest${q.c ? ' done' : ''}"><div><b>${q.t}</b><span class="sub" style="margin:0">${q.p} из ${q.n} · награда ${q.r}</span><div class="pb"><i style="width:${q.p / q.n * 100}%"></i></div></div>${q.c ? '<span>✓</span>' : `<button class="btn ${q.p >= q.n ? 'hot' : 'ghost'}" data-qc="${i}" ${q.p >= q.n ? '' : 'disabled'} style="padding:8px 12px;font-size:13px">Забрать</button>`}</div>`).join('');
+    h += `<p class="sub" style="text-align:center">Сделай все три — ещё +${d.qAllR} сверху. Новые задания каждый день в полночь по Москве.</p>`;
+  } else if (NET.taskTab === 'w') {
+    const W = d.wheel, n = W.sectors.length, cols = ['#7a1e14', '#1f4a2a', '#24324f', '#6a4a12', '#4a1a4a', '#1f3f4a', '#5a1414', '#8a6a12'];
+    const grad = W.sectors.map((_, i) => `${cols[i % cols.length]} ${i * 360 / n}deg ${(i + 1) * 360 / n}deg`).join(',');
+    h += `<div class="wheelwrap"><div class="wheelpin"></div><div class="wheel" id="wheel" style="background:conic-gradient(${grad});transform:rotate(${NET.wheelRot || 0}deg)">${W.sectors.map((t, i) => `<span style="transform:rotate(${(i + .5) * 360 / n}deg)"><i>${t === 'вещь' ? '🎁' : t}</i></span>`).join('')}</div><div class="wheelhub"></div></div>
+      <button class="btn hot" style="width:100%" id="wSpin">${W.free ? 'Крутить бесплатно' : W.spins ? `Крутить (осталось ${W.spins})` : 'Бесплатный прокрут завтра'}</button>
+      <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · 50 ⭐</button>
+      <p class="sub" style="text-align:center;margin-top:8px">Один прокрут в день бесплатно. Выпадает от 25 до 1000 сигарет или вещь с барахолки.</p>`;
+  } else if (NET.taskTab === 's') {
+    const S = d.season;
+    h += `<div class="card" style="text-align:center"><h2 style="margin:0">Сезон «${S.name}»</h2><p class="sub" style="margin:4px 0">До конца ${S.left} ${plural(S.left, 'день', 'дня', 'дней')}. Очки — это рейтинг, набранный за онлайн-партии в этом месяце.</p>
+      <b style="font-size:20px">У тебя ${S.pts} ${plural(S.pts, 'очко', 'очка', 'очков')}${S.place ? ` · ${S.place}-е место` : ''}</b>
+      <p class="sub" style="margin:6px 0 0">Награды тройке: 🥇 ${S.prizes[0]} · 🥈 ${S.prizes[1]} · 🥉 ${S.prizes[2]} сигарет и титул «Чемпион сезона»</p></div>
+      <div class="paper sheet" style="margin-top:12px">${S.top.length ? S.top.map((x, i) => `<div class="li${x.id === NET.uid ? ' me' : ''}"><span class="n">${i + 1}</span><span class="av"><img data-sh="${i}" alt=""></span><span><b>${esc(x.name)}${x.id === NET.uid ? ' (ты)' : ''}</b></span><span class="r">${x.pts}</span></div>`).join('') : '<p style="text-align:center;padding:14px">В этом сезоне ещё никто не набрал очков. Будь первым!</p>'}</div>
+      ${S.last ? `<p class="sub" style="text-align:center;margin-top:8px">Прошлый сезон: ${S.last.top.map((x, i) => ['🥇', '🥈', '🥉'][i] + ' ' + esc(x.name)).join(' · ') || 'без победителей'}</p>` : ''}`;
+  } else {
+    const cur = d.title;
+    h += `<p class="sub">Открой достижение — получишь сигареты и титул. Титул видно под твоим именем в партии и в деле.</p>` + d.achs.map(a => `<div class="ach${a.got ? ' got' : ''}"><span class="ic">${a.got ? '🏅' : '🔒'}</span><span><b>${a.t}</b><small>${a.d}${a.r ? ` · +${a.r}` : ''} · титул «${a.title}»</small></span>${a.got ? (cur === a.k ? '<button class="btn ghost" data-tt="" style="padding:6px 10px;font-size:12px">Снять</button>' : `<button class="btn sec" data-tt="${a.k}" style="padding:6px 10px;font-size:12px">Титул</button>`) : ''}</div>`).join('');
+  }
+  if (box.dataset.h === h && box.childElementCount) return; box.dataset.h = h; box.innerHTML = h;
+  if ($('tDaily')) $('tDaily').onclick = () => { $('tDaily').disabled = true; nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
+  box.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => { b.disabled = true; nsend({ t: 'qClaim', i: +b.dataset.qc }); try { SFX.coin(); } catch (e) { } });
+  if ($('wSpin')) $('wSpin').onclick = () => { if (NET.spinning) return; const W = d.wheel; if (!W.free && !W.spins) return malyava('Бесплатный прокрут завтра. Можно взять ещё за 50 ⭐'); NET.spinning = true; $('wSpin').disabled = true; nsend({ t: 'spin' }); };
+  if ($('wBuy')) $('wBuy').onclick = () => buyStars({ sid: 'spin' });
+  box.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => nsend({ t: 'setTitle', k: b.dataset.tt }));
+  if (NET.taskTab === 's') d.season.top.forEach(async (x, i) => { const el = box.querySelector(`[data-sh="${i}"]`); if (el) el.src = await headURL(cleanEq(x.eq)); });
+}
+function wheelSpun(m) {
+  const n = 8, el = $('wheel'), base = Math.ceil((NET.wheelRot || 0) / 360) * 360;
+  const target = base + 360 * 6 + (360 - (m.k + .5) * 360 / n) + (Math.random() - .5) * 20;
+  NET.wheelRot = target; if (el) el.style.transform = `rotate(${target}deg)`;
+  try { for (let i = 0; i < 14; i++) setTimeout(() => SFX.checker(), i * i * 22); } catch (e) { }
+  setTimeout(() => {
+    NET.spinning = false;
+    const what = m.item ? `вещь «${(item(m.item) || {}).name || 'с барахолки'}». Уже у тебя в барахолке!` : `${m.cigs} сигарет!`;
+    showModal(`<div class="vict"><h3>${m.cigs >= 1000 ? 'Джекпот!' : 'Выпало'}</h3><p style="font-size:20px;font-weight:700;text-align:center">${what}</p><button class="btn hot" style="width:100%" data-close>Забрать</button></div>`);
+    try { SFX.coin(); cigRain(); } catch (e) { }
+    if (m.item && !P.owned.includes(m.item)) { P.owned.push(m.item); }
+    NET.tasks && renderTasks();
+  }, 4400);
+}
+// титул под именем: в партии и в деле
+const _renderPlayers4 = renderPlayers;
+renderPlayers = async function () {
+  const r = await _renderPlayers4.apply(this, arguments);
+  if (!G) return r;
+  const add = (el, t) => { if (!el || !t) return; const b = el.querySelector('b'); if (b && !el.querySelector('.ttl')) b.insertAdjacentHTML('afterend', `<span class="ttl">${esc(t)}</span>`); };
+  add($('gpOpp'), G.opp && G.opp.title); add($('gpMe'), G.watch ? (G.self && G.self.title) : (NET.me && NET.me.title));
+  return r;
+};
+const _fillCase4 = fillCase;
+fillCase = function (m) { _fillCase4(m); const t = m.user && m.user.title; if (t && $('cpS')) $('cpS').querySelector('dl').insertAdjacentHTML('afterbegin', `<dt>Титул</dt><dd>${esc(t)}</dd>`); };
 
 </script>
