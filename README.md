@@ -9,15 +9,11 @@
 - `catalog.js` — звания, ставки, награды.
 - `app/` — сама игра (страница и картинки).
 
-## Запуск на Hugging Face Spaces (бесплатно, без карты)
+## Запуск на Back4app Containers (бесплатно)
 
-1. huggingface.co → New Space → SDK **Docker**, шаблон Blank, Public.
-2. В Space: Files → Add file → Create new file `Dockerfile`, вставить содержимое `Dockerfile` из этого репозитория.
-3. Settings → Variables and secrets: секрет `BOT_TOKEN`, переменные `WEBAPP_URL` (адрес вида `https://имя-space.hf.space`) и `BOT_USERNAME` (имя бота без @).
-4. Включить webhook, открыв в браузере `https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=<WEBAPP_URL>/tg-hook`.
-5. Написать боту `/start`.
-
-Обновить игру после изменений в GitHub: Settings → Factory rebuild.
+1. back4app.com → Containers → New app → подключить GitHub и выбрать этот репозиторий (Dockerfile уже есть, порт 8080).
+2. Environment variables: `BOT_TOKEN`, `BOT_USERNAME` (без @), `WEBAPP_URL` (адрес приложения из Back4app).
+3. После запуска написать боту `/start`. Если бот молчит — открыть в браузере `https://api.telegram.org/bot<ТОКЕН>/setWebhook?url=<WEBAPP_URL>/tg-hook`.
 
 ## Запуск на Render.com (нужна карта)
 
