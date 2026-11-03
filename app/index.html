@@ -276,6 +276,12 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .ck.can{outline:2px solid #ffd76a;outline-offset:1px}
 .ck.sel{outline:3px solid #fff;outline-offset:1px;filter:brightness(1.15)}
 .ck.moved{animation:pop .35s ease}
+.petdom{position:absolute;opacity:0;z-index:6;transform-origin:50% 100%;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.petdom.pat{animation:pat .75s ease}
+@keyframes pat{0%{opacity:1;transform:scale(1)}25%{opacity:1;transform:scale(1.07,.88)}55%{opacity:1;transform:scale(.96,1.06)}85%{opacity:1;transform:scale(1.01,.99)}100%{opacity:0;transform:scale(1)}}
+.pheart{position:absolute;z-index:7;color:#ff5a6e;font-size:22px;pointer-events:none;text-shadow:0 1px 3px #000a;animation:pheart 1.5s ease-out forwards}
+.pheart.say{color:#fff3d6;font-size:15px;font-weight:700;white-space:nowrap;background:#0009;border-radius:10px;padding:2px 8px}
+@keyframes pheart{0%{opacity:0;transform:translateY(10px) scale(.6)}20%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-70px) scale(1.1)}}
 .ck.dragck{position:fixed!important;left:0!important;top:0!important;bottom:auto!important;z-index:9999;pointer-events:none;outline:none;filter:drop-shadow(0 8px 10px #000a);will-change:transform}
 .pt.hov::after{background:#ffe9a6dd!important;animation:none!important}
 .tray .half.hov{background:#f2b35a90!important}
@@ -853,7 +859,9 @@ const BOARDS = [
   ['Сосновые самодельные',0,'nardy_zakrytye/01','nardy_otkrytye/01',{t:['#a8763f','#e6cc9c','#8c4a20','#5e7a3a','#a0703a22']}],['Тёмные резные',400,'nardy_zakrytye/02','nardy_otkrytye/02',{t:['#3e2414','#8a5e3a','#2a140a','#e3c79a','#00000022']}],
   ['Выжженные с куполами',900,'nardy_zakrytye/03','nardy_otkrytye/03',{t:['#7a4a22','#d7b07a','#5a2410','#f4e2bc','#6a3a1222',1]}],['Чёрные со звездой',1500,'nardy_zakrytye/04','nardy_otkrytye/04',{t:['#171413','#4a423c','#a5231b','#d9c79c','#ffffff0a',1]}],
   ['Красные лаковые',2200,'nardy_zakrytye/05','nardy_otkrytye/05',{t:['#5c0d0a','#9e2a1e','#1f0c08','#ecd099','#00000018']}],['Чёрные с короной',0,'nardy_zakrytye/06','nardy_otkrytye/06',{rank:'Вор в законе',t:['#0f0d0c','#2e2825','#c9a23e','#8a7e72','#ffffff08',1]}],
-  ['«По понятиям»',0,'nardy/ponyatiya_z','nardy/ponyatiya_o',{rank:'Вор',t:['#33241a','#6b5238','#b0302a','#e8d6ae','#0000001a',1]}],['«С иконой»',0,'nardy/ikona_z','nardy/ikona_o',{ach:'beads5',t:['#24150c','#7a5532','#d6ab4c','#3a2212','#0000001c',1]}]];
+  ['«По понятиям»',0,'nardy/ponyatiya_z','nardy/ponyatiya_o',{rank:'Вор',t:['#33241a','#6b5238','#b0302a','#e8d6ae','#0000001a',1]}],['«С иконой»',0,'nardy/ikona_z','nardy/ikona_o',{ach:'beads5',t:['#24150c','#7a5532','#d6ab4c','#3a2212','#0000001c',1]}],
+  ['Из спичек',1200,'nardy_zakrytye/07','nardy_otkrytye/07',{t:['#b98a4e','#e9d3a2','#6b4020','#b03a2a','#a0703a22']}],['С драконом',3500,'nardy_zakrytye/08','nardy_otkrytye/08',{t:['#0f0c0b','#231c18','#c9a23e','#a5231b','#ffffff08',1]}],
+  ['Малахитовые',5000,'nardy_zakrytye/09','nardy_otkrytye/09',{t:['#0d4a35','#1f7a58','#d6ab4c','#efe6d0','#00000022',1]}],['Лагерные',2000,'nardy_zakrytye/10','nardy_otkrytye/10',{t:['#3a3836','#5b5753','#2a2826','#d8d0c0','#00000022']}]];
 BOARDS.forEach(([n,p,z,o,l],i)=>add({id:'d_'+i, cat:'nardy', sub:'nardy', slot:'board', name:n, price:p, img:z+'.webp', open:o+'.webp', ...(l||{})}));
 // шашки и кубики
 [['Обычные',0,null,null],['Хлебные',150,'01','02'],['Пуговицы',250,'03','04'],['Пробки',300,'05','06'],['Резное дерево',700,'07','08'],['Кость',900,'09','10'],['Янтарь',1500,'11','12'],['Мрамор',2000,'15','13'],['Монеты со звездой',3000,'17','18',{rank:'Положенец'}]]
@@ -863,6 +871,20 @@ BOARDS.forEach(([n,p,z,o,l],i)=>add({id:'d_'+i, cat:'nardy', sub:'nardy', slot:'
 // хата
 [['Голяк',0],['Подшаманил',1500],['С телевизором',4000],['Ковёр и кровать',9000],['Блатная хата',20000,{rank:'Вор'}],['Барак',2500],['Качалка',6000],['Тёплая зимняя',3500],['Кабинет пахана',30000,{rank:'Положенец'}],['Золотая хата',45000,{rank:'Вор'}],['Кавказская',25000,{rank:'Блатной'}]]
   .forEach(([n,p,l],i)=>add({id:'l_'+(i+1), cat:'hata', sub:'hata', slot:'level', lvl:i+1, name:n, price:p, img:`hata/uroven_${i+1}.webp`, ...(l||{})}));
+// новое: очки, браслеты, в руке, еда, стена, питомцы
+[['Без очков',0],['Авиаторы золотые',1200],['Круглые в проволочной оправе',400],['Чёрные спортивные',700],['В роговой оправе',500],['Золотые без оправы',3500,{rank:'Блатной'}]]
+  .forEach(([n,p,l],i)=>add({id:'g_'+i, cat:'shmot', sub:'ochki', slot:'glasses', name:n, price:p, k:i, img:i?`nadeto/g${i}.webp`:null, th:i?`th/g${i}.webp`:null, ...(l||{})}));
+[['Без браслета',0],['Золотая цепь',2500],['Кожаный плетёный',200],['Серебряная цепь',1200],['Деревянные бусины',300],['Золото с камнями',6000,{rank:'Положенец'}]]
+  .forEach(([n,p,l],i)=>add({id:'br_'+i, cat:'ryzhyo', sub:'braslety', slot:'bracelet', name:n, price:p, k:i, img:i?`nadeto/br${i}.webp`:null, th:i?`th/br${i}.webp`:null, ...(l||{})}));
+[['Сигарета из пачки',0],['Сигара',2000],['Чёрный мундштук',800],['Золотой мундштук',3000]]
+  .forEach(([n,p,l],i)=>add({id:'sm_'+i, cat:'shmot', sub:'vruke', slot:'smoke', name:n, price:p, k:i, img:i?`nadeto/sm${i}.webp`:'sigarety/02.webp', th:i?`th/sm${i}.webp`:null, ...(l||{})}));
+[['Пустой стол',0],['Банка чифира',150],['Хлеб с салом',300],['Тушёнка',250],['Конфеты',200],['Мандарины',150],['Колбаса',400],['Сахар-рафинад',100],['Лапша',120]]
+  .forEach(([n,p],i)=>add({id:'fd_'+i, cat:'stol', sub:'eda', slot:'food', name:n, price:p, k:i, img:i?`eda/${String(i).padStart(2,'0')}.webp`:null}));
+[['Голая стена',0],['Икона',900],['Гитара',1500],['Часы',500],['Плакат с красоткой',700],['Ковёр',1200],['Фото матери',300],['Резная звезда',800],['Полка с книгами',600],
+ ['Шарф болельщика',400],['Самодельный календарь',100],['Треснувшее зеркало',200],['Шахматы из хлеба',900],['Карта СССР',500],['Грамота',700],['Сушёные грибы и чеснок',250],['Плакат культуриста',600]]
+  .forEach(([n,p],i)=>add({id:'wl_'+i, cat:'hata', sub:'stena', slot:'wall', name:n, price:p, k:i, img:i?`stena/${String(i).padStart(2,'0')}.webp`:null}));
+[['Без питомца',0],['Кот',1500],['Пёс',2500],['Крыса',600],['Ворон',3000],['Голубь',800],['Таракан «Шнырь»',300],['Паук',1200],['Рыжий котёнок',2000]]
+  .forEach(([n,p],i)=>add({id:'pt_'+i, cat:'hata', sub:'pitomcy', slot:'pet', name:n, price:p, k:i, img:i?`pitomcy/${String(i).padStart(2,'0')}.webp`:null}));
 // фразы и стикеры
 const PHRASES = [
   ['Здорово, бродяга'],['Хорошая игра'],['Спасибо за партию'],['Давай ещё одну'],['Ходи давай'],['Красава'],['Повезло тебе'],
@@ -873,14 +895,21 @@ const PHRASES = [
   ['Ну что, петушок, докукарекался?',300],['Не кукарекай раньше времени, петушок',300],['Петушок пропел, партия твоя кончилась',300]];
 PHRASES.forEach(([n,p,l],i)=>add({id:'f_'+i, cat:'bazar', sub:'frazy', slot:'phrase', name:n, price:p||0, ...(l||{}), free:!p&&!l}));
 const STICKERS = [['Палец вверх'],['Смех до слёз'],['Хлопок по лбу'],['Злой кулак'],['Рукопожатие'],['Кружка чифира',100],['Кубики на удачу',150],['Время, брат',100],['Кто тут главный',300],['Угощаю',150],
-  ['Чётки',0,{rank:'Блатной'}],['Марс близко',0,{ach:'mars5'}],['Дождь из сигарет',0,{ach:'stake500'}]];
+  ['Чётки',0,{rank:'Блатной'}],['Марс близко',0,{ach:'mars5'}],['Дождь из сигарет',0,{ach:'stake500'}],
+  ['Рано кукарекал',300],['Тапки в зубы',200],['Слил',250],['Иди в шашки',250],['Кубики не помогут',200],['Ну-ну',150],['Чифир остыл',150],['Медленные хлопки',200]];
 STICKERS.forEach(([n,p,l],i)=>add({id:'st_'+i, cat:'bazar', sub:'stikery', slot:'sticker', name:n, price:p||0, img:`stikery/${String(i+1).padStart(2,'0')}.webp`, ...(l||{}), free:!p&&!l}));
+// за звёзды Телеграма: пачки сигарет и наборы (что внутри — проверяет сервер)
+[['pk500','Пачка: 500 сигарет',100,'01','500 сигарет','pachki'],['pk1500','Блок: 1500 сигарет',250,'02','1500 сигарет','pachki'],['pk4000','Ящик: 4000 сигарет',500,'03','4000 сигарет','pachki'],
+ ['set1','Набор «Первоход»',200,'04','спортивный костюм, восьмиклинка, янтарные чётки, круглые очки, кожаный браслет и 500 сигарет','nabory'],
+ ['set2','Набор «Блатной»',400,'05','малиновый пиджак, золотой крест, золотые часы, красные лаковые нарды, золотые авиаторы, золотая цепь на руку и 1000 сигарет','nabory'],
+ ['set3','Набор «Хата под ключ»',500,'06','ремонт «Ковёр и кровать», ковёр на стену, кот, колбаса на стол, кружка с куполами и хрустальная пепельница','nabory']]
+  .forEach(([sid,n,st,k,gives,sub])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub, slot:'stars', name:n, stars:st, price:0, img:`zvezdy/${k}.webp`, gives}));
 const ACH = {games100:'Сыграть 100 партий', beads5:'Собрать 5 видов чёток', streak10:'Выиграть 10 партий подряд', underdog:'Обыграть того, у кого хата на 2 уровня выше', mars5:'Сделать 5 марсов', stake500:'Выиграть партию со ставкой 500'};
 const item = id => ITEMS.find(x=>x.id===id);
-const CATS = [{id:'shmot',name:'Шмот',subs:{odezhda:'Одежда',shapki:'Шапки'}},{id:'nakolki',name:'Наколки',subs:PLACES},
-  {id:'ryzhyo',name:'Рыжьё и чётки',subs:{sheya:'На шею',chasy:'Часы',chetki:'Чётки'}},
-  {id:'nardy',name:'Нарды',subs:{nardy:'Доски',shashki:'Шашки',kubiki:'Кубики'}},{id:'stol',name:'На стол',subs:{kruzhki:'Кружки',pepelnitsy:'Пепельницы',kurevo:'Курево'}},
-  {id:'hata',name:'Ремонт хаты',subs:{hata:'Уровни'}},{id:'bazar',name:'Базар',subs:{frazy:'Фразы',stikery:'Стикеры'}}];
+const CATS = [{id:'shmot',name:'Шмот',subs:{odezhda:'Одежда',shapki:'Шапки',ochki:'Очки',vruke:'В руке'}},{id:'nakolki',name:'Наколки',subs:PLACES},
+  {id:'ryzhyo',name:'Рыжьё и чётки',subs:{sheya:'На шею',chasy:'Часы',braslety:'Браслеты',chetki:'Чётки'}},
+  {id:'nardy',name:'Нарды',subs:{nardy:'Доски',shashki:'Шашки',kubiki:'Кубики'}},{id:'stol',name:'На стол',subs:{kruzhki:'Кружки',pepelnitsy:'Пепельницы',kurevo:'Курево',eda:'Еда'}},
+  {id:'hata',name:'Хата',subs:{hata:'Ремонт',stena:'На стену',pitomcy:'Питомцы'}},{id:'zvezdy',name:'⭐ За звёзды',subs:{pachki:'Сигареты',nabory:'Наборы'}},{id:'bazar',name:'Базар',subs:{frazy:'Фразы',stikery:'Стикеры'}}];
 
 // ---------- Точки на теле (сцена 880×1168) ----------
 const SLOT = {chest:[{x:440,y:458,w:225,mh:230}], kl:[{x:362,y:340,w:50,r:-8},{x:522,y:340,w:50,r:8}], pog:[{x:262,y:300,w:58,r:-28},{x:604,y:300,w:58,r:28}],
@@ -892,6 +921,17 @@ const LAMPS = {1:[480,40],2:[240,45],3:[480,60],4:[520,415],5:[700,140],6:[800,7
 const STOL = {"1": [177, 818], "2": [193, 818], "3": [197, 803], "4": [178, 791], "5": [187, 821], "6": [187, 816], "7": [203, 791], "8": [181, 818], "9": [194, 809], "10": [191, 811], "11": [200, 816]};
 const STOL_DY = {1:0,2:-11,3:-26,4:-28,5:-12,6:-12,7:-32,8:-12,9:-12,10:-12,11:-12};
 const LAY = {"h1":[409,116],"h2":[424,122],"h3":[407,124],"h4":[429,110],"h5":[364,106],"h6":[404,99],"h7":[411,123],"h8":[404,105],"h9":[419,123],"n1":[398,296],"n2":[390,286],"n3":[392,262],"n4":[391,316],"n5":[398,273],"n6":[394,262],"n7":[391,262],"w1":[510,524],"r1":[162,616],"w2":[543,523],"r2":[162,616],"w3":[521,529],"r3":[162,616],"w4":[511,523],"r4":[162,616],"cig":[151,580],"m0":[548,756],"a1":[253,852],"b1":[465,630],"d0":[246,755],"m1":[549,759],"c1":[478,849],"a2":[248,851],"b2":[465,630],"d1":[225,754],"m2":[562,733],"c2":[467,848],"a3":[265,843],"b3":[465,630],"d2":[239,755],"m3":[549,758],"c3":[479,863],"a4":[238,861],"b4":[465,630],"d3":[241,770],"m4":[557,734],"c4":[450,855],"b5":[465,630],"d4":[255,767],"c5":[453,854],"b6":[465,630],"d5":[237,766],"c0":[443,861],"b7":[465,630],"d6":[235,758],"d7":[241,741]};
+Object.assign(LAY,{"g1":[430,220],"g2":[428,204],"g3":[408,173],"g4":[415,173],"g5":[410,179],"br1":[142,540],"br2":[143,542],"br3":[144,543],"br4":[142,542],"br5":[144,532],"sm1":[203,498],"sm2":[100,603],"sm3":[63,572],"d8":[229,779],"d9":[239,777],"d10":[244,766],"d11":[205,815]});
+// где на стене висит вещь (в каждой хате своё свободное место), где сидит питомец и где еда на столе
+const WALLPOS = {1:[255,175,150],2:[262,215,140],3:[262,175,115],4:[255,200,130],5:[125,265,120],6:[255,210,150],7:[250,330,140],8:[690,250,130],9:[250,330,130],10:[125,300,120],11:[130,300,130]};
+const PETW = [0,150,190,120,135,115,95,125,120];
+const PETPOS = {cx:795, bot:1166};
+const FOODPOS = {cx:372, bot:992, w:88};
+async function drawWall(x, eq, L){ const it=eq.wall&&item(eq.wall); if(!it||!it.k) return; const im=await img(it.img); const p=WALLPOS[L]||WALLPOS[1]; if(!im) return;
+  let w=p[2], h=w*im.height/im.width; if(h>p[2]*1.25){ h=p[2]*1.25; w=h*im.width/im.height; }
+  x.save(); x.shadowColor='#0008'; x.shadowBlur=10; x.shadowOffsetX=4; x.shadowOffsetY=6; x.drawImage(im,p[0]-w/2,p[1]-h/2,w,h); x.restore(); }
+function contactShadow(x,cx,bot,w){ const g=x.createRadialGradient(cx,bot-4,2,cx,bot-4,w*0.55); g.addColorStop(0,'#000a'); g.addColorStop(1,'#0000'); x.save(); x.translate(0,bot-4); x.scale(1,0.22); x.translate(0,-(bot-4)); x.fillStyle=g; x.beginPath(); x.arc(cx,bot-4,w*0.55,0,7); x.fill(); x.restore(); }
+function petBox(eq){ const it=eq.pet&&item(eq.pet); if(!it||!it.k) return null; return {it, w:PETW[it.k]||130}; }
 const BEADS = [612,948,-62];
 let ANCH = null;
 
@@ -916,6 +956,10 @@ function drawSprite(x, im, cx, cy, w, rot, alpha, mh){
   if(!im) return; let h = w*im.height/im.width; if(mh && h>mh){ w=w*mh/h; h=mh; } x.save(); x.translate(cx,cy); if(rot) x.rotate(rot*Math.PI/180); if(alpha!=null) x.globalAlpha=alpha; x.drawImage(im,-w/2,-h/2,w,h); x.restore();
 }
 
+// погладить питомца: он ёжится от удовольствия, над ним сердечки
+const PET_SAY=['','мрр…','*виляет хвостом*','пи-пи!','кар!','гурр-гурр','*шевелит усами*','*перебирает лапками*','мяу!'];
+function petPet(el,box,pb){ el.classList.remove('pat'); void el.offsetWidth; el.classList.add('pat'); haptic('light'); try{ SFX.click(); }catch(e){}
+  for(let i=0;i<5;i++) setTimeout(()=>{ const h=document.createElement('span'); h.className='pheart'; h.textContent=i===2?PET_SAY[pb.it.k]:'❤'; Object.assign(h.style,{left:pct(PETPOS.cx-(i===2?110:50)+Math.random()*50,W),top:pct(PETPOS.bot-pb.w*1.05,H)}); if(i===2) h.classList.add('say'); box.append(h); setTimeout(()=>h.remove(),1500); },i*120); }
 // ---------- Сборка героя из слоёв ----------
 async function composeHero(eq, opt){
   opt = opt||{};
@@ -944,30 +988,35 @@ async function composeHero(eq, opt){
   const T = async (id) => { const it=item(id); if(!it||!it.img) return; const key=id.replace('_',''), p=LAY[key]; if(!p) return; const im=await img(`nadeto/${key}.webp`); if(!im) return;
     if (dust(id)) x.filter='grayscale(.7) brightness(.8) contrast(.9)'; x.drawImage(im,p[0],p[1]+tdy); x.filter='none'; };
   await T(eq.board); await T(eq.mug); await T(eq.ash); await T(eq.pack);
+  { const fd=eq.food&&item(eq.food); if(fd&&fd.k){ const im=await img(fd.img); if(im){ const w=FOODPOS.w, h=w*im.height/im.width, b=FOODPOS.bot+tdy; contactShadow(x,FOODPOS.cx,b,w*0.9); x.drawImage(im,FOODPOS.cx-w/2,b-h,w,h); } } }
   if (opt.season){ for (const [px,py] of [[668,948],[700,940],[684,925]]){ const g=x.createRadialGradient(px-4,py-4,2,px,py,15); g.addColorStop(0,'#ffc15a'); g.addColorStop(1,'#d9600c'); x.fillStyle=g; x.beginPath(); x.arc(px,py,15,0,7); x.fill(); } x.fillStyle='#3d6b2a'; x.beginPath(); x.ellipse(686,909,7,3,-.5,0,7); x.fill(); }
 
   // всё, что надето, нарисовано прямо на герое и сидит ровно
   const L = async (key, d) => { const p=LAY[key]; if(!p) return; const im=await img(`nadeto/${key}.webp`); if(im) x.drawImage(im,p[0]+d[0],p[1]+d[1]); };
-  if (eq.pack) await L('cig', dL);
+  const smk=eq.smoke&&item(eq.smoke);
+  if (smk&&smk.k) await L('sm'+smk.k, dL); else if (eq.pack) await L('cig', dL);
+  { const br=eq.bracelet&&item(eq.bracelet); if(br&&br.k) await L('br'+br.k, dL); }
   if (eq.beads && item(eq.beads).img) await L(eq.beads.replace('_',''), dR);
   if (eq.watch && item(eq.watch).k){ const key='w'+item(eq.watch).k, p=LAY[key], im=await img(`nadeto/${key}.webp`);
     if (p&&im){ const t=document.createElement('canvas'); t.width=W; t.height=H; const tx=t.getContext('2d'); tx.drawImage(im,p[0]+dR[0],p[1]+dR[1]);
       x.drawImage(t,0,0); } }
   if (eq.neck && item(eq.neck).k) await L('n'+item(eq.neck).k, [an.neck[0]-base.neck[0], an.neck[1]-base.neck[1]]);
+  { const gl=eq.glasses&&item(eq.glasses); if(gl&&gl.k) await L('g'+gl.k, [an.head[0]-base.head[0], an.head[1]-base.head[1]]); }
   if (hat) await L('h'+hat, [an.head[0]-base.head[0], an.head[1]-base.head[1]]);
+  { const pb=petBox(eq); if(pb){ const im=await img(pb.it.img); if(im){ const h=pb.w*im.height/im.width; contactShadow(x,PETPOS.cx,PETPOS.bot,pb.w); x.drawImage(im,PETPOS.cx-pb.w/2,PETPOS.bot-h,pb.w,h); } } }
   return c;
 }
 const heroCache = new Map(), headCache = new Map();
 function heroKey(eq,opt){ return JSON.stringify([eq,opt||{},P.dust||{}]); }
 async function heroCanvas(eq,opt){ const k=heroKey(eq,opt); if(!heroCache.has(k)){ if(heroCache.size>40) heroCache.clear(); heroCache.set(k,composeHero(eq,opt)); } return heroCache.get(k); }
 async function headURL(eq){ const k=heroKey(eq); if(headCache.has(k)) return headCache.get(k); const c=await heroCanvas(eq); const h=document.createElement('canvas'); h.width=160; h.height=174; h.getContext('2d').drawImage(c,382,118,204,222,0,0,160,174); const u=h.toDataURL('image/webp',.85); headCache.set(k,u); return u; }
-async function heroOnBg(eq, lvl, w){ const c=document.createElement('canvas'); c.width=w||W; c.height=Math.round((w||W)*H/W); const x=c.getContext('2d'); x.drawImage(await img(`hata/uroven_${lvl}.webp`),0,0,c.width,c.height); x.drawImage(await heroCanvas(Object.assign({},eq,{level:'l_'+lvl})),0,0,c.width,c.height); return c; }
+async function heroOnBg(eq, lvl, w){ const c=document.createElement('canvas'); c.width=w||W; c.height=Math.round((w||W)*H/W); const x=c.getContext('2d'); x.drawImage(await img(`hata/uroven_${lvl}.webp`),0,0,c.width,c.height); { x.save(); x.scale(c.width/W,c.height/H); await drawWall(x,eq,lvl); x.restore(); } x.drawImage(await heroCanvas(Object.assign({},eq,{level:'l_'+lvl})),0,0,c.width,c.height); return c; }
 
 // ---------- Профиль ----------
 const KEY='kondrat_proto_v3';
-const DEFAULT_EQ = {outfit:'o_00_golyi', hat:'h_0', neck:'n_0', ring:'r_0', watch:'w_0', beads:'b_0', tats:{}, board:'d_0', checkers:'s_0', dice:'k_0', mug:'m_1', ash:'a_0', pack:'c_0', level:'l_1'};
+const DEFAULT_EQ = {glasses:'g_0', bracelet:'br_0', smoke:'sm_0', food:'fd_0', wall:'wl_0', pet:'pt_0', outfit:'o_00_golyi', hat:'h_0', neck:'n_0', ring:'r_0', watch:'w_0', beads:'b_0', tats:{}, board:'d_0', checkers:'s_0', dice:'k_0', mug:'m_1', ash:'a_0', pack:'c_0', level:'l_1'};
 function fresh(){ return { since:Date.now(), name:'Кондрат', num:'0715', cigs:2500, rating:0, wins:0, losses:0, botWins:0, games:0, streak:0, mars:0,
-  owned:ITEMS.filter(x=>x.price===0&&!x.rank&&!x.ach).map(x=>x.id), eq:JSON.parse(JSON.stringify(DEFAULT_EQ)), lastDaily:0, ach:{}, dust:{'d_0':1}, set:{music:true, sfx:true, tod:'auto', season:false} }; }
+  owned:ITEMS.filter(x=>x.price===0&&!x.rank&&!x.ach&&!x.stars).map(x=>x.id), eq:JSON.parse(JSON.stringify(DEFAULT_EQ)), lastDaily:0, ach:{}, dust:{'d_0':1}, set:{music:true, sfx:true, tod:'auto', season:false} }; }
 let P = fresh();
 try { const r=localStorage.getItem(KEY); if(r) P=Object.assign(fresh(),JSON.parse(r)); } catch(e){}
 P.eq.ring='r_0'; if(P.eq.tats){ delete P.eq.tats.kist; delete P.eq.tats.palcy; } for(const k of ['hat','neck','watch','beads','board','mug','ash','pack','level','outfit','checkers','dice']) if(P.eq[k]&&!item(P.eq[k])) P.eq[k]=DEFAULT_EQ[k];
@@ -1019,7 +1068,7 @@ const pct = (v,d) => (v/d*100)+'%';
 async function buildScene(box, eq, opts){
   opts=opts||{}; const L = item(eq.level).lvl;
   box.innerHTML='';
-  const bg=document.createElement('canvas'); bg.width=W; bg.height=H; bg.getContext('2d').drawImage(await img(`hata/uroven_${L}.webp`),0,0);
+  const bg=document.createElement('canvas'); bg.width=W; bg.height=H; bg.getContext('2d').drawImage(await img(`hata/uroven_${L}.webp`),0,0); await drawWall(bg.getContext('2d'),eq,L);
   const hc = await heroCanvas(eq,{});
   const mk=(cls)=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; c.className=cls; c.getContext('2d').drawImage(hc,0,0); return c; };
   box.append(bg);
@@ -1027,6 +1076,8 @@ async function buildScene(box, eq, opts){
   box.append(mk('low'), mk('up'));
   const light=document.createElement('div'); light.className='lay light'; const glow=document.createElement('div'); glow.className='lay glow';
   const fx=document.createElement('div'); fx.className='lay fx'; box.append(light,glow,fx);
+  { const pb=petBox(eq); if(pb && opts.moments){ const im=await img(pb.it.img); if(im){ const h=pb.w*im.height/im.width; const el=document.createElement('img'); el.src=im.src; el.className='petdom'; el.alt=pb.it.name;
+      Object.assign(el.style,{left:pct(PETPOS.cx-pb.w/2,W),top:pct(PETPOS.bot-h,H),width:pct(pb.w,W)}); el.onclick=e=>{ e.stopPropagation(); petPet(el,box,pb); }; box.append(el); } } }
   const night=isNight(), [lx,ly]=LAMPS[L], wn=WINDOWS[L];
   light.style.background = night ? `radial-gradient(circle at ${pct(lx,W)} ${pct(ly,H)},#fff 0,#c9b48a 18%,#2b3350 60%,#141a30 100%)` : `linear-gradient(#0000,#0000)`;
   glow.style.background = night ? `radial-gradient(circle at ${pct(lx,W)} ${pct(ly,H)},#ffcf7a66 0,#0000 22%)`
@@ -1145,7 +1196,7 @@ let shopCat='shmot', shopSub='odezhda', shopSel=null;
 function equippedId(it){ if(it.slot==='tat') return P.eq.tats[it.place]; if(it.slot==='phrase'||it.slot==='sticker') return null; return P.eq[it.slot]; }
 function tryEq(it){ const e=JSON.parse(JSON.stringify(P.eq)); if(it.slot==='tat') e.tats[it.place]=it.id; else if(it.slot==='level'||it.slot==='phrase'||it.slot==='sticker'){} else e[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place)) e.outfit='o_00_golyi'; if(it.slot==='level') e.level=it.id; return e; }
-function priceTag(it){ if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
+function priceTag(it){ if(it.stars) return `<span class="tag">⭐ ${it.stars}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
 async function thumb(it){
   if(!it.img){ return `<span style="font-size:12px;color:#5a503d">—</span>`; }
   if(it.slot==='level') return `<img src="${A+it.img}" alt="">`;
@@ -1172,11 +1223,14 @@ async function renderShop(){
 async function renderPreview(opt){
   const it=item(shopSel), own=owns(it.id), lk=locked(it), on=equippedId(it)===it.id;
   let btn;
+  if (it.slot==='stars'){
+    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big"><img src="${A+it.img}" alt=""></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Оплата звёздами Телеграма, всё приходит в игру сразу.</p><button class="btn hot" id="starBtn">Купить за ⭐ ${it.stars}</button></div>`;
+    $('starBtn').onclick=()=>buyStars(it); return; }
   if (it.slot==='phrase' || it.slot==='sticker'){
     btn = own ? `<button class="btn sec" disabled>${it.slot==='phrase'?'Фраза твоя':'Стикер твой'}</button>` : lk ? `<button class="btn ghost" disabled>Закрыто: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Купить за ${it.price}</button>`;
   } else if (!own) btn = lk ? `<button class="btn ghost" disabled>Откроется: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Взять за ${it.price}</button>${P.cigs<it.price?'<p style="margin:6px 0 0;font-size:12px;color:var(--danger)">Не хватает сигарет</p>':''}`;
   else if (it.slot==='tat') btn = `<button class="btn ${on?'sec':'hot'}" id="eqBtn">${on?'Свести наколку':'Набить снова'}</button>`;
-  else btn = on ? `<button class="btn sec" disabled>${it.slot==='level'?'Ты здесь живёшь':'Надето'}</button>` : `<button class="btn hot" id="eqBtn">${it.slot==='level'?'Переехать':it.slot==='board'?'Положить на стол':'Надеть'}</button>`;
+  else btn = on ? `<button class="btn sec" disabled>${it.slot==='level'?'Ты здесь живёшь':it.slot==='pet'?'Живёт с тобой':it.slot==='wall'?'Висит':['food','mug','ash','board'].includes(it.slot)?'На столе':'Надето'}</button>` : `<button class="btn hot" id="eqBtn">${({level:'Переехать',board:'Положить на стол',food:'Поставить на стол',wall:'Повесить',pet:'Завести',smoke:'Взять в руку',mug:'Поставить на стол',ash:'Поставить на стол'})[it.slot]||'Надеть'}</button>`;
   if ((P.dust||{})[it.id]) btn += `<button class="btn sec" id="cleanBtn" style="margin-top:8px;width:100%">Почистить за 10</button>`;
   let note='';
   if (it.slot==='tat') note = it.place==='spina' ? 'Место: спина. Видно в личном деле.' : `Место: ${PLACES[it.place].toLowerCase()}. ${['kist','palcy','neck'].includes(it.place)?'Видно всегда.':'Видно, когда тело не закрыто одеждой.'}`;
@@ -1184,6 +1238,8 @@ async function renderPreview(opt){
   else if (it.slot==='sticker') note = it.free?'Бесплатный, есть у всех.':lk?'Откроется: '+lk:'Стикер для партии.';
   else if (it.slot==='board') note = 'На столе в хате и на партии.';
   else if (it.slot==='checkers'||it.slot==='dice') note = 'Видно в партии.';
+  else if (it.slot==='pet') note = it.k ? 'Сидит на полу в хате. Нажми на него в хате, чтобы погладить.' : 'Без питомца.';
+  else if (it.slot==='wall') note = 'Висит на стене в хате.';
   else note = own ? 'Уже твоё.' : 'Примерка бесплатная.';
   if ((P.dust||{})[it.id]) note = 'Вещь запылилась. Почисти, и будет как новая.';
   const showHero = !['phrase','sticker','checkers','dice'].includes(it.slot) && !(it.slot==='tat'&&it.place==='spina');
@@ -1195,6 +1251,7 @@ async function renderPreview(opt){
   const b2=$('eqBtn'); if(b2) b2.onclick=()=>{ if(it.slot==='tat'&&on) delete P.eq.tats[it.place]; else applyEq(it); saveP(); SFX.click(); if(it.slot==='tat'&&!on) inkAnim(it); else renderShop(); };
   const b3=$('cleanBtn'); if(b3) b3.onclick=()=>{ if(P.cigs<10) return malyava('Не хватает сигарет'); P.cigs-=10; eco('clean'); delete P.dust[it.id]; heroCache.clear(); saveP(); SFX.coin(); malyava('Почищено, блестит'); renderShop(); };
 }
+function buyStars(it){ SFX.click(); if(typeof NET!=='undefined'&&NET.on){ nsend({t:'stars',id:it.sid}); malyava('Открываю оплату…'); } else malyava('Покупка за звёзды работает в игре через Телеграм'); }
 function applyEq(it){ if(it.slot==='tat') P.eq.tats[it.place]=it.id; else if(it.slot==='level') P.eq.level=it.id; else if(it.slot!=='phrase'&&it.slot!=='sticker') P.eq[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place) && item(P.eq.outfit).file!=='00_golyi'){} }
 function buy(it){
@@ -1603,6 +1660,8 @@ async function netMsg(m) {
     case 'chat': if (G && G.net && !G.over) _react(1, m.img ? { img: m.img } : { text: m.text }); return;
     case 'game': return netGame(m);
     case 'peek': return netPeek(m);
+    case 'invoice': try { TGA.openInvoice(m.link, st => { if (st === 'failed') malyava('Оплата не прошла'); }); } catch (e) { malyava('Обнови Телеграм, чтобы платить звёздами'); } return;
+    case 'paid': malyava(`Оплата прошла: ${m.title}. Всё уже у тебя!`); try { SFX.coin(); cigRain(); } catch (e) { } if (screen === 'shop') renderShop(); return;
     case 'prepared': try { TGA.shareMessage(m.id, ok => { if (ok) { malyava('Фото отправлено'); endBack(); } }); } catch (e) { malyava('Обнови Телеграм, чтобы пересылать фото'); } return;
   }
 }

@@ -7,6 +7,15 @@ const C = require('./catalog.js');
 const ITEMS = require('./items.json'); // цены барахолки (собираются из игры)
 const RANK_NAMES = C.RANKS.map(r => r.name);
 
+// покупки за Telegram Stars (цены в звёздах). Что входит — решает только сервер.
+const STARS = {
+  pk500: { title: 'Пачка: 500 сигарет', stars: 100, cigs: 500 },
+  pk1500: { title: 'Блок: 1500 сигарет', stars: 250, cigs: 1500 },
+  pk4000: { title: 'Ящик: 4000 сигарет', stars: 500, cigs: 4000 },
+  set1: { title: 'Набор «Первоход»', stars: 200, cigs: 500, items: ['o_05_sportivka', 'h_3', 'b_3', 'g_2', 'br_2'] },
+  set2: { title: 'Набор «Блатной»', stars: 400, cigs: 1000, items: ['o_13_malinovyi', 'n_3', 'w_3', 'd_4', 'g_1', 'br_1'] },
+  set3: { title: 'Набор «Хата под ключ»', stars: 500, cigs: 0, items: ['l_4', 'wl_5', 'pt_1', 'fd_6', 'm_3', 'a_3'] },
+};
 const TURN_SECONDS = 90;
 const HOOK_PATH = '/tg-hook';
 
@@ -60,6 +69,19 @@ function createCore(cfg) {
       const lv = eq.level && /^l_(\d+)$/.exec(eq.level); u.lvl = lv ? Math.max(1, Math.min(11, +lv[1])) : 1;
     }
     save(u);
+  }
+  function starsDesc(p) { const names = (p.items || []).map(id => ITEMS[id] && ITEMS[id].name).filter(Boolean); return [p.cigs ? `${p.cigs} сигарет` : '', names.length ? names.join(', ') : ''].filter(Boolean).join(' + ') || p.title; }
+  // оплата прошла: выдаём (повторная доставка того же платежа ничего не даёт)
+  function grantStars(uid, id, charge, paid) {
+    const p = STARS[id], u = users[uid]; if (!p || !u) return false;
+    meta.paid = meta.paid || {}; if (meta.paid[charge]) return false; meta.paid[charge] = uid;
+    if (!Array.isArray(u.owned)) u.owned = [];
+    u.cigs += p.cigs || 0; (p.items || []).forEach(x => { if (ITEMS[x] && !u.owned.includes(x)) u.owned.push(x); });
+    u.stars = (u.stars || 0) + (paid || p.stars);
+    meta.sales = (meta.sales || []).concat([{ at: Date.now(), uid, id, stars: paid || p.stars, charge }]).slice(-1000);
+    addLog('оплата', `${u.name} купил «${p.title}» за ${paid || p.stars} ⭐`);
+    save(u); saveMeta(); sendMe(uid); send(uid, { t: 'paid', id, title: p.title });
+    return true;
   }
   function addLog(by, text) { meta.alog = (meta.alog || []).concat([{ at: Date.now(), by, text }]).slice(-200); saveMeta(); }
 
@@ -153,6 +175,14 @@ function createCore(cfg) {
         return;
       }
       case 'photo': return sharePhoto(uid, m);
+      case 'stars': { // купить за звёзды: сервер выписывает счёт, Телеграм сам принимает оплату
+        const p = STARS[m.id]; if (!p) return;
+        if (!BOT_TOKEN && DEV) { grantStars(uid, m.id, 'dev' + Date.now(), p.stars); return; }
+        tg('createInvoiceLink', { title: p.title.slice(0, 32), description: starsDesc(p).slice(0, 255), payload: `${m.id}|${uid}|${Date.now()}`, currency: 'XTR', prices: [{ label: p.title.slice(0, 32), amount: p.stars }] })
+          .then(r => r && r.ok ? send(uid, { t: 'invoice', id: m.id, link: r.result }) : err(uid, 'Оплата сейчас недоступна, попробуй позже'))
+          .catch(() => err(uid, 'Оплата сейчас недоступна, попробуй позже'));
+        return;
+      }
       case 'top': {
         const all = Object.values(users).filter(x => x.app).sort((a, b) => b.rating - a.rating || b.wins - a.wins);
         return send(uid, { t: 'top', list: all.slice(0, 50).map(publicUser), place: all.findIndex(x => x.id === uid) + 1, total: all.length });
@@ -405,6 +435,7 @@ function createCore(cfg) {
 🟢 Сейчас в игре: ${online.size}
 🎲 Идёт партий: ${inGames}, ищут соперника: ${queue.length}
 📊 Партий сегодня: ${meta.day === today() ? meta.gamesDay || 0 : 0}, всего: ${meta.gamesTotal || 0}
+⭐ Продажи за звёзды: сегодня ${(meta.sales || []).filter(x => x.at > day).reduce((a, x) => a + x.stars, 0)} ⭐, всего ${(meta.sales || []).reduce((a, x) => a + x.stars, 0)} ⭐ (${(meta.sales || []).length} покупок)
 
 🏆 Топ:
 ${top}
@@ -469,6 +500,7 @@ ${top}
 ⭐ Рейтинг: ${u.rating} (${C.rankOf(u.rating)})
 🎲 Онлайн: побед ${u.wins || 0}, поражений ${u.losses || 0}; бот: ${u.botWins || 0} побед
 🛍 Вещей куплено: ${(u.owned || []).filter(id => ITEMS[id] && ITEMS[id].price).length}
+⭐ Потратил звёзд: ${u.stars || 0}
 👥 Корешей: ${(u.friends || []).length}
 📅 С нами с ${dt(u.created)}, был ${dt(u.seen)}${online.has(u.id) ? ' (сейчас в игре)' : ''}`;
   }
@@ -492,6 +524,16 @@ ${top}
 
   // ответ боту отдаётся прямо в ответ на webhook
   function onUpdate(up) {
+    if (up.pre_checkout_query) { // Телеграм спрашивает перед списанием звёзд: всё ли в порядке
+      const q = up.pre_checkout_query, [id, uid] = String(q.invoice_payload || '').split('|'), p = STARS[id], u = users[uid];
+      const ok = !!(p && u && !u.banned && q.currency === 'XTR' && q.total_amount === p.stars && String(q.from.id) === uid);
+      return ok ? { method: 'answerPreCheckoutQuery', pre_checkout_query_id: q.id, ok: true } : { method: 'answerPreCheckoutQuery', pre_checkout_query_id: q.id, ok: false, error_message: 'Покупка недоступна. Открой игру заново и попробуй ещё раз.' };
+    }
+    if (up.message && up.message.successful_payment) {
+      const sp = up.message.successful_payment, [id, uid] = String(sp.invoice_payload || '').split('|'), p = STARS[id];
+      const got = grantStars(uid, id, sp.telegram_payment_charge_id, sp.total_amount);
+      return { method: 'sendMessage', chat_id: up.message.chat.id, text: p ? (got ? `✅ Оплата прошла: «${p.title}». Всё уже у тебя в игре. Спасибо, что поддерживаешь!` : '✅ Эта покупка уже выдана.') : 'Оплата получена.' };
+    }
     if (up.callback_query) {
       const q = up.callback_query;
       tg('answerCallbackQuery', { callback_query_id: q.id }).catch(() => { });
@@ -586,7 +628,7 @@ ${top}
       ] });
       if (!WEBAPP_URL) { log('WEBAPP_URL не задан'); return (opts && opts.poll) ? poll() : null; }
       await tg('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Играть', web_app: { url: appUrl() } } });
-      const h = await tg('setWebhook', { url: WEBAPP_URL + HOOK_PATH, secret_token: HOOK_SECRET, allowed_updates: ['message', 'callback_query'] });
+      const h = await tg('setWebhook', { url: WEBAPP_URL + HOOK_PATH, secret_token: HOOK_SECRET, allowed_updates: ['message', 'callback_query', 'pre_checkout_query'] });
       log('Webhook: ' + (h.ok ? 'включён' : h.description));
       return h.ok;
     } catch (e) { log('Сервер не может сам связаться с Телеграмом (' + e.message + ')'); }
@@ -596,7 +638,7 @@ ${top}
     let offset = 0;
     for (; ;) {
       try {
-        const r = await tg('getUpdates', { offset, timeout: 50, allowed_updates: ['message', 'callback_query'] });
+        const r = await tg('getUpdates', { offset, timeout: 50, allowed_updates: ['message', 'callback_query', 'pre_checkout_query'] });
         for (const up of r.result || []) { offset = up.update_id + 1; const o = onUpdate(up); if (o) { const { method, ...rest } = o; await tg(method, rest).catch(() => { }); } }
       } catch (e) { await new Promise(r => setTimeout(r, 5000)); }
     }
