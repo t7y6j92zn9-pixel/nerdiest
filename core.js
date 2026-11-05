@@ -113,9 +113,9 @@ function createCore(cfg) {
   function grantStars(uid, id, charge, paid) {
     const g = GOLD[id], p = g || STARS[id], u = users[uid]; if (!p || !u) return false;
     meta.paid = meta.paid || {}; if (meta.paid[charge]) return false; meta.paid[charge] = uid;
-    if (g) { const x2 = !u.goldFirst; u.goldFirst = Date.now(); u.gold = (u.gold | 0) + g.give * (x2 ? 2 : 1); if (x2) send(uid, { t: 'toast', text: `Первая покупка — рыжья вдвойне: +${g.give * 2}` }); } else giveProd(u, p);
+    let gave = 0; if (g) { const x2 = !u.goldFirst; u.goldFirst = Date.now(); gave = g.give * (x2 ? 2 : 1); u.gold = (u.gold | 0) + gave; if (x2) send(uid, { t: 'toast', text: `Первая покупка — рыжья вдвойне: +${g.give * 2}` }); } else giveProd(u, p);
     u.stars = (u.stars || 0) + (paid || p.stars); dayStat('stars', paid || p.stars);
-    meta.sales = (meta.sales || []).concat([{ at: Date.now(), uid, id, stars: paid || p.stars, charge }]).slice(-1000);
+    meta.sales = (meta.sales || []).concat([{ at: Date.now(), uid, id, stars: paid || p.stars, charge, gold: gave }]).slice(-1000);
     addLog('оплата', `${u.name} купил(а) «${p.title}» за ${paid || p.stars} ⭐`);
     save(u); saveMeta(); sendMe(uid); send(uid, { t: 'paid', id, title: p.title });
     return true;
@@ -1094,7 +1094,9 @@ function createCore(cfg) {
       if (r && r.error_code === 403) { u.botBlocked = Date.now(); save(u); } return !!(r && r.ok); } catch (e) { return false; }
   }
   async function hourly() {
-    if (!BOT_TOKEN) return; const h = mskH(); if (h < 9 || h >= 22) return;   // ночью не будим
+    if (!BOT_TOKEN) return; const h = mskH();
+    if (h >= 4 && meta.bkDay !== today()) { meta.bkDay = today(); saveMeta(); await backup(); }   // копия базы раз в день
+    if (h < 9 || h >= 22) return;   // ночью не будим
     const now = Date.now(); let sent = 0;
     for (const u of Object.values(users)) {
       if (sent >= 60) break;
@@ -1108,6 +1110,34 @@ function createCore(cfg) {
       if (rd && !u.chestPing && now - seen > 3600e3) { u.chestPing = 1; save(u); sent++; await botNote(u, `🎁 ${CHESTS[rd].name} готов(а)! Открой в «Заданиях» — внутри сигареты, а может и вещь.`, '🎁 Открыть'); }
     }
   }
+  // ---------- резервная копия: файл со всеми игроками админам ----------
+  async function backup(to) {
+    if (!BOT_TOKEN) return false;
+    const ids = to ? [to] : (meta.admins || []); if (!ids.length) return false;
+    const data = JSON.stringify({ at: new Date().toISOString(), users, meta, chats });
+    const name = `nardy-backup-${today()}.json`; let ok = false;
+    for (const id of ids) {
+      try {
+        const fd = new FormData(); fd.append('chat_id', String(id)); fd.append('caption', `💾 Резервная копия: ${Object.keys(users).length} игроков, ${today()}. Храни этот файл — по нему можно восстановить игру.`);
+        fd.append('document', new Blob([data], { type: 'application/json' }), name);
+        const r = await (await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd })).json(); ok = ok || !!(r && r.ok);
+      } catch (e) { }
+    }
+    return ok;
+  }
+  // ---------- возврат звёзд: забираем выданное и сообщаем админам ----------
+  function onRefund(rp, chatId) {
+    const [id, uid0] = String(rp.invoice_payload || '').split('|'), uid = uid0 || String(chatId), u = users[uid];
+    const sale = (meta.sales || []).find(x => x.charge === rp.telegram_payment_charge_id) || {};
+    const p = GOLD[id] || STARS[id]; let took = 0;
+    if (u) { if (sale.gold) { took = Math.min(u.gold | 0, sale.gold); u.gold = (u.gold | 0) - took; }
+      u.refunds = (u.refunds | 0) + 1; u.stars = Math.max(0, (u.stars || 0) - (rp.total_amount | 0)); save(u); sendMe(uid); }
+    meta.refunds = [{ at: Date.now(), uid, name: u ? u.name : uid, id, title: p ? p.title : id, stars: rp.total_amount | 0, gold: sale.gold | 0, took }].concat(meta.refunds || []).slice(0, 100); saveMeta();
+    addLog('возврат', `${u ? u.name : uid} вернул(а) ${rp.total_amount} ⭐ за «${p ? p.title : id}», забрано рыжья ${took}`);
+    const short = sale.gold && took < sale.gold ? `\n⚠️ Рыжьё уже потрачено: забрал(а) только ${took} из ${sale.gold}.` : '';
+    for (const a of meta.admins || []) tg('sendMessage', { chat_id: a, text: `↩️ Возврат звёзд\nИгрок: ${u ? u.name : '?'} (id ${uid})\nПокупка: «${p ? p.title : id}», ${rp.total_amount} ⭐\nЗабрано рыжья: ${took}${short}\n\nВсе возвраты: /refunds · карточка: /player ${uid}` }).catch(() => { });
+  }
+  function refundsText() { const l = meta.refunds || []; return l.length ? '↩️ Возвраты звёзд (последние):\n\n' + l.slice(0, 20).map(x => `• ${new Date(x.at + 3 * 3600e3).toISOString().slice(5, 16).replace('T', ' ')} ${x.name} (id ${x.uid}): «${x.title}» ${x.stars}⭐, забрано рыжья ${x.took}${x.gold && x.took < x.gold ? ' из ' + x.gold : ''}`).join('\n') : '↩️ Возвратов звёзд не было.'; }
   // ---------- канал новостей: бот сам постит события ----------
   function chanPost(text, pic) {   // пост в канал с картинкой (a/posty/*.jpg)
     if (!BOT_TOKEN || !meta.chan) return;
@@ -1259,6 +1289,8 @@ ${top}
 /give кто 500 — выдать сигареты (минус — забрать: /give кто -100)
 /gold кто 100 — выдать рыжьё (минус — забрать)
 /channel @канал — подключить канал новостей (бот сам постит события)
+/backup — прислать копию базы (и так приходит раз в день)
+/refunds — кто вернул звёзды
 /post текст — свой пост в канал (или пришли фото с подписью /post текст)
 /rating кто 1200 — поставить рейтинг
 /ban кто причина — закрыть доступ, /unban кто — открыть
@@ -1295,6 +1327,8 @@ ${top}
     const parts = text.split(/\s+/).slice(1);
     if (cmd === '/help') return M(ADMIN_HELP);
     if (cmd === '/stats') return M(statsText());
+    if (cmd === '/refunds') return M(refundsText());
+    if (cmd === '/backup') { backup(me.id).then(ok => { if (!ok) tg('sendMessage', { chat_id: me.id, text: '❌ Не получилось отправить копию' }); }); return M('💾 Собираю копию базы, пришлю файлом…'); }
     if (cmd === '/channel') {
       const c = String(parts[0] || '').trim();
       if (!c) return M(meta.chan ? `📣 Канал новостей: ${meta.chan}\nБот сам постит: нового Смотрящего, кубок общаков, итоги сезона, джекпоты на колесе, каждого сотого игрока.\n\nСвой пост: /post текст, или пришли фото с подписью /post текст\nОтключить: /channel off` : '📣 Канал новостей не подключён.\n\n1) Создай канал в Телеграме.\n2) Добавь этого бота в канал администратором (право «Публиковать сообщения»).\n3) Напиши сюда: /channel @адрес_канала');
@@ -1355,6 +1389,7 @@ ${top}
       const ok = !!(p && u && !u.banned && q.currency === 'XTR' && q.total_amount === p.stars && String(q.from.id) === uid);
       return ok ? { method: 'answerPreCheckoutQuery', pre_checkout_query_id: q.id, ok: true } : { method: 'answerPreCheckoutQuery', pre_checkout_query_id: q.id, ok: false, error_message: 'Покупка недоступна. Открой игру заново и попробуй ещё раз.' };
     }
+    if (up.message && up.message.refunded_payment) { onRefund(up.message.refunded_payment, up.message.chat.id); return null; }
     if (up.message && up.message.successful_payment) {
       const sp = up.message.successful_payment, [id, uid] = String(sp.invoice_payload || '').split('|'), p = GOLD[id] || STARS[id];
       const got = grantStars(uid, id, sp.telegram_payment_charge_id, sp.total_amount);
@@ -1427,7 +1462,7 @@ ${top}
       }
       return M(adminText(), adminKb);
     }
-    if (me && isAdmin(me.id) && ['/channel', '/post', '/player', '/give', '/gold', '/rating', '/ban', '/unban', '/log', '/help', '/mute', '/reports', '/stats', '/sus', '/errs', '/promo', '/promos', '/promodel', '/broadcast'].includes(cmd)) return adminCmd(me, cmd, text, M);
+    if (me && isAdmin(me.id) && ['/backup', '/refunds', '/channel', '/post', '/player', '/give', '/gold', '/rating', '/ban', '/unban', '/log', '/help', '/mute', '/reports', '/stats', '/sus', '/errs', '/promo', '/promos', '/promodel', '/broadcast'].includes(cmd)) return adminCmd(me, cmd, text, M);
     if (cmd === '/unadmin' && me && isAdmin(me.id)) { meta.admins = meta.admins.filter(x => x !== me.id); saveMeta(); return M('Ты больше не админ.'); }
     if (cmd === '/start' && /^fr_/i.test(payload || '') && me) {
       const fid = payload.slice(3), f = users[fid];
