@@ -1185,6 +1185,7 @@ function createCore(cfg) {
       [{ text: '🎲 Играть', web_app: { url: appUrl() } }],
       [{ text: '📜 Правила', callback_data: 'rules' }, { text: '🏆 Рейтинг', callback_data: 'top' }],
       [{ text: '🤝 Позвать кореша', url: share }],
+      ...(meta.chan && String(meta.chan).startsWith('@') ? [[{ text: '📢 Новости зоны', url: 'https://t.me/' + String(meta.chan).slice(1) }]] : []),
       [{ text: '📩 Поддержка', callback_data: 'sup' }],
     ] };
   }
