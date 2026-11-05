@@ -246,9 +246,10 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .wmsg i{display:block;font-style:normal;font-size:10px;color:#c9a23e;font-weight:700}.wmsg img{width:44px;display:block}
 .wmsg.out{animation:wOut .5s ease forwards}@keyframes wIn{from{opacity:0;transform:translateX(-12px)}}@keyframes wOut{to{opacity:0;transform:translateX(-12px)}}
 .dstat{margin-top:12px;background:#0006;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
-.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:5px}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px}
 .dc{background:#f3ecd6;color:#14204e;border-radius:6px;padding:4px 2px;text-align:center;line-height:1.15;box-shadow:inset 0 0 0 1px #c9b88a}
-.dc span{display:block;font-size:12px;color:#5a5040}.dc b{font-size:14px}
+.dc{position:relative}.dc .dd{display:flex;justify-content:center;gap:3px;margin-bottom:2px}.dc .dd svg{width:24px;height:24px}.dc b{font-size:13px}.dc i{position:absolute;top:1px;right:3px;font-style:normal;font-size:10px}.dc.hot i{color:#a06a00}.dc.cold i{color:#2a4a90}
+.dleg{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px;font-size:12px;color:var(--muted)}.dleg span{display:flex;align-items:center;gap:5px}.sw{width:14px;height:14px;border-radius:4px;background:#f3ecd6;box-shadow:inset 0 0 0 1px #c9b88a;display:inline-block}.sw.hot{background:#f6e39a;box-shadow:inset 0 0 0 2px #d4a020}.sw.cold{background:#dfe6f0;box-shadow:inset 0 0 0 2px #5a7ab0}
 .pass .ph{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .pbadge{background:linear-gradient(135deg,#f6d77a,#b07a1c);color:#2a1a06;font-weight:800;font-size:12px;padding:4px 10px;border-radius:12px;box-shadow:0 2px 6px #000a}
 .pbar{position:relative;height:22px;border-radius:11px;background:#0009;border:1px solid var(--line);margin:10px 0;overflow:hidden}
@@ -267,7 +268,7 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .pp.lk::after{content:"🔒";position:absolute;right:2px;top:1px;font-size:11px}
 .got::before{content:"✓";position:absolute;inset:0;display:grid;place-items:center;background:#000a;color:#7fd07f;font-size:24px;font-weight:800}
 .rdy{box-shadow:0 0 0 2px #f0c060,0 0 12px #f0c06088;animation:rdy 1.4s ease-in-out infinite}@keyframes rdy{50%{box-shadow:0 0 0 2px #f0c060,0 0 4px #f0c06044}}
-.dc.dbl{background:#e9dcae}.dc.hot{box-shadow:inset 0 0 0 2px #d4a020;background:#f6e39a}.dc.cold{box-shadow:inset 0 0 0 2px #5a7ab0;background:#dfe6f0}
+.dc.hot{box-shadow:inset 0 0 0 2px #d4a020;background:#f6e39a}.dc.cold{box-shadow:inset 0 0 0 2px #5a7ab0;background:#dfe6f0}
 .ach{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:#000a;border:1px solid var(--line);margin-bottom:8px}
 .ach .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#ffffff10}.ach.got .ic{background:radial-gradient(#f0d070,#8a6a1a)}
 .ach small{display:block;color:var(--muted);font-size:12px}.ach:not(.got){opacity:.6}
@@ -2681,16 +2682,21 @@ const _netMsg9 = netMsg;
 netMsg = async function (m) { if (m.t === 'me' && m.me) NET.myAv = m.me.eq && m.me.eq._av || null; return _netMsg9(m); };
 
 // ================= Статистика выпадения зар в деле (вкладка «Статистика») =================
+function dieSVG(v) {   // маленький зарик с точками
+  const P = { 1: [[50, 50]], 2: [[28, 28], [72, 72]], 3: [[28, 28], [50, 50], [72, 72]], 4: [[28, 28], [72, 28], [28, 72], [72, 72]], 5: [[28, 28], [72, 28], [50, 50], [28, 72], [72, 72]], 6: [[28, 26], [72, 26], [28, 50], [72, 50], [28, 74], [72, 74]] }[v];
+  return `<svg viewBox="0 0 100 100"><rect x="4" y="4" width="92" height="92" rx="18" fill="#fffaf0" stroke="#3a2b20" stroke-width="5"/>${P.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="10" fill="${v === 1 ? '#b3261e' : '#1c1714'}"/>`).join('')}</svg>`;
+}
 function diceStatsHTML(d, n) {
   if (!n) return `<div class="dstat"><b>Зарики</b><p class="sub" style="margin:4px 0 0">Пока нет бросков. Сыграй партию — тут появится, что тебе выпадает.</p></div>`;
   let dbl = 0, cells = '';
   for (let a = 1; a <= 6; a++) for (let b = a; b <= 6; b++) {
     const c = d[a + '-' + b] | 0, pct = c / n * 100, norm = a === b ? 100 / 36 : 200 / 36; if (a === b) dbl += c;
     const hot = n >= 30 && pct > norm * 1.35 ? ' hot' : n >= 30 && pct < norm * .65 ? ' cold' : '';
-    cells += `<div class="dc${a === b ? ' dbl' : ''}${hot}"><span>${a}:${b}</span><b>${pct.toFixed(1)}%</b></div>`;
+    cells += `<div class="dc${hot}"><span class="dd">${dieSVG(a)}${dieSVG(b)}</span><b>${pct.toFixed(1)}%</b>${hot === ' hot' ? '<i>▲</i>' : hot === ' cold' ? '<i>▼</i>' : ''}</div>`;
   }
   return `<div class="dstat"><b>Зарики · ${n} ${plural(n, 'бросок', 'броска', 'бросков')}</b><p class="sub" style="margin:2px 0 8px">Дублей ${(dbl / n * 100).toFixed(1)}% (по теории 16,7%)</p><div class="dgrid">${cells}</div>
-    <p class="sub" style="margin:8px 0 0">Обычно: дубль 2,8%, остальное 5,6%. Жёлтым — выпадает чаще нормы, синим — реже.</p></div>`;
+    <div class="dleg"><span><i class="sw"></i>как обычно</span><span><i class="sw hot"></i>▲ чаще нормы</span><span><i class="sw cold"></i>▼ реже нормы</span></div>
+    <p class="sub" style="margin:6px 0 0">По теории каждый дубль выпадает в 2,8% бросков, каждая другая пара — в 5,6%. Цвет появляется после 30 бросков.</p></div>`;
 }
 const _fillCase10 = fillCase;
 fillCase = function (m) { _fillCase10(m); if (NET.caseFor !== m.id) return; const p = $('cpS'); if (p && !p.querySelector('.dstat')) p.insertAdjacentHTML('beforeend', diceStatsHTML(m.dice || {}, m.diceN | 0)); };
