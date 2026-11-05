@@ -379,6 +379,7 @@ button,[data-go],.li2,.lgame,.mode{touch-action:manipulation;-webkit-tap-highlig
 .tray .half.hov{background:#f2b35a90!important}
 #board,#tray{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
+.tsel{font:inherit;font-size:14px;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:#0008;color:var(--text);max-width:150px}
 .ck.ghost{background:#fff3!important;box-shadow:inset 0 0 0 2px #ffe6a0!important;outline:none;animation:ghost 1.4s ease-in-out infinite}
 @keyframes ghost{50%{background:#ffe6a066!important}}
 .setup .pt .ck{animation:setup .5s backwards;animation-delay:calc(var(--j) * 60ms + var(--d,0) * 40ms)}
@@ -1191,7 +1192,12 @@ const SFX = {
   flick(){ noise(.08,4000,2,.2); },
   checker(){ noise(.05,900,1.4,.7,'lowpass'); tone(210,.07,.05,'triangle'); tone(520,.03,.02,'square'); },
 };
-function startMusic(){ if(!music){ music=new Audio(A+'fon.mp3'); music.loop=true; const a=ac(); if(a){ try{ const src=a.createMediaElementSource(music); musicGain=a.createGain(); src.connect(musicGain).connect(a.destination); }catch(e){ musicGain=null; } } musicVol(.35); } if(a0()) {} if(P.set.music) music.play().catch(()=>{}); }
+// музыка: 11 треков. По умолчанию — все по очереди вперемешку, в настройках можно выбрать один
+const TRACKS=11; let trackOrder=[], trackPos=0;
+function curTrack(){ const t=P.set.track|0; if(t>=1&&t<=TRACKS) return t; if(!trackOrder.length){ trackOrder=[...Array(TRACKS)].map((_,i)=>i+1).sort(()=>Math.random()-.5); trackPos=0; } return trackOrder[trackPos%TRACKS]; }
+function trackSrc(){ return A+'muz/'+String(curTrack()).padStart(2,'0')+'.mp3'; }
+function nextTrack(manual){ if(!(P.set.track|0)||manual){ if(P.set.track|0){ P.set.track=(P.set.track%TRACKS)+1; saveP(); } else trackPos++; } if(music){ music.loop=!!(P.set.track|0); music.src=trackSrc(); if(P.set.music) music.play().catch(()=>{}); } }
+function startMusic(){ if(!music){ music=new Audio(trackSrc()); music.loop=!!(P.set.track|0); music.addEventListener('ended',()=>nextTrack()); music.addEventListener('error',()=>{ if(!music.loop) setTimeout(()=>nextTrack(),1500); }); const a=ac(); if(a){ try{ const src=a.createMediaElementSource(music); musicGain=a.createGain(); src.connect(musicGain).connect(a.destination); }catch(e){ musicGain=null; } } musicVol(.35); } if(a0()) {} if(P.set.music) music.play().catch(()=>{}); }
 function a0(){ const a=AC; if(a&&a.state==='suspended') a.resume().catch(()=>{}); return a; }
 function setMusic(on){ P.set.music=on; saveP(); $('musicBtn').classList.toggle('off',!on); if(on) startMusic(); else if(music) music.pause(); }
 function radioSnippet(){ const a=ac(); if(!a) return; const r=new Audio(A+'fon.mp3'); r.currentTime=20+Math.random()*120; let src; try{ src=a.createMediaElementSource(r); const f=a.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1200; f.Q.value=1.2; const g=a.createGain(); g.gain.value=.9; src.connect(f).connect(g).connect(a.destination);}catch(e){ r.volume=.3; }
@@ -1694,6 +1700,7 @@ $('setBtn').onclick=()=>{
   const tg=(k,opts)=>`<div class="tg">${opts.map(([v,n])=>`<button data-k="${k}" data-v="${v}" class="${String(P.set[k])===String(v)?'on':''}">${n}</button>`).join('')}</div>`;
   showModal(`<h3>Настройки</h3><div class="set">
     <div class="rowi"><span>Музыка</span>${tg('music',[[true,'Вкл'],[false,'Выкл']])}</div>
+    <div class="rowi"><span>Трек</span><span class="row" style="gap:6px;flex:0 1 auto"><select id="trackSel" class="tsel"><option value="0">Все по очереди</option>${[...Array(TRACKS)].map((_,i)=>`<option value="${i+1}" ${(P.set.track|0)===i+1?'selected':''}>Трек ${i+1}</option>`).join('')}</select><button class="btn sec" id="trackNext" style="padding:6px 10px">Дальше ▶</button></span></div>
     <div class="rowi"><span>Звуки</span>${tg('sfx',[[true,'Вкл'],[false,'Выкл']])}</div>
     <div class="rowi"><span>Громкость музыки</span><input type="range" class="vol" id="volM" min="0" max="100" value="${Math.round(mv()*100)}"></div>
     <div class="rowi"><span>Громкость звуков</span><input type="range" class="vol" id="volS" min="0" max="100" value="${Math.round(sv()*100)}"></div>
@@ -1707,6 +1714,8 @@ $('setBtn').onclick=()=>{
   if($('supBtn')) $('supBtn').onclick=()=>{ const u=`https://t.me/${NET.bot}?start=support`; try{ Telegram.WebApp.openTelegramLink(u); }catch(e){ window.open(u,'_blank'); } };
   $('modalBody').querySelectorAll('.tg button').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; let v=b.dataset.v; v=v==='true'?true:v==='false'?false:v;
     if(k==='music') setMusic(v); else P.set[k]=v; saveP(); heroCache.clear(); b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(screen==='home') renderHome(); });
+  $('trackSel').onchange=e=>{ P.set.track=+e.target.value; saveP(); if(!P.set.music) setMusic(true); if(music){ music.loop=!!P.set.track; music.src=trackSrc(); music.play().catch(()=>{}); } else startMusic(); };
+  $('trackNext').onclick=()=>{ if(!P.set.music) setMusic(true); if(!music) startMusic(); nextTrack(true); const sel=$('trackSel'); if(sel) sel.value=String(P.set.track|0); };
   $('volM').oninput=e=>{ P.set.vm=e.target.value/100; musicVol(.35); }; $('volM').onchange=()=>saveP();
   $('volS').oninput=e=>{ P.set.vs=e.target.value/100; }; $('volS').onchange=()=>{ saveP(); SFX.checker(); };
   if(!$('tCigs')) return;
