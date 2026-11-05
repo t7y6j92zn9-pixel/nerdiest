@@ -25,7 +25,8 @@ const STARS = {
   vip6: { title: 'Блатной статус на полгода', stars: 3590, cigs: 0, vip: 182 },
   vip12: { title: 'Блатной статус на год', stars: 6490, cigs: 0, vip: 365 },
 };
-for (const k in STARS) STARS[k].gold = STARS[k].stars;   // цена в рыжье = старой цене в звёздах
+for (const k in STARS) STARS[k].gold = STARS[k].stars;
+const GOLD_ITEMS = { d_15: 120, d_10: 100, s_11: 70, k_5: 40, o_08_troika: 90, h_8: 40, n_7: 50, br_1: 50, sm_3: 60, pt_4: 60, wl_2: 30, a_4: 50 };   // эти вещи барахолки продаются только за рыжьё   // цена в рыжье = старой цене в звёздах
 const GOLD = {
   gd50: { title: 'Горсть рыжья: 50', stars: 50, give: 50 },
   gd100: { title: 'Кисет рыжья: 110', stars: 100, give: 110 },
@@ -302,7 +303,7 @@ function createCore(cfg) {
   // --- сундуки: «Кисет» за 5 онлайн-партий, «Дачка» за 10 онлайн-побед, «Золотой» за рыжьё ---
   const CHESTS = { kiset: { need: 5, name: 'Кисет' }, dacha: { need: 10, name: 'Дачка' }, gold: { gold: 150, name: 'Золотой сундук' } };
   const rnd = (a, b) => a + Math.floor(Math.random() * (b - a + 1));
-  function chestItem(u, lo, hi) { const l = Object.keys(ITEMS).filter(id => { const it = ITEMS[id]; return it && it.slot !== 'level' && it.price >= lo && it.price <= hi && !it.rank && !it.ach && !it.hidden && !(u.owned || []).includes(id); }); return l.length ? l[Math.floor(Math.random() * l.length)] : null; }
+  function chestItem(u, lo, hi) { const l = Object.keys(ITEMS).filter(id => { const it = ITEMS[id]; return it && !GOLD_ITEMS[id] && it.slot !== 'level' && it.price >= lo && it.price <= hi && !it.rank && !it.ach && !it.hidden && !(u.owned || []).includes(id); }); return l.length ? l[Math.floor(Math.random() * l.length)] : null; }
   function chestRoll(u, k) {
     const out = { k, cigs: 0 };
     if (k === 'kiset') { out.cigs = rnd(6, 20) * 10; if (Math.random() < .2) { u.chif = (u.chif | 0) + 1; out.chif = 1; } }
@@ -388,10 +389,18 @@ function createCore(cfg) {
       case 'prof': return applyProf(u, m.prof);
       case 'buy': {
         const it = ITEMS[m.id]; if (!it || !it.price) return sendMe(uid);
+        if (GOLD_ITEMS[m.id]) { err(uid, 'Эта вещь — только за рыжьё'); return sendMe(uid); }
         if (u.owned.includes(m.id)) return sendMe(uid);
         if (!rankOk(u, it)) { err(uid, 'Нужно звание «' + it.rank + '»'); return sendMe(uid); }
         if (u.cigs < it.price) { err(uid, 'Не хватает сигарет'); return sendMe(uid); }
         u.cigs -= it.price; u.owned.push(m.id); save(u); achCheck(u); return sendMe(uid);
+      }
+      case 'ibuy': {   // вещь барахолки за рыжьё
+        const it = ITEMS[m.id], gp = GOLD_ITEMS[m.id]; if (!it || !gp) return sendMe(uid);
+        if (u.owned.includes(m.id)) return sendMe(uid);
+        if ((u.gold | 0) < gp) { send(uid, { t: 'noGold', need: gp - (u.gold | 0) }); return sendMe(uid); }
+        u.gold -= gp; u.goldSpent = (u.goldSpent | 0) + gp; dayStat('goldSpent', gp); u.owned.push(m.id); addLog('рыжьё', `${u.name}: вещь ${m.id} за ${gp} рыжья`);
+        save(u); saveMeta(); achCheck(u); sendMe(uid); return send(uid, { t: 'ibought', id: m.id });
       }
       case 'daily': {
         const dT = dnum(Date.now()), last = u.lastDaily ? dnum(u.lastDaily) : -9; if (last === dT) return sendMe(uid);

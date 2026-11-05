@@ -629,7 +629,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 
     <section class="screen" id="s-shop" hidden>
       <h2>Барахолка</h2>
-      <p class="sub">Всё за сигареты. Примерка бесплатная.</p>
+      <p class="sub">За сигареты, самое ценное — за рыжьё. Примерка бесплатная.</p>
       <div class="chips" id="cats"></div>
       <div class="chips small" id="subcats"></div>
       <div class="card preview" id="shopPreview"></div>
@@ -1432,7 +1432,8 @@ function equippedId(it){ if(it.slot==='tat') return P.eq.tats[it.place]; if(it.s
 function tryEq(it){ const e=JSON.parse(JSON.stringify(P.eq)); if(it.slot==='tat') e.tats[it.place]=it.id; else if(it.slot==='level'||it.slot==='phrase'||it.slot==='sticker'){} else e[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place)) e.outfit='o_00_golyi'; if(it.slot==='level') e.level=it.id; return e; }
 const COIN=()=>`<img class="coini" src="${A}ryzhe/icon.webp" alt="">`;
-function priceTag(it){ if(it.slot==='gold') return `<span class="tag gold">⭐ ${it.stars}</span>`; if(it.slot==='stars') return `<span class="tag gc">${COIN()}${it.gold}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
+const GOLD_ITEMS={ d_15: 120, d_10: 100, s_11: 70, k_5: 40, o_08_troika: 90, h_8: 40, n_7: 50, br_1: 50, sm_3: 60, pt_4: 60, wl_2: 30, a_4: 50 }; for(const id in GOLD_ITEMS){ const x=item(id); if(x) x.gp=GOLD_ITEMS[id]; }
+function priceTag(it){ if(it.gp&&!owns(it.id)) return `<span class="tag gc">${COIN()}${it.gp}</span>`; if(it.slot==='gold') return `<span class="tag gold">⭐ ${it.stars}</span>`; if(it.slot==='stars') return `<span class="tag gc">${COIN()}${it.gold}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
 async function thumb(it){
   if(!it.img){ return `<span style="font-size:12px;color:#5a503d">—</span>`; }
   if(it.slot==='level') return `<img src="${A+it.img}" alt="">`;
@@ -1467,6 +1468,7 @@ async function renderPreview(opt){
     $('starBtn').onclick=()=>buyGold(it); return; }
   if (it.slot==='phrase' || it.slot==='sticker'){
     btn = own ? `<button class="btn sec" disabled>${it.slot==='phrase'?'Фраза твоя':'Стикер твой'}</button>` : lk ? `<button class="btn ghost" disabled>Закрыто: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Купить за ${it.price}</button>`;
+  } else if (!own && it.gp) { const g=(typeof NET!=='undefined'&&NET.me)?NET.me.gold|0:0; btn = `<button class="btn hot" id="gBuyBtn">Взять за ${COIN()} ${it.gp}</button><p style="margin:6px 0 0;font-size:12px;color:var(--muted)">Эта вещь — только за рыжьё${g<it.gp?` · не хватает ${it.gp-g}`:''}</p>`;
   } else if (!own) btn = lk ? `<button class="btn ghost" disabled>Откроется: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Взять за ${it.price}</button>${P.cigs<it.price?'<p style="margin:6px 0 0;font-size:12px;color:var(--danger)">Не хватает сигарет</p>':''}`;
   else if (it.slot==='tat') btn = `<button class="btn ${on?'sec':'hot'}" id="eqBtn">${on?'Свести наколку':'Набить снова'}</button>`;
   else btn = on ? `<button class="btn sec" disabled>${it.slot==='level'?'Ты здесь живёшь':it.slot==='pet'?'Живёт с тобой':it.slot==='wall'?'Висит':['food','mug','ash','board'].includes(it.slot)?'На столе':'Надето'}</button>` : `<button class="btn hot" id="eqBtn">${({level:'Переехать',board:'Положить на стол',food:'Поставить на стол',wall:'Повесить',pet:'Завести',smoke:'Взять в руку',mug:'Поставить на стол',ash:'Поставить на стол'})[it.slot]||'Надеть'}</button>`;
@@ -1485,6 +1487,7 @@ async function renderPreview(opt){
   if (it.slot==='dice') $('pvBox').querySelector('.big').innerHTML=`<div style="display:flex;gap:10px">${dieHTML(5,'',it)}${dieHTML(3,'',it)}</div>`;
   if (showHero) await buildScene($('pvScene'), tryEq(it), {});
   const b1=$('buyBtn'); if(b1) b1.onclick=()=>buy(it);
+  const b3=$('gBuyBtn'); if(b3) b3.onclick=()=>{ SFX.click(); if(typeof NET!=='undefined'&&NET.on) nsend({t:'ibuy',id:it.id}); else malyava('Рыжьё работает в игре через Телеграм'); };
   const b2=$('eqBtn'); if(b2) b2.onclick=()=>{ if(it.slot==='tat'&&on) delete P.eq.tats[it.place]; else applyEq(it); saveP(); SFX.click(); if(it.slot==='tat'&&!on) inkAnim(it); else renderShop(); };
 }
 function buyGold(it){ SFX.click(); if(typeof NET!=='undefined'&&NET.on) nsend({t:'gbuy',id:it.sid}); else malyava('Рыжьё работает в игре через Телеграм'); }
@@ -3225,6 +3228,12 @@ fillCase = function (m) {
   _fillCase24(m); if (NET.caseFor !== m.id) return;
   const cs = document.querySelector('#modalBody .case'), u = m.user || {};
   if (cs && u.pass && !cs.querySelector('.passcase')) { const v = cs.querySelector('.vipcase'); const h = `<div class="passcase">🎫 <b>Блатная ходка</b><span>этого сезона</span></div>`; if (v) v.insertAdjacentHTML('afterend', h); else cs.insertAdjacentHTML('afterbegin', h); }
+};
+// вещь за рыжьё куплена — надеваем и показываем
+const _netMsg25 = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'ibought') { const it = item(m.id); if (it) { if (!P.owned.includes(it.id)) P.owned.push(it.id); applyEq(it); saveP(); try { SFX.coin(); } catch (e) { } malyava('Куплено: ' + it.name); if (screen === 'shop') setTimeout(renderShop, 300); } return; }
+  return _netMsg25(m);
 };
 
 </script>
