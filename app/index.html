@@ -474,6 +474,8 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 .lbar{width:100%;height:12px;border-radius:7px;background:#ffffff14;border:1px solid #ffffff22;overflow:hidden;box-shadow:inset 0 1px 3px #000}
 .lbar i{display:block;height:100%;width:4%;border-radius:7px;background:linear-gradient(90deg,#8a5a1a,#f0c060);transition:width .4s ease;box-shadow:0 0 10px #f0c06088}
 .lprog span{font-family:var(--f-hand);font-size:22px;color:var(--muted)}
+.lconsent{position:relative;z-index:2;max-width:300px;margin:10px auto 0;text-align:center;font-size:11px;line-height:1.4;color:#cdbf9f;opacity:.85}.lconsent a{color:#e0a840}
+.legal{margin-top:12px;text-align:center;font-size:12px;color:var(--muted)}.legal a{color:var(--muted)}
 #enterBtn.appear{animation:enterIn .45s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes enterIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 @keyframes gone{to{opacity:0;visibility:hidden}}
@@ -539,6 +541,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
   <h1>Нарды<br>от Кондрата</h1>
   <div class="lprog" id="lprog"><div class="lbar"><i id="lbarI"></i></div><span id="ltxt">Заходим в хату…</span></div>
   <button class="btn hot" id="enterBtn" hidden>Войти в хату</button>
+  <p class="lconsent" id="lconsent" hidden>Нажимая «Войти в хату», ты принимаешь <a href="#" data-doc="terms">соглашение</a> и <a href="#" data-doc="privacy">политику конфиденциальности</a>. 18+</p>
 </div>
 
 <div id="app">
@@ -1728,7 +1731,9 @@ $('setBtn').onclick=()=>{
     <div class="row" style="margin-top:8px"><button class="btn sec" id="tRank">Показать нашивку</button></div>
     <button class="btn ghost" id="tReset" style="width:100%;margin-top:10px">Начать заново</button>`}</div>
     ${window.NET&&NET.on?'<button class="btn sec" id="supBtn" style="width:100%;margin-top:12px">Написать в поддержку</button>':''}
+    <div class="legal"><a href="#" data-doc="terms">Пользовательское соглашение</a> · <a href="#" data-doc="privacy">Конфиденциальность</a></div>
     <button class="btn hot" style="width:100%;margin-top:12px" data-close>Готово</button>`);
+  $('modalBody').querySelectorAll('[data-doc]').forEach(x=>x.onclick=e=>{ e.preventDefault(); openDoc(x.dataset.doc); });
   if($('supBtn')) $('supBtn').onclick=()=>{ const u=`https://t.me/${NET.bot}?start=support`; try{ Telegram.WebApp.openTelegramLink(u); }catch(e){ window.open(u,'_blank'); } };
   $('modalBody').querySelectorAll('.tg button').forEach(b=>b.onclick=()=>{ const k=b.dataset.k; let v=b.dataset.v; v=v==='true'?true:v==='false'?false:v;
     if(k==='music') setMusic(v); else P.set[k]=v; saveP(); heroCache.clear(); b.parentElement.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); if(screen==='home') renderHome(); });
@@ -1747,7 +1752,9 @@ $('setBtn').onclick=()=>{
 // кнопка «Войти в хату» появляется только когда всё загружено (картинки, связь с сервером)
 const LOAD={need:new Set(['anch','hero','home']), done:new Set(), ok:false};
 function loadStep(k){ LOAD.done.add(k); const all=[...LOAD.need], pct=Math.max(4,Math.round(100*all.filter(x=>LOAD.done.has(x)).length/all.length)); const i=$('lbarI'); if(i) i.style.width=pct+'%'; if(all.every(x=>LOAD.done.has(x))) setTimeout(loadReady,350); }
-function loadReady(){ if(LOAD.ok) return; LOAD.ok=true; clearInterval(LOAD.iv); const i=$('lbarI'); if(i) i.style.width='100%'; $('lprog').hidden=true; const b=$('enterBtn'); b.hidden=false; b.classList.add('appear'); }
+function openDoc(d){ const u=new URL(d+'.html',location.href).href; try{ Telegram.WebApp.openLink(u); }catch(e){ window.open(u,'_blank'); } }
+document.addEventListener('click',e=>{ const x=e.target.closest&&e.target.closest('#lconsent [data-doc]'); if(x){ e.preventDefault(); e.stopPropagation(); openDoc(x.dataset.doc); } },true);
+function loadReady(){ if(LOAD.ok) return; LOAD.ok=true; clearInterval(LOAD.iv); const i=$('lbarI'); if(i) i.style.width='100%'; $('lprog').hidden=true; const b=$('enterBtn'); b.hidden=false; b.classList.add('appear'); const c=$('lconsent'); if(c) c.hidden=false; }
 LOAD.iv=setInterval(()=>{ const t=$('ltxt'), L=['Заходим в хату…','Завариваем чифир…','Шнырь подметает пол…','Расставляем шашки…','Трясём зарики…','Кореша подтягиваются…']; if(t) t.textContent=L[(L.indexOf(t.textContent)+1)%L.length]; },1300);
 setTimeout(loadReady,15000);   // страховка: если что-то зависло — всё равно пускаем
 (async function boot(){

@@ -1065,6 +1065,8 @@ ${top}
     const cmd = cmd0.split('@')[0].toLowerCase();
     if (!WEBAPP_URL) return M('Игра ещё не настроена: на сервере не задан WEBAPP_URL.');
     if (cmd === '/cancel') { if (me) { me.supWait = 0; save(me); } return M('Ок, отменено.', menuKeyboard()); }
+    if (cmd === '/terms' || cmd === '/privacy') return M('📜 Документы игры\n\nПользовательское соглашение: ' + WEBAPP_URL + '/terms.html\nПолитика конфиденциальности: ' + WEBAPP_URL + '/privacy.html\n\nВопросы — /support');
+    if (cmd === '/paysupport') { if (me) { me.supWait = Date.now(); save(me); } return M('💳 Вопрос по оплате звёздами\n\nНапиши одним сообщением: что купил, когда и что не пришло. Проверим платёж и выдадим покупку или вернём звёзды.\n\nПравила возврата — /terms'); }
     if (cmd === '/support' || (cmd === '/start' && payload === 'support')) { if (me) { me.supWait = Date.now(); save(me); } return M(SUPPORT_PROMPT); }
     if (cmd === '/admin' && me) {
       if (payload) { tg('deleteMessage', { chat_id, message_id: msg.message_id }).catch(() => { }); } // пароль не оставляем в чате
@@ -1115,7 +1117,7 @@ ${top}
       botUsername = r.result.username; log('Бот: @' + botUsername);
       await tg('setMyCommands', { commands: [
         { command: 'start', description: 'Главное меню' }, { command: 'play', description: 'Играть в нарды' },
-        { command: 'rules', description: 'Правила' }, { command: 'top', description: 'Доска почёта' }, { command: 'invite', description: 'Позвать кореша' }, { command: 'support', description: 'Написать в поддержку' },
+        { command: 'rules', description: 'Правила' }, { command: 'top', description: 'Доска почёта' }, { command: 'invite', description: 'Позвать кореша' }, { command: 'support', description: 'Написать в поддержку' }, { command: 'paysupport', description: 'Вопрос по оплате' }, { command: 'terms', description: 'Соглашение и конфиденциальность' },
       ] });
       if (!WEBAPP_URL) { log('WEBAPP_URL не задан'); return (opts && opts.poll) ? poll() : null; }
       await tg('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Играть', web_app: { url: appUrl() } } });
