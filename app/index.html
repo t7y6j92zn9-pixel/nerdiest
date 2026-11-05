@@ -25,7 +25,9 @@ body[data-lvl="5"]{--accent:#c9a23e;--accent2:#ecd27a;--line:#3f4a2a}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{height:100%}
 body{margin:0;color:var(--text);font-family:var(--f-body);font-size:14px;user-select:none;
-  background:var(--bg) url(a/stena.webp) center top/cover fixed}
+  background:var(--bg)}
+/* фон стены отдельным неподвижным слоем: «fixed»-фон на телефонах пересчитывался при каждом переключении вкладки и лагал */
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:var(--bg) url(a/stena.webp) center top/cover no-repeat;transform:translateZ(0);will-change:transform}
 body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(ellipse at 50% 30%,transparent 30%,#000a 100%)}
 button{font-family:inherit;color:inherit;cursor:pointer}
 button:focus-visible{outline:2px solid var(--accent2);outline-offset:2px}
@@ -172,6 +174,8 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .item .nm{font-size:11.5px;line-height:1.2;min-height:28px;font-weight:500}
 .tag{position:absolute;right:-4px;bottom:-6px;min-width:58px;height:30px;padding:6px 8px 0 18px;font-size:12px;font-weight:700;color:#2a1d10;text-align:center;
   background:url(a/knopki/02.webp) center/100% 100%;transform:rotate(-8deg);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag.gold{background-image:url(a/knopki/02g.webp);color:#3a2200}.coini{width:17px;height:17px;vertical-align:-4px;margin-right:2px;object-fit:contain}.btn .coini{width:18px;height:18px;vertical-align:-4px}
+.thn{position:absolute;left:50%;top:6%;transform:translateX(-50%);background:#f6d27a;color:#2a1a04;font:800 15px/1 system-ui;padding:3px 8px;border-radius:8px;box-shadow:0 0 0 2px #7a4a08,0 2px 6px #000a;z-index:2}
 .tag.own{background:none;color:#2f5a1e;transform:none;padding:6px 6px 0}
 .lockb{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#000a;border-radius:3px;color:#f3e6cc;font-size:11px;text-align:center;padding:4px}
 .lockb img{width:34%}
@@ -385,6 +389,8 @@ button,[data-go],.li2,.lgame,.mode{touch-action:manipulation;-webkit-tap-highlig
 .bottom .pt::before,.bottom .pt::after{top:auto;bottom:0;clip-path:polygon(50% 0,100% 100%,0 100%)}
 .pt.tgt::after{background:#ffd84dd9;animation:tgt .9s ease-in-out infinite;filter:drop-shadow(0 0 6px #ffd84d)}
 .pt.tgt{z-index:2}
+.ck.ghostck{background:radial-gradient(circle,#ffe27acc 0 38%,#ffd84d55 40% 62%,#0000 64%)!important;box-shadow:0 0 0 3px #ffd84d,0 0 14px 4px #ffd84dcc!important;animation:ghostp .9s ease-in-out infinite;pointer-events:none}
+@keyframes ghostp{50%{transform:scale(.86);opacity:.7}}
 @keyframes tgt{50%{background:#ffd84d66}}
 .pt .ck{position:absolute;left:4%;width:92%;margin:0;top:calc(1px + var(--j) * min(90cqw, (98cqh - 92cqw) / max(var(--n) - 1, 1)))}
 .bottom .pt .ck{top:auto;bottom:calc(1px + var(--j) * min(90cqw, (98cqh - 92cqw) / max(var(--n) - 1, 1)))}
@@ -527,29 +533,27 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 .tg{display:flex;gap:4px}.tg button{border:1px solid var(--line);background:#000a;border-radius:8px;padding:6px 9px;font-size:12px;color:var(--muted)}
 .tg button.on{background:var(--paper);color:var(--paper-ink);font-weight:700}
 /* телефон повернули боком: доска слева на всю высоту, всё остальное — колонкой справа */
-@media (max-width:400px){.logo{font-size:24px}.tright{gap:3px}}
+
 @media (orientation:landscape) and (max-height:560px){
-  body[data-scr="game"] #app{max-width:980px}
+  body[data-scr="game"] #app{max-width:none}
   body[data-scr="game"] .top,body[data-scr="game"] nav{display:none}
-  body[data-scr="game"] main{padding-bottom:0}
-  body[data-scr="game"] #s-game:not([hidden]){display:grid;grid-template-columns:auto minmax(200px,1fr);column-gap:8px;align-content:center;align-items:center;min-height:100vh;min-height:100dvh;padding-block:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-bottom,0px))}
-  body[data-scr="game"] #s-game>*{grid-column:2;min-width:0}
+  body[data-scr="game"] main{padding-bottom:0;padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+  /* нарды на весь экран, справа только зарики и кнопка броска; остальное ниже, прокруткой */
+  body[data-scr="game"] #s-game:not([hidden]){display:grid;grid-template-columns:minmax(0,1fr) 150px;column-gap:8px;align-items:start}
+  body[data-scr="game"] #s-game>*{grid-column:1/-1;min-width:0}
   body[data-scr="game"] #s-game>.gbg{grid-column:1/-1}
-  body[data-scr="game"] #s-game>.table{grid-column:1;grid-row:1/span 12;padding:4px 2px;width:min(calc(100vw - 250px),calc((100vh - 10px) * 1.6));width:min(calc(100vw - 250px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)),calc((100dvh - 10px) * 1.6))}
-  body[data-scr="game"] .board{aspect-ratio:1.45;border-width:7px}
-  body[data-scr="game"] .gtop{padding-block:2px}
-  body[data-scr="game"] #s-game{overflow:hidden}
-  body[data-scr="game"] .gp .av{width:36px;height:36px}body[data-scr="game"] .gp{gap:6px}body[data-scr="game"] .gp b{font-size:13px}
-  body[data-scr="game"] .gmeta{font-size:10px;line-height:1.25;white-space:nowrap;flex:none}
-  body[data-scr="game"] .gtop{gap:4px}
-  body[data-scr="game"] .controls{min-height:52px;margin-top:2px}
-  body[data-scr="game"] .react{margin-top:4px}
-  body[data-scr="game"] .gbottom{margin-top:6px}
-  body[data-scr="game"] .gbottom{gap:4px}body[data-scr="game"] .gbottom .btn{flex:1;min-width:0;padding:8px 4px;font-size:12px}
-  body[data-scr="game"] .eyew{bottom:auto;top:6px;right:-2px;transform:translateX(100%)}
+  body[data-scr="game"] #s-game>.table{grid-column:1;grid-row:1;padding:4px 0;margin:0}
+  body[data-scr="game"] #s-game>.gstatus{grid-column:2;grid-row:1;align-self:start;margin-top:12px;font-size:13px}
+  body[data-scr="game"] #s-game>.controls{grid-column:2;grid-row:1;align-self:center;flex-direction:column;min-height:0;gap:8px}
+  body[data-scr="game"] .board{aspect-ratio:auto;height:calc(100vh - 12px);height:calc(100dvh - 12px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));border-width:7px}
+  body[data-scr="game"] .gtop{padding-block:6px 2px}
+  body[data-scr="game"] .eyew{top:6px}
   .modal{max-height:94vh;max-height:94dvh}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.top .logo{font-size:clamp(17px,5.3vw,28px);overflow:hidden;text-overflow:ellipsis;flex:1 1 auto}.top .tright{flex:none;gap:4px}
+@media (max-width:420px){.top .icb{width:34px;height:34px}.top .pack{width:44px}.top .goldb{width:36px}}
 </style>
 
 <div class="bars" id="bars"></div>
@@ -1078,8 +1082,8 @@ STICKERS.forEach(([n,p,l],i)=>add({id:'st_'+i, cat:'bazar', sub:'stikery', slot:
  ['set3','Набор «Хата под ключ»',500,'06','ремонт «Ковёр и кровать», ковёр на стену, кот, колбаса на стол, кружка с куполами и хрустальная пепельница','nabory']]
   .forEach(([sid,n,st,k,gives,sub])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub, slot:'stars', name:n, gold:st, price:0, img:`zvezdy/${k}.webp`, gives}));
 // чифир — буст на одну онлайн-партию: +25% сигарет за победу
-[['chif1','Кружка чифира',10,'03','1 кружка: +25% сигарет за победу в следующей онлайн-партии'],['chif5','Пять кружек чифира',40,'04','5 кружек: каждая даёт +25% сигарет за победу на одну онлайн-партию']]
-  .forEach(([sid,n,g,k,gives])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'chifir', slot:'stars', name:n, gold:g, price:0, img:`kruzhki_pepelnitsy/${k}.webp`, gives}));
+[['chif1','Кружка чифира',10,'ryzhe/chif1.webp','1 кружка: +25% сигарет за победу в следующей онлайн-партии'],['chif5','Пять кружек чифира',40,'ryzhe/chif5.webp','5 кружек: каждая даёт +25% сигарет за победу на одну онлайн-партию']]
+  .forEach(([sid,n,g,k,gives])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'chifir', slot:'stars', name:n, gold:g, price:0, img:k, gives}));
 // рыжьё — вторая валюта, покупается только за звёзды Телеграма
 [['gd50','Горсть рыжья',50,50,'01'],['gd100','Кисет рыжья',100,110,'02'],['gd250','Мешочек рыжья',250,290,'03'],['gd500','Котелок рыжья',500,600,'04'],['gd1000','Сундук рыжья',1000,1250,'05']]
   .forEach(([sid,n,st,g,k])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'ryzhe', slot:'gold', name:n, stars:st, give:g, price:0, img:`ryzhe/${k}.webp`, gives:`${g} рыжья`+(g>st?` (${st} + ${g-st} в подарок)`:'')}));
@@ -1387,7 +1391,8 @@ let shopCat='shmot', shopSub='odezhda', shopSel=null;
 function equippedId(it){ if(it.slot==='tat') return P.eq.tats[it.place]; if(it.slot==='phrase'||it.slot==='sticker') return null; return P.eq[it.slot]; }
 function tryEq(it){ const e=JSON.parse(JSON.stringify(P.eq)); if(it.slot==='tat') e.tats[it.place]=it.id; else if(it.slot==='level'||it.slot==='phrase'||it.slot==='sticker'){} else e[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place)) e.outfit='o_00_golyi'; if(it.slot==='level') e.level=it.id; return e; }
-function priceTag(it){ if(it.slot==='gold') return `<span class="tag">⭐ ${it.stars}</span>`; if(it.slot==='stars') return `<span class="tag">🪙 ${it.gold}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
+const COIN=()=>`<img class="coini" src="${A}ryzhe/icon.webp" alt="">`;
+function priceTag(it){ if(it.slot==='gold') return `<span class="tag gold">⭐ ${it.stars}</span>`; if(it.slot==='stars') return `<span class="tag gold">${COIN()}${it.gold}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
 async function thumb(it){
   if(!it.img){ return `<span style="font-size:12px;color:#5a503d">—</span>`; }
   if(it.slot==='level') return `<img src="${A+it.img}" alt="">`;
@@ -1406,7 +1411,7 @@ async function renderShop(){
   if(!shopSel||!items.find(x=>x.id===shopSel)) shopSel=(items.find(x=>equippedId(x)===x.id)||items[0]).id;
   const grid=$('shopGrid');
   grid.innerHTML = (await Promise.all(items.map(async x=>{ const lk=locked(x); const full=x.slot==='level';
-    return `<button class="item${x.id===shopSel?' sel':''}" data-id="${x.id}"><span class="th${full?' full':''}">${await thumb(x)}</span><span class="nm">${x.name}</span>${priceTag(x)}
+    return `<button class="item${x.id===shopSel?' sel':''}" data-id="${x.id}"><span class="th${full?' full':''}">${await thumb(x)}${x.slot==='gold'?`<b class="thn">${x.give}</b>`:''}</span><span class="nm">${x.name}</span>${priceTag(x)}
       ${lk&&!owns(x.id)?`<span class="lockb"><img src="${A}knopki/07.webp" alt="">${lk}</span>`:''}</button>`; }))).join('');
   grid.querySelectorAll('.item').forEach(b=>b.onclick=()=>{ shopSel=b.dataset.id; SFX.click(); renderPreview(); grid.querySelectorAll('.item').forEach(x=>x.classList.toggle('sel',x===b)); });
   renderPreview();
@@ -1415,10 +1420,10 @@ async function renderPreview(opt){
   const it=item(shopSel), own=owns(it.id), lk=locked(it), on=equippedId(it)===it.id;
   let btn;
   if (it.slot==='gold'){
-    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big"><img src="${A+it.img}" alt=""></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Рыжьё — вторая валюта: на него берут наборы, пачки сигарет, пропуск, прокруты и чифир. Оплата звёздами Телеграма.</p><button class="btn hot" id="starBtn">Купить за ⭐ ${it.stars}</button></div>`;
+    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big" style="position:relative"><img src="${A+it.img}" alt=""><b class="thn">${it.give}</b></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Рыжьё — вторая валюта: на него берут наборы, пачки сигарет, пропуск, прокруты и чифир. Оплата звёздами Телеграма.</p><button class="btn hot" id="starBtn">Купить за ⭐ ${it.stars}</button></div>`;
     $('starBtn').onclick=()=>buyStars(it); return; }
   if (it.slot==='stars'){
-    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big"><img src="${A+it.img}" alt=""></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Всё приходит в игру сразу.</p><button class="btn hot" id="starBtn">Взять за 🪙 ${it.gold}</button></div>`;
+    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big"><img src="${A+it.img}" alt=""></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Всё приходит в игру сразу.</p><button class="btn hot" id="starBtn">Взять за ${COIN()} ${it.gold}</button></div>`;
     $('starBtn').onclick=()=>buyGold(it); return; }
   if (it.slot==='phrase' || it.slot==='sticker'){
     btn = own ? `<button class="btn sec" disabled>${it.slot==='phrase'?'Фраза твоя':'Стикер твой'}</button>` : lk ? `<button class="btn ghost" disabled>Закрыто: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Купить за ${it.price}</button>`;
@@ -1667,7 +1672,7 @@ function renderGame(){ const f=FLY; FLY=null; let r0=null; if(!drag) document.qu
   if(r0&&f.to!=='off'){ const el=ckAt(f.to); if(el){ const r1=el.getBoundingClientRect(), dx=r0.left-r1.left, dy=r0.top-r1.top; if(Math.abs(dx)+Math.abs(dy)>2){ el.classList.remove('moved'); el.style.zIndex=6; el.style.transition='none'; el.style.transform=`translate(${dx}px,${dy}px)`; void el.offsetWidth; el.style.transition='transform .3s cubic-bezier(.25,.8,.35,1)'; el.style.transform=''; setTimeout(()=>{ el.style.zIndex=''; el.classList.add('moved'); },300); } } }
 }
 let FLY=null;
-function ckAt(a){ const box=a==='bar'?$('board').querySelector('[data-a="bar"]'):$('board').querySelector(`.pt[data-a="${a}"]`); if(!box) return null; const l=box.querySelectorAll('.ck:not(.ghost)'); return l[l.length-1]||null; }
+function ckAt(a){ const box=a==='bar'?$('board').querySelector('[data-a="bar"]'):$('board').querySelector(`.pt[data-a="${a}"]`); if(!box) return null; const l=box.querySelectorAll('.ck:not(.ghost):not(.ghostck)'); return l[l.length-1]||null; }
 function haptic(k){ try{ const h=window.Telegram&&Telegram.WebApp&&Telegram.WebApp.HapticFeedback; if(h) h.impactOccurred(k||'light'); }catch(e){} }
 function renderGame0(){ if(G) $('resignBtn').textContent=G.over?'Итоги партии':'Сдаться';
   if(!G) return; updCigs();
@@ -1675,7 +1680,7 @@ function renderGame0(){ if(G) $('resignBtn').textContent=G.over?'Итоги па
   const MY=G.myCol||'w', OP=MY==='w'?'k':'w';
   const sty=c=>{ const s=item(P.eq.checkers); return s.w?`--img:url(${A}shashki_kubiki/${c==='w'?s.w:s.k}.webp);`:''; }, skc=item(P.eq.checkers).w?' skin':'';
   const pt=(a,k)=>{ const v=S.b[a], c=Math.abs(v), cls=v>0?MY:OP, n=c+(tg[a]?1:0); let h=`<div class="pt${tg[a]?' tgt':''}" data-a="${a}" style="--d:${k}">`;
-    for(let j=0;j<c;j++){ const last=j===c-1; let ex=''; if(last&&src.has(a)) ex+=G.sel===a?' sel':' can'; if(last&&a===G.last) ex+=' moved'; h+=`<div class="ck ${cls}${skc}${ex}" style="--j:${j};--n:${n};${sty(cls)}"></div>`; }
+    for(let j=0;j<c;j++){ const last=j===c-1; let ex=''; if(last&&src.has(a)) ex+=G.sel===a?' sel':' can'; if(last&&a===G.last) ex+=' moved'; h+=`<div class="ck ${cls}${skc}${ex}" style="--j:${j};--n:${n};${sty(cls)}"></div>`; } if(tg[a]) h+=`<div class="ck ghostck" style="--j:${c};--n:${n}"></div>`;
     if(tg[a]) h+=`<div class="ck ghost" style="--j:${c};--n:${n}"></div>`; return h+'</div>'; };
   const quad=(arr,cls)=>`<div class="quad ${cls}">${arr.map((a,k)=>pt(a,k)).join('')}</div>`;
   const barCell=p=>{ const n=S.bar[p]; if(!n) return `<div class="barc"></div>`; const me=p===0, c=me?MY:OP; return `<div class="barc" ${me?'data-a="bar"':''}><div class="ck ${c}${skc}${me&&src.has('bar')?(G.sel==='bar'?' sel':' can'):''}" style="${sty(c)}">${n>1?n:''}</div></div>`; };
@@ -2273,7 +2278,7 @@ fillCase = function (m) { _fillCase3(m); const b = m.user && m.user.brig; if (b 
 function renderBrig() {
   const box = $('brigBox'), d = NET.brigD; if (!d) { box.innerHTML = '<p class="sub" style="text-align:center">Загружаю…</p>'; return; }
   const b = d.b, top = NET.brigTop || [];
-  const topHTML = `<h2 style="font-size:24px;margin-top:16px">Рейтинг общаков</h2><p class="sub" style="margin:0 0 8px">Очки общака: каждая онлайн-победа участника +10, марс +20, кокс +30. Нажми на бригаду — увидишь состав.</p>` + (top.length ? top.map((x, i) => `<div class="li2" data-bt="${x.id}" style="cursor:pointer"><span class="n" style="width:22px;text-align:center;font-weight:800">${i + 1}</span><span class="av" style="border-radius:50%">${x.emblem ? `<img src="${emb(x.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(x.name)}</b><span>${x.n} из 15 · очки общака ${x.rating}${x.bonus ? ' · +5%' : ''}</span></span><span class="r" style="margin-left:auto;font-weight:800">${x.rating}</span></div>`).join('') : '<div class="card empty"><b>Пока ни одной</b>Собери первую бригаду.</div>');
+  const topHTML = `<h2 style="font-size:24px;margin-top:16px">Рейтинг общаков</h2>` + (top.length ? top.map((x, i) => `<div class="li2" data-bti="${x.id}" style="cursor:pointer"><span class="n" style="width:22px;text-align:center;font-weight:800">${i + 1}</span><span class="av" style="border-radius:50%">${x.emblem ? `<img src="${emb(x.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(x.name)}</b><span>${x.n} из 15 · очки общака ${x.rating}</span></span><span class="r" style="margin-left:auto;font-weight:800">${x.rating}</span></div>`).join('') : '<div class="card empty"><b>Пока ни одной</b>Собери первую бригаду.</div>');
   if (!b) {
     box.innerHTML = (d.invites && d.invites.length ? `<h2 style="font-size:24px">Зовут в бригаду</h2>` + d.invites.map((v, i) => `<div class="li2"><span class="av" style="border-radius:50%">${v.emblem ? `<img src="${emb(v.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(v.name)}</b><span>зовёт ${esc(v.by)} · ${v.n} из 15</span></span><button class="btn hot" style="padding:8px 10px;font-size:13px" data-bj="${i}">Вступить</button><button class="btn ghost" style="padding:8px 10px;font-size:13px" data-bd="${i}">✕</button></div>`).join('') : '')
       + `<div class="card" style="text-align:center;padding:16px"><b>Общак</b><p class="sub" style="margin:6px 0 10px">Собери бригаду до 15 человек. В общак все скидываются сигаретами, а создатель тратит их на герб и на +5% к выигрышу для всех.</p><button class="btn hot" id="brigNew">Собрать бригаду · 5000</button></div>` + topHTML;
@@ -2349,7 +2354,7 @@ function renderTasks() {
     const grad = W.sectors.map((_, i) => `${cols[i % cols.length]} ${i * 360 / n}deg ${(i + 1) * 360 / n}deg`).join(',');
     h += `<div class="wheelwrap"><canvas id="wheelCv" width="680" height="680"></canvas>${PIN_SVG}</div>
       <button class="btn hot" style="width:100%" id="wSpin">${W.free ? 'Крутить бесплатно' : W.spins ? `Крутить (осталось ${W.spins})` : 'Бесплатный прокрут завтра'}</button>
-      <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · 50 🪙</button>${NET.me && NET.me.admin ? '<button class="btn ghost" style="width:100%;margin-top:8px" id="wTest">Тест-прокрут (только для админа, без награды)</button>' : ''}
+      <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · ${COIN()} 50</button>${NET.me && NET.me.admin ? '<button class="btn ghost" style="width:100%;margin-top:8px" id="wTest">Тест-прокрут (только для админа, без награды)</button>' : ''}
       <p class="sub" style="text-align:center;margin-top:8px">Один прокрут в день бесплатно. Выпадает от 25 до 1000 сигарет или вещь с барахолки.</p>`;
   } else if (NET.taskTab === 's') {
     const S = d.season;
@@ -2756,7 +2761,7 @@ function passHTML(p, S) {
     <div class="pbar"><i style="width:${done ? 100 : p.xp / p.per * 100}%"></i><span>${done ? 'Все 30 ступеней пройдены!' : `Ступень ${p.lv} из ${p.max} · ${p.xp}/${p.per} опыта`}</span></div>
     <div class="ptrack" id="psTrack"><div class="plab"><span></span><span>Для всех</span><span>Блатной</span></div>${cols}</div>
     ${ready ? `<button class="btn hot" style="width:100%;margin-top:10px" id="psClaim">Забрать награды (${ready})</button>` : ''}
-    ${p.prem ? '' : `<button class="btn sec" style="width:100%;margin-top:8px" id="psBuy">Блатной пропуск · ${p.price} 🪙</button><p class="sub" style="text-align:center;margin:6px 0 0">Награда на каждой ступени: больше сигарет, прокруты колеса, редкие вещи и титул «Хозяин сезона». Купишь позже — получишь всё за уже пройденные ступени.</p>`}
+    ${p.prem ? '' : `<button class="btn sec" style="width:100%;margin-top:8px" id="psBuy">Блатной пропуск · ${COIN()} ${p.price}</button><p class="sub" style="text-align:center;margin:6px 0 0">Награда на каждой ступени: больше сигарет, прокруты колеса, редкие вещи и титул «Хозяин сезона». Купишь позже — получишь всё за уже пройденные ступени.</p>`}
     <p class="sub" style="text-align:center;margin:8px 0 0">Опыт: победа онлайн +50, партия +20, задание +40, передачка +30, победа над ботом +10</p></div>`;
 }
 const _netMsg12 = netMsg;
@@ -2803,7 +2808,7 @@ $('goldBtn').onclick = () => openGoldShop('ryzhe');
 const _netMsg14 = netMsg;
 netMsg = async function (m) {
   if (m.t === 'me') { const r = await _netMsg14(m); updCigs(); return r; }
-  if (m.t === 'noGold') { showModal(`<h3>Не хватает рыжья</h3><div style="text-align:center"><img src="${A}ryzhe/03.webp" alt="" style="width:120px"><p>Нужно ещё <b>${m.need}</b> 🪙. Рыжьё покупается за звёзды Телеграма.</p></div>
+  if (m.t === 'noGold') { showModal(`<h3>Не хватает рыжья</h3><div style="text-align:center"><img src="${A}ryzhe/03.webp" alt="" style="width:120px"><p>Нужно ещё <b>${m.need}</b> ${COIN()}. Рыжьё покупается за звёзды Телеграма.</p></div>
       <button class="btn hot" style="width:100%" id="ngBuy">Купить рыжьё</button><button class="btn ghost" style="width:100%;margin-top:8px" data-close>Не сейчас</button>`); $('ngBuy').onclick = () => { hideModal(); openGoldShop('ryzhe'); }; return; }
   if (m.t === 'rematchAsk') { NET.reAsk = m; const b = $('again'); if (b && G && G.over) { b.textContent = 'Соперник за реванш — жми!'; b.classList.add('pulse'); } malyava(`${m.name} хочет реванш${m.stake ? ` на ${m.stake} сигарет` : ''}`); return; }
   if (m.t === 'rematchWait') { const b = $('again'); if (b) { b.textContent = 'Ждём соперника…'; b.disabled = true; } return; }
@@ -2830,8 +2835,8 @@ renderPlay = async function () {
   const box = $('s-play'); if (!box) return r; let c = $('chifCard');
   if (!c) { c = document.createElement('div'); c.id = 'chifCard'; c.className = 'card chifc'; const anchor = box.querySelector('.card'); if (anchor) anchor.before(c); else box.append(c); }
   const n = NET.me.chif | 0, on = !!NET.me.chifOn;
-  c.innerHTML = `<img src="${A}kruzhki_pepelnitsy/03.webp" alt=""><div style="flex:1;min-width:0"><b>Чифир ☕ ${n ? '· ' + n + ' шт.' : ''}</b><p class="sub">${on ? 'Заварен: +25% сигарет за победу в следующей онлайн-партии' : '+25% сигарет за победу на одну онлайн-партию'}</p></div>
-    ${n ? `<button class="btn ${on ? 'sec' : 'hot'}" id="chifTg" style="padding:8px 12px">${on ? 'Убрать' : 'Заварить'}</button>` : `<button class="btn hot" id="chifBuy" style="padding:8px 12px">🪙 10</button>`}`;
+  c.innerHTML = `<img src="${A}ryzhe/chif1.webp" alt=""><div style="flex:1;min-width:0"><b>Чифир ☕ ${n ? '· ' + n + ' шт.' : ''}</b><p class="sub">${on ? 'Заварен: +25% сигарет за победу в следующей онлайн-партии' : '+25% сигарет за победу на одну онлайн-партию'}</p></div>
+    ${n ? `<button class="btn ${on ? 'sec' : 'hot'}" id="chifTg" style="padding:8px 12px">${on ? 'Убрать' : 'Заварить'}</button>` : `<button class="btn hot" id="chifBuy" style="padding:8px 12px">${COIN()} 10</button>`}`;
   if ($('chifTg')) $('chifTg').onclick = () => { SFX.click(); NET.me.chifOn = !on; nsend({ t: 'chifOn', on: !on }); renderPlay(); };
   if ($('chifBuy')) $('chifBuy').onclick = () => openGoldShop('chifir');
   return r;
@@ -2863,7 +2868,7 @@ const _renderBrig16 = renderBrig;
 renderBrig = function () {
   const r = _renderBrig16.apply(this, arguments);
   const box = $('brigBox'), d = NET.brigD;
-  box.querySelectorAll('[data-bt]').forEach(el => el.onclick = () => { SFX.click(); nsend({ t: 'brigInfo', id: el.dataset.bt }); });
+  box.querySelectorAll('[data-bti]').forEach(el => el.onclick = () => { SFX.click(); nsend({ t: 'brigInfo', id: el.dataset.bti }); });
   const b = d && d.b;
   if (b && b.req && b.req.length) {
     const my = b.members.find(x => x.id === NET.uid) || {};
@@ -2882,7 +2887,7 @@ renderBrig = function () {
 function showBrigInfo(b) {
   const BR = { owner: 'создатель', dep: 'заместитель', smot: 'смотрящий', member: 'в бригаде' };
   const mine = NET.brigD && NET.brigD.b, mem = b.members.slice().sort((a, c) => ['owner', 'dep', 'smot', 'member'].indexOf(a.role) - ['owner', 'dep', 'smot', 'member'].indexOf(c.role) || (c.pts | 0) - (a.pts | 0));
-  showModal(`<div class="brighead"><img src="${b.emblem ? emb(b.emblem) : A + 'nashivki/01.webp'}" alt=""><div><h3 style="margin:0;text-align:left">${esc(b.name)}</h3><span class="sub" style="margin:0">${b.place ? b.place + '-е место · ' : ''}${b.n} из 15</span><br><b>Очки общака: ${b.rating | 0}</b><br><span class="sub" style="margin:0">побед участников: ${b.wins | 0}${b.bonus ? ' · +5% к выигрышу' : ''}</span></div></div>
+  showModal(`<div class="brighead"><img src="${b.emblem ? emb(b.emblem) : A + 'nashivki/01.webp'}" alt=""><div><h3 style="margin:0;text-align:left">${esc(b.name)}</h3><span class="sub" style="margin:0">${b.place ? b.place + '-е место · ' : ''}${b.n} из 15</span><br><b>Очки общака: ${b.rating | 0}</b><br><span class="sub" style="margin:0">побед участников: ${b.wins | 0}</span></div></div>
     <h2 style="font-size:22px;margin:12px 0 6px">Состав</h2><div style="max-height:46vh;overflow:auto">${mem.map((x, i) => `<div class="bmem" data-im="${i}" style="cursor:pointer"><img data-ih="${i}" alt=""><span><b>${x.smotr ? '👑 ' : ''}${esc(x.name)}</b><br><span class="sub" style="margin:0">${BR[x.role] || ''} · рейтинг ${x.rating} · в общак ${x.pts | 0}</span></span><i style="margin-left:auto;font-style:normal;color:${x.online ? '#7c6' : '#777'}">●</i></div>`).join('')}</div>
     ${!mine && !(NET.brigD && NET.brigD.b) ? (b.asked ? '<button class="btn sec" style="width:100%;margin-top:10px" disabled>Заявка отправлена</button>' : b.n >= 15 ? '<button class="btn ghost" style="width:100%;margin-top:10px" disabled>Бригада полная</button>' : '<button class="btn hot" style="width:100%;margin-top:10px" id="biReq">Попроситься в бригаду</button>') : ''}
     <button class="btn ghost" style="width:100%;margin-top:8px" data-close>Закрыть</button>`);
