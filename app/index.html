@@ -166,9 +166,9 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
   box-shadow:0 3px 8px #000b}
 .item:nth-child(3n+1){transform:rotate(-1deg)}.item:nth-child(3n+2){transform:rotate(.8deg)}
 .item.sel{outline:3px solid var(--accent2);outline-offset:2px}
-.item .th{aspect-ratio:1;display:grid;place-items:center;overflow:hidden;border-radius:2px}
-.item .th img,.item .th canvas{max-width:92%;max-height:92%;object-fit:contain;filter:drop-shadow(0 3px 3px #0007)}
-.item .th.full img,.item .th.full canvas{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:cover}
+.item .th{aspect-ratio:1;display:grid;place-items:center;overflow:hidden;border-radius:2px;position:relative}
+.item .th img,.item .th canvas{position:absolute;left:5%;top:5%;width:90%;height:90%;object-fit:contain;filter:drop-shadow(0 3px 3px #0007)}
+.item .th.full img,.item .th.full canvas{left:0;top:0;width:100%;height:100%;object-fit:cover}
 .item .nm{font-size:11.5px;line-height:1.2;min-height:28px;font-weight:500}
 .tag{position:absolute;right:-4px;bottom:-6px;min-width:58px;height:30px;padding:6px 8px 0 18px;font-size:12px;font-weight:700;color:#2a1d10;text-align:center;
   background:url(a/knopki/02.webp) center/100% 100%;transform:rotate(-8deg);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -425,6 +425,12 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 @keyframes title{to{opacity:1}}
 .loading .btn{position:relative;width:100%;max-width:340px;font-size:18px;padding:16px}
 .loading.gone{animation:gone .6s forwards}
+.lprog{position:relative;width:100%;max-width:340px;display:flex;flex-direction:column;align-items:center;gap:10px;min-height:56px}
+.lbar{width:100%;height:12px;border-radius:7px;background:#ffffff14;border:1px solid #ffffff22;overflow:hidden;box-shadow:inset 0 1px 3px #000}
+.lbar i{display:block;height:100%;width:4%;border-radius:7px;background:linear-gradient(90deg,#8a5a1a,#f0c060);transition:width .4s ease;box-shadow:0 0 10px #f0c06088}
+.lprog span{font-family:var(--f-hand);font-size:22px;color:var(--muted)}
+#enterBtn.appear{animation:enterIn .45s cubic-bezier(.2,1.4,.4,1) both}
+@keyframes enterIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
 @keyframes gone{to{opacity:0;visibility:hidden}}
 .vict{text-align:center}
 .vict .hero{position:relative;width:70%;margin:0 auto;aspect-ratio:880/1168}
@@ -469,7 +475,8 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 <div class="loading" id="loading">
   <canvas id="loadHero" width="880" height="1168"></canvas>
   <h1>Нарды<br>от Кондрата</h1>
-  <button class="btn hot" id="enterBtn">Войти в хату</button>
+  <div class="lprog" id="lprog"><div class="lbar"><i id="lbarI"></i></div><span id="ltxt">Заходим в хату…</span></div>
+  <button class="btn hot" id="enterBtn" hidden>Войти в хату</button>
 </div>
 
 <div id="app">
@@ -1609,7 +1616,9 @@ let drag=null, dragEnd=0;
 function dropTarget(x,y){ const el=document.elementFromPoint(x,y); const t=el&&el.closest('[data-a]'); if(!t||!($('board').contains(t)||$('tray').contains(t))) return null; const r=t.dataset.a; return r==='off'?'off':r==='bar'?'bar':+r; }
 function killGhosts(){ document.querySelectorAll('.dragck').forEach(x=>x.remove()); document.querySelectorAll('.hov').forEach(x=>x.classList.remove('hov')); }
 $('board').addEventListener('pointerdown',e=>{ if(drag){ drag=null; killGhosts(); } if(!G||G.phase!=='move'||e.button>0) return; const ck=e.target.closest('.ck.can,.ck.sel'); if(!ck) return; const box=ck.closest('[data-a]'); if(!box) return;
-  const raw=box.dataset.a; drag={a:raw==='bar'?'bar':+raw, x0:e.clientX, y0:e.clientY, id:e.pointerId, moved:false, ghost:null, src:ck}; });
+  const raw=box.dataset.a; drag={a:raw==='bar'?'bar':+raw, x0:e.clientX, y0:e.clientY, id:e.pointerId, moved:false, ghost:null, src:ck};
+  // на телефоне палец «приклеен» к шашке, а доска перерисовывается — держим палец на самой доске, она не пересоздаётся
+  try{ $('board').setPointerCapture(e.pointerId); }catch(_){ } });
 window.addEventListener('pointermove',e=>{ if(!drag||e.pointerId!==drag.id) return; const dx=e.clientX-drag.x0, dy=e.clientY-drag.y0;
   if(!drag.moved){ if(Math.hypot(dx,dy)<7) return; drag.moved=true;
     const r=drag.src.getBoundingClientRect(), g=drag.src.cloneNode(true); g.classList.remove('can','sel','moved'); g.classList.add('dragck'); g.style.width=r.width+'px'; g.style.height=r.height+'px'; drag.w=r.width; document.body.append(g); drag.ghost=g;
@@ -1628,7 +1637,7 @@ function dragFinish(e){ if(!drag||e.pointerId!==drag.id) return; const d=drag; d
 window.addEventListener('pointerup',dragFinish); window.addEventListener('pointercancel',dragFinish);
 // страховка: если палец «потерялся» (свернули приложение, второй палец, системный жест) — тень шашки не должна висеть
 function dragReset(){ if(drag){ drag=null; dragEnd=Date.now(); } killGhosts(); if(G) renderGame(); }
-window.addEventListener('blur',dragReset); document.addEventListener('visibilitychange',dragReset); window.addEventListener('lostpointercapture',e=>{ if(drag&&e.pointerId===drag.id) dragReset(); });
+window.addEventListener('blur',dragReset); document.addEventListener('visibilitychange',dragReset); $('board').addEventListener('lostpointercapture',e=>{ if(e.target===$('board')&&drag&&e.pointerId===drag.id) dragReset(); });
 $('resignBtn').onclick=()=>{ if(G&&G.over&&window.lastEnd) return lastEnd(); if(!G||G.over) return; showModal(`<h3>Сдаться?</h3><p style="text-align:center">${G.stake?`Ставка ${G.stake} сигарет уйдёт сопернику.`:'Партия будет засчитана как поражение.'} В рейтинге −30.</p><div class="row"><button class="btn sec" data-close>Играть дальше</button><button class="btn hot" id="resYes">Сдаться</button></div>`); $('resYes').onclick=()=>{ hideModal(); resign(); }; };
 $('rulesBtn').onclick=()=>showModal(G&&G.v==='short'?`<h3>Короткие нарды</h3><ul><li>Шашки ходят навстречу друг другу, против часовой стрелки.</li><li>Одиночную шашку соперника можно сбить: она уходит на бар и заходит заново.</li><li>Пока у тебя шашка на баре, сначала вводи её.</li><li>На пункт с двумя и больше шашками соперника вставать нельзя.</li><li>Все 15 в доме — можно выбрасывать.</li><li>Марс — двойная победа, кокс — тройная.</li></ul><button class="btn hot" style="width:100%" data-close>Понятно</button>`:`<h3>Длинные нарды</h3><ul><li>У каждого 15 шашек на «голове». Ходят по кругу против часовой стрелки.</li><li>Ходишь на числа кубиков: одной шашкой или двумя. Дубль — 4 хода.</li><li>Бить нельзя. На пункт с чужой шашкой вставать нельзя.</li><li>С головы за ход снимается одна шашка (первый ход с 6-6, 4-4, 3-3 — две).</li><li>Нельзя строить забор из 6 подряд, если впереди нет шашки соперника.</li><li>Все 15 в доме — можно выбрасывать. Марс — победа вдвойне.</li></ul><button class="btn hot" style="width:100%" data-close>Понятно</button>`);
 
@@ -1662,12 +1671,19 @@ $('setBtn').onclick=()=>{
 };
 
 // ---------- Старт: загрузочный экран ----------
+// кнопка «Войти в хату» появляется только когда всё загружено (картинки, связь с сервером)
+const LOAD={need:new Set(['anch','hero','home']), done:new Set(), ok:false};
+function loadStep(k){ LOAD.done.add(k); const all=[...LOAD.need], pct=Math.max(4,Math.round(100*all.filter(x=>LOAD.done.has(x)).length/all.length)); const i=$('lbarI'); if(i) i.style.width=pct+'%'; if(all.every(x=>LOAD.done.has(x))) setTimeout(loadReady,350); }
+function loadReady(){ if(LOAD.ok) return; LOAD.ok=true; clearInterval(LOAD.iv); const i=$('lbarI'); if(i) i.style.width='100%'; $('lprog').hidden=true; const b=$('enterBtn'); b.hidden=false; b.classList.add('appear'); }
+LOAD.iv=setInterval(()=>{ const t=$('ltxt'), L=['Заходим в хату…','Завариваем чифир…','Шнырь подметает пол…','Расставляем шашки…','Трясём зарики…','Кореша подтягиваются…']; if(t) t.textContent=L[(L.indexOf(t.textContent)+1)%L.length]; },1300);
+setTimeout(loadReady,15000);   // страховка: если что-то зависло — всё равно пускаем
 (async function boot(){
-  ANCH = await fetch(A+'anchors.json').then(r=>r.json());
+  ANCH = await fetch(A+'anchors.json').then(r=>r.json()); loadStep('anch');
   $('musicBtn').classList.toggle('off',!P.set.music);
-  const hc=await heroOnBg(P.eq,lvl()); const lc=$('loadHero'); lc.getContext('2d').drawImage(hc,0,0);
+  const hc=await heroOnBg(P.eq,lvl()); const lc=$('loadHero'); lc.getContext('2d').drawImage(hc,0,0); loadStep('hero');
   const start=(location.hash||'').slice(1);
   go(['shop','play','top','friends'].includes(start)?start:'home', true);
+  try{ await renderHome(); }catch(e){} loadStep('home');
   $('enterBtn').onclick=()=>{ ac(); SFX.clang(); startMusic(); $('loading').classList.add('gone'); setTimeout(()=>$('loading').hidden=true,700); };
   if (/skip/.test(location.search+location.hash) || window.__skipLoad) { $('loading').hidden=true; }
 })();
@@ -1938,6 +1954,7 @@ if (IN_TG_NO_LOGIN) setTimeout(() => showModal(`<h3>Открой через бо
 if (NET.on) {
   if (TGA) { try { TGA.ready(); TGA.expand(); if (TGA.disableVerticalSwipes) TGA.disableVerticalSwipes(); if (TGA.setHeaderColor) TGA.setHeaderColor('#14100c'); if (TGA.setBackgroundColor) TGA.setBackgroundColor('#14100c'); } catch (e) { } }
   try { document.querySelector('.logo small').textContent = 'тестовая версия'; } catch (e) { }
+  LOAD.need.add('net');
   (function waitAssets() { if (ANCH) netConnect(); else setTimeout(waitAssets, 100); })();
   if (NET.joinCode || (TGA && TGA.initDataUnsafe && /^room_/i.test(TGA.initDataUnsafe.start_param || ''))) window.__skipLoad = true;
 }
@@ -2059,7 +2076,7 @@ function updBadges() {
 const _netMsg3 = netMsg;
 netMsg = async function (m) {
   switch (m.t) {
-    case 'me': { NET.me = m.me; const r = await _netMsg3(m); updBadges(); if (QS.get('tab') === 'mal' && !NET.tabDone) { NET.tabDone = true; go('friends'); } return r; }
+    case 'me': { NET.me = m.me; const r = await _netMsg3(m); if (!LOAD.done.has('net')) loadStep('net'); updBadges(); if (QS.get('tab') === 'mal' && !NET.tabDone) { NET.tabDone = true; go('friends'); } return r; }
     case 'mal': { NET.me && (NET.me.unread = (NET.me.unread | 0) + 1); updBadges(); try { SFX.coin(); } catch (e) { }
       if (screen === 'friends' && NET.frTab === 'mal') nsend({ t: 'mals' }); else malyava(`📩 Малява от ${m.m.fn}`); return; }
     case 'mals': NET.mals = m; if (screen === 'friends' && NET.frTab === 'mal') renderMal(); return;
