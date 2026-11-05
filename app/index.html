@@ -200,6 +200,8 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .vipcase img{height:46px}.vipcase b{display:block;color:#f6d27a;font-size:15px}.vipcase span{font-size:12px;color:#e8d0a0}
 .vipleft{background:#3a2808;border:1px solid #c9962a;border-radius:8px;padding:6px 8px;font-size:13px;color:#f6e2b0;margin:6px 0}
 .spinc{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;margin:0 2px 8px}
+.case .vipcase,.case .passcase{margin-right:74px}
+.passcase{display:flex;align-items:center;gap:6px;background:linear-gradient(90deg,#2a1f3a,#15101e);border:1px solid #9a7ad0;border-radius:10px;padding:6px 10px;margin-bottom:8px;color:#e6dcff;font-size:13px}.passcase b{color:#d8c4ff;white-space:nowrap}.passcase span{white-space:nowrap}.passcase span{opacity:.8;font-size:12px}
 .x2c{position:absolute;right:4%;top:4%;background:#d33;color:#fff;font:italic 900 14px/1 system-ui;padding:4px 6px;border-radius:7px;transform:rotate(8deg);box-shadow:0 0 0 2px #fff4,0 2px 6px #000a;z-index:3}
 .thn{position:absolute;left:50%;top:6%;transform:translateX(-50%);background:#f6d27a;color:#2a1a04;font:800 15px/1 system-ui;padding:3px 8px;border-radius:8px;box-shadow:0 0 0 2px #7a4a08,0 2px 6px #000a;z-index:2}
 .tag.own{background:none;color:#2f5a1e;transform:none;padding:6px 6px 0}
@@ -554,6 +556,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 .case .shots span{position:absolute;left:0;right:0;bottom:0;background:#000a;color:#fff;font-size:10px;text-align:center;font-family:ui-monospace,monospace}
 .case dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;font-size:13px;margin:10px 0 0}
 .case dt{color:#5a4a2a}.case dd{margin:0;font-weight:600}
+.case dt.tatdt{grid-column:1/-1;margin-top:4px}.case dd.tatdd{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px}.tatc{display:inline-block;background:#00000014;border:1px solid #5a4a2a44;border-radius:10px;padding:1px 7px;font-size:11.5px;font-weight:600;white-space:nowrap}
 .case .stamp{position:absolute;right:12px;top:34px;width:70px;transform:rotate(12deg)}
 .backtats{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .backtats img{height:70px;background:#c8936f;border-radius:4px;padding:3px;mix-blend-mode:normal}
@@ -587,7 +590,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 
-.top .logo{font-size:clamp(17px,5.3vw,28px);overflow:hidden;text-overflow:ellipsis;flex:1 1 auto}.top .tright{flex:none;gap:4px}
+.top .logo{font-size:clamp(17px,5.3vw,28px);overflow:hidden;text-overflow:ellipsis;flex:1 1 auto}.top .tright{flex:none;gap:8px}.top .pack b,.top .goldb b{white-space:nowrap}
 @media (max-width:420px){.top .icb{width:34px;height:34px}.top .pack{width:44px}.top .goldb{width:36px}}
 </style>
 
@@ -1415,7 +1418,7 @@ async function showCase(x, inGame){
     <dl><dt>Погоняло</dt><dd>${p.name}${p.smotr?' 👑':''}</dd>${p.smotr?'<dt>Масть</dt><dd>Смотрящий недели</dd>':''}<dt>Звание</dt><dd>${rank} · ${p.rating}</dd><dt>Статья</dt><dd>${p.fav}</dd><dt>Партий</dt><dd>${p.games} · побед ${p.wins}</dd>
     <dt>Марсов</dt><dd>${p.mars}</dd><dt>Лучшая серия</dt><dd>${p.streak} ${p.streak%10===1&&p.streak%100!==11?'победа':'побед'} подряд</dd><dt>Хата</dt><dd>${hata.name}</dd><dt>Нарды</dt><dd>${item(p.eq.board).name}</dd>
     <dt>Срок</dt><dd>${p.days} ${p.days%10===1&&p.days%100!==11?'день':(p.days%10>=2&&p.days%10<=4&&(p.days%100<10||p.days%100>=20))?'дня':'дней'} в игре</dd>
-    <dt>Особые приметы</dt><dd>${tats.length?tats.join(', '):'наколок нет'}</dd>${p.note?`<dt>Характеристика</dt><dd>${p.note}</dd>`:''}</dl>
+    <dt class="tatdt">Особые приметы${tats.length?` · ${tats.length}`:''}</dt><dd class="tatdd">${tats.length?tats.map(t=>`<span class="tatc">${t}</span>`).join(''):'наколок нет'}</dd>${p.note?`<dt>Характеристика</dt><dd>${p.note}</dd>`:''}</dl>
     </div>
     ${(p.me||inGame)?'<button class="btn sec" style="width:100%;margin-top:12px" data-close>Закрыть дело</button>':`<div class="row" style="margin-top:12px"><button class="btn sec" data-close>Закрыть</button><button class="btn hot" id="caseCall">Вызвать на партию</button></div>`}`);
   if($('caseCall')) $('caseCall').onclick=()=>{ hideModal(); if(x.net&&window.netInvite) return netInvite(x); malyava('Малява отправлена. Ждём ответа…'); setTimeout(()=>startGame({opp:x,stake:0,online:true}),1400); };
@@ -2453,7 +2456,7 @@ fillCase = function (m) { _fillCase4(m); const t = m.user && m.user.title; if (t
 function holdCigs(ms) { NET.cigHold = Date.now() + ms; }
 function countCigs(to) {
   const el = $('cigN'); if (!el) return;
-  const from = parseInt(el.textContent, 10);
+  const from = parseInt(el.dataset.raw || el.textContent, 10);
   cancelAnimationFrame(NET.cigRaf);
   if (isNaN(from) || from === to || Math.abs(to - from) > 200000) { el.textContent = to; return; }
   const t0 = performance.now(), D = Math.min(900, 300 + Math.abs(to - from));
@@ -2561,6 +2564,7 @@ wheelSpun = function (m) {
     NET.wheelRot = target % 360; drawWheel(NET.wheelRot, sectors); NET.spinning = false;
     let what = m.item === 'test' ? 'вещь с барахолки' : m.item ? `вещь «${(item(m.item) || {}).name || 'с барахолки'}». Уже у тебя в барахолке!` : `${m.cigs} сигарет!`;
     if (m.test) showModal(`<div class="vict"><h3>Тест-прокрут</h3><p style="font-size:20px;font-weight:700;text-align:center">Выпало бы: ${what}</p><p class="sub" style="text-align:center">Это проверка, награда не начисляется.</p><button class="btn hot" style="width:100%" data-close>Ясно</button></div>`);
+    else if (m.item && item(m.item)) { const it = item(m.item); showModal(`<div class="vict chestopen"><h3>Выпала вещь!</h3><img class="chimg" src="${A + (it.th || it.img)}" alt="" style="width:140px;height:140px;object-fit:contain"><p style="font-size:20px;font-weight:700;text-align:center;margin:6px 0 2px">${esc(it.name)}</p><p class="sub" style="text-align:center;margin:0 0 8px">Уже лежит у тебя в барахолке — можно надеть</p><div class="row"><button class="btn sec" data-close>Забрать</button><button class="btn hot" id="wItGo">В барахолку</button></div></div>`); $('wItGo').onclick = () => { hideModal(); shopCat = it.cat; shopSub = it.sub; shopSel = it.id; go('shop'); }; }
     else showModal(`<div class="vict"><h3>${m.cigs >= 1000 ? 'Джекпот!' : 'Выпало'}</h3><p style="font-size:20px;font-weight:700;text-align:center">${what}</p><button class="btn hot" style="width:100%" data-close ${m.cigs ? 'data-fly' : ''}>Забрать</button></div>`);
     try { SFX.coin(); if (m.cigs >= 500) cigRain(); } catch (e) { }
     if (m.item && m.item !== 'test' && !P.owned.includes(m.item)) P.owned.push(m.item);
@@ -2970,6 +2974,7 @@ renderPlay = async function () {
   if (!c) { c = document.createElement('div'); c.id = 'bossCard'; c.className = 'card chifc'; const ch = $('chifCard'); if (ch) ch.before(c); else box.append(c); }
   c.classList.toggle('glow', !B.used);
   c.innerHTML = `<img src="${A}nashivki/08.webp" alt=""><div style="flex:1;min-width:0"><b>Босс недели: Кондрат</b><p class="sub">${B.won ? 'Ты его уже обыграл(а) на этой неделе 👑' : B.used ? 'Попытка на этой неделе потрачена. Новая — в понедельник' : `Одна попытка в неделю. Победа — <b>+${B.prize}</b> сигарет. Кондрат сильный: зарики у него фартовые`}</p></div>${B.used ? '' : '<button class="btn hot" id="bossGo" style="padding:8px 12px">Сразиться</button>'}`;
+  c.onclick = B.used ? () => { const now = Date.now(); if (now - (NET.bossMsgAt || 0) < 6000) return; NET.bossMsgAt = now; malyava(B.won ? 'Кондрата ты уже обыграл(а) на этой неделе. Новый бой — в понедельник' : 'На этой неделе ты уже играл(а) с боссом. Новая попытка — в понедельник'); } : null;
   if ($('bossGo')) $('bossGo').onclick = () => { SFX.click(); showModal(`<h3>Сразиться с Кондратом?</h3><p style="text-align:center">Попытка одна на неделю. Сдашься или проиграешь — следующая в понедельник.</p><div class="row"><button class="btn sec" data-close>Не сейчас</button><button class="btn hot" id="bossOk">В бой</button></div>`); $('bossOk').onclick = () => { hideModal(); nsend({ t: 'bossStart' }); }; };
   return r;
 };
@@ -3060,7 +3065,6 @@ function modeSetup(mode) {
       <label class="capt"><input type="checkbox" id="mCap" ${NET.capOn ? 'checked' : ''}> <span><b>На интерес</b> — проигравший сутки носит кепку «Лох»</span></label>
       <button class="btn hot" style="width:100%;margin-top:12px" id="mPick">Выбрать из корешей</button>
       <button class="btn sec" style="width:100%;margin-top:8px" id="mGo">Ссылкой в Телеграм</button>
-      <div class="row" style="margin-top:8px"><input id="mCode" maxlength="6" placeholder="Код от кореша" style="flex:1;min-width:0;padding:10px;border-radius:10px;border:1px solid #fff3;background:#0006;color:inherit;font:inherit;text-transform:uppercase"><button class="btn ghost" id="mJoin">Войти</button></div>
       <button class="btn ghost" style="width:100%;margin-top:8px" data-close>Отмена</button>`;
     showModal(h);
     document.querySelectorAll('#mV button').forEach(b => b.onclick = () => { SFX.click(); v = b.dataset.v; draw(); });
@@ -3211,6 +3215,16 @@ renderShop = async function () {
     if (d && pv && !pv.querySelector('.vipleft')) { pv.querySelectorAll('.btn.hot').forEach(b => { b.disabled = true; b.textContent = 'Уже блатной'; b.classList.remove('hot'); b.classList.add('ghost'); });
       (pv.querySelector('h3') || pv).insertAdjacentHTML('afterend', `<p class="vipleft">👑 Твой статус действует ещё <b>${d} ${plural(d, 'день', 'дня', 'дней')}</b>. Продлить можно, когда закончится.</p>`); } }
   return r;
+};
+// большие суммы в шапке пишем коротко (12,5к), чтобы сигареты и рыжьё не налезали друг на друга
+{ const fmt = n => n < 10000 ? String(n) : n < 1e6 ? (Math.floor(n / 100) / 10).toString().replace('.', ',').replace(/,0$/, '') + 'к' : (Math.floor(n / 1e5) / 10).toString().replace('.', ',').replace(/,0$/, '') + 'м';
+  ['cigN', 'goldN'].forEach(id => { const el = $(id); if (!el) return; const fix = () => { const t = el.textContent.trim(); if (!/^\d+$/.test(t)) return; el.dataset.raw = t; if (+t >= 10000) el.textContent = fmt(+t); }; new MutationObserver(fix).observe(el, { childList: true, characterData: true, subtree: true }); fix(); }); }
+// блатная ходка сезона — плашка в деле (видят все, кто открыл профиль)
+const _fillCase24 = fillCase;
+fillCase = function (m) {
+  _fillCase24(m); if (NET.caseFor !== m.id) return;
+  const cs = document.querySelector('#modalBody .case'), u = m.user || {};
+  if (cs && u.pass && !cs.querySelector('.passcase')) { const v = cs.querySelector('.vipcase'); const h = `<div class="passcase">🎫 <b>Блатная ходка</b><span>этого сезона</span></div>`; if (v) v.insertAdjacentHTML('afterend', h); else cs.insertAdjacentHTML('afterbegin', h); }
 };
 
 </script>
