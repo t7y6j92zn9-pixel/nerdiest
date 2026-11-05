@@ -33,7 +33,7 @@ img{max-width:100%}
 #app{position:relative;z-index:1;max-width:480px;margin:0 auto;min-height:100%;display:flex;flex-direction:column;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:8px 6px}
-.logo{font-family:var(--f-hand);font-size:28px;line-height:.9;color:var(--text);text-shadow:0 1px 0 #000}
+.logo{font-family:var(--f-hand);font-size:28px;white-space:nowrap;min-width:0;line-height:.9;color:var(--text);text-shadow:0 1px 0 #000}
 .logo small{display:block;font-family:var(--f-body);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-top:2px}
 .tright{display:flex;align-items:center;gap:6px}
 .pack{position:relative;width:52px;height:46px;background:url(a/sigarety/01.webp) center/contain no-repeat;border:0;padding:0}
@@ -201,6 +201,14 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .tasksbig .cnt{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:13px;line-height:20px;min-width:22px}
 .flycig{position:fixed;width:30px;height:30px;z-index:9999;pointer-events:none;object-fit:contain;filter:drop-shadow(0 2px 3px #000a)}
 .pack.pulse{animation:packPulse .5s ease-out}
+#taskSeg button{position:relative}.tbadge{position:absolute;top:-6px;right:-4px;min-width:18px;height:18px;border-radius:9px;background:#d33;color:#fff;font:700 11px/18px system-ui;font-style:normal;padding:0 4px;box-shadow:0 0 0 2px #000,0 0 10px #f44}
+.glow{box-shadow:0 0 0 2px #ffd76a,0 0 18px #ffd76a88!important;animation:glowp 1.6s ease-in-out infinite}.glowb{animation:glowp 1.6s ease-in-out infinite}
+@keyframes glowp{50%{box-shadow:0 0 0 2px #ffd76a66,0 0 6px #ffd76a44}}
+.btn.pulse{animation:packPulse .9s ease-out infinite}
+.goldb{position:relative;width:40px;height:46px;background:url(a/ryzhe/icon.webp) center 4px/34px auto no-repeat;border:0;padding:0}
+.goldb b{position:absolute;left:50%;bottom:-2px;transform:translateX(-50%);background:#f6d27a;color:#2a1a04;font-size:12px;border-radius:6px;padding:0 5px;font-weight:800}
+.chifc{display:flex;align-items:center;gap:10px}.chifc img{width:44px;height:44px;object-fit:contain}.chifc .sub{margin:2px 0 0}
+.smotr{display:flex;align-items:center;gap:10px;justify-content:center;font-weight:700}
 @keyframes packPulse{40%{transform:scale(1.25)}}
 .achpop{text-align:center;margin:6px 0 12px}.achpop .medal{width:84px;height:84px;margin:0 auto 8px;border-radius:50%;display:grid;place-items:center;font-size:40px;background:radial-gradient(circle at 35% 30%,#ffe9a8,#c9932e 55%,#6a4a12);box-shadow:0 0 0 4px #3a2a10,0 0 24px #f0c06088}
 .achpop b{display:block;font-size:22px}.achpop p{margin:6px 0 0;color:var(--muted)}
@@ -249,13 +257,13 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .ptrack{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
 .plab{flex:0 0 auto;display:grid;grid-template-rows:18px 62px 62px;gap:4px;font-size:10px;color:var(--muted);writing-mode:vertical-rl;transform:rotate(180deg);text-align:center}
 .plab span{display:flex;align-items:center;justify-content:center}
-.pl{flex:0 0 58px;display:grid;grid-template-rows:18px 62px 62px;gap:4px;scroll-snap-align:center}
-.pl .n{text-align:center;font-size:12px;font-weight:800;color:var(--muted)}.pl.op .n{color:#f0c060}.pl.cur .n{color:#fff;background:#c9862a;border-radius:9px}
+.psl{flex:0 0 58px;display:grid;grid-template-rows:18px 62px 62px;gap:4px;scroll-snap-align:center}
+.psl .n{text-align:center;font-size:12px;font-weight:800;color:var(--muted)}.psl.op .n{color:#f0c060}.psl.cur .n{color:#fff;background:#c9862a;border-radius:9px}
 .pf,.pp{border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;line-height:1.05;position:relative;overflow:hidden}
 .pf{background:#0007;border:1px solid var(--line)}.pf.e{background:#0003;border-style:dashed}
 .pp{background:linear-gradient(160deg,#3a2a10,#1e160a);border:1px solid #b08a3a}
 .pf img,.pp img{width:36px;height:36px;object-fit:contain}.pf b,.pp b{font-size:13px}.pf small,.pp small{font-size:9px;color:var(--muted)}
-.pl:not(.op) .pf,.pl:not(.op) .pp{opacity:.55}
+.psl:not(.op) .pf,.psl:not(.op) .pp{opacity:.55}
 .pp.lk::after{content:"🔒";position:absolute;right:2px;top:1px;font-size:11px}
 .got::before{content:"✓";position:absolute;inset:0;display:grid;place-items:center;background:#000a;color:#7fd07f;font-size:24px;font-weight:800}
 .rdy{box-shadow:0 0 0 2px #f0c060,0 0 12px #f0c06088;animation:rdy 1.4s ease-in-out infinite}@keyframes rdy{50%{box-shadow:0 0 0 2px #f0c060,0 0 4px #f0c06044}}
@@ -374,8 +382,9 @@ button,[data-go],.li2,.lgame,.mode{touch-action:manipulation;-webkit-tap-highlig
 .pt::after{background:transparent}
 .tl .pt:nth-child(even)::before,.tr .pt:nth-child(even)::before,.bl .pt:nth-child(odd)::before,.br .pt:nth-child(odd)::before{background:var(--pb)}
 .bottom .pt::before,.bottom .pt::after{top:auto;bottom:0;clip-path:polygon(50% 0,100% 100%,0 100%)}
-.pt.tgt::after{background:#fff2b8aa;animation:tgt 1s ease-in-out infinite}
-@keyframes tgt{50%{background:#fff2b840}}
+.pt.tgt::after{background:#ffd84dd9;animation:tgt .9s ease-in-out infinite;filter:drop-shadow(0 0 6px #ffd84d)}
+.pt.tgt{z-index:2}
+@keyframes tgt{50%{background:#ffd84d66}}
 .pt .ck{position:absolute;left:4%;width:92%;margin:0;top:calc(1px + var(--j) * min(90cqw, (98cqh - 92cqw) / max(var(--n) - 1, 1)))}
 .bottom .pt .ck{top:auto;bottom:calc(1px + var(--j) * min(90cqw, (98cqh - 92cqw) / max(var(--n) - 1, 1)))}
 .ck{position:relative;z-index:1;aspect-ratio:1;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;
@@ -383,8 +392,9 @@ button,[data-go],.li2,.lgame,.mode{touch-action:manipulation;-webkit-tap-highlig
 .ck.w{background-color:#f6efe0;background-image:radial-gradient(circle at 50% 50%,#0000 0 52%,#0002 54% 58%,#0000 60%),radial-gradient(circle at 35% 30%,#fff,#efe6d2 55%,#cbbd9f);color:#3a2b20;box-shadow:0 0 0 1.5px #2a1a0e,0 2px 3px #000b}
 .ck.k{background-color:#1f1915;background-image:radial-gradient(circle at 50% 50%,#0000 0 52%,#fff1 54% 58%,#0000 60%),radial-gradient(circle at 35% 30%,#5a4d44,#1c1714 62%);color:var(--accent2);box-shadow:0 0 0 1.5px #f3e6c4,0 2px 3px #000b}
 .ck.skin{background-image:var(--img)!important;background-color:transparent}
-.ck.can{outline:2px solid #ffd76a;outline-offset:1px}
-.ck.sel{outline:3px solid #fff;outline-offset:1px;filter:brightness(1.15)}
+.ck.can{outline:3px solid #ffd76a;outline-offset:1px;animation:canp 1.1s ease-in-out infinite}
+@keyframes canp{50%{outline-color:#ffd76a55;box-shadow:0 0 10px 3px #ffd76a99}}
+.ck.sel{outline:3px solid #fff;outline-offset:2px;filter:brightness(1.2);box-shadow:0 0 14px 4px #fff9;z-index:3;animation:none}
 .ck.moved{animation:pop .35s ease}
 .petdom{position:absolute;opacity:0;z-index:6;transform-origin:50% 100%;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .petdom.pat{animation:pat .75s ease}
@@ -516,15 +526,21 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
 .tg{display:flex;gap:4px}.tg button{border:1px solid var(--line);background:#000a;border-radius:8px;padding:6px 9px;font-size:12px;color:var(--muted)}
 .tg button.on{background:var(--paper);color:var(--paper-ink);font-weight:700}
 /* телефон повернули боком: доска слева на всю высоту, всё остальное — колонкой справа */
+@media (max-width:400px){.logo{font-size:24px}.tright{gap:3px}}
 @media (orientation:landscape) and (max-height:560px){
   body[data-scr="game"] #app{max-width:980px}
   body[data-scr="game"] .top,body[data-scr="game"] nav{display:none}
   body[data-scr="game"] main{padding-bottom:0}
-  body[data-scr="game"] #s-game:not([hidden]){display:grid;grid-template-columns:auto minmax(210px,1fr);column-gap:10px;align-content:center;align-items:center;min-height:100vh;min-height:100dvh;padding-block:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-bottom,0px))}
+  body[data-scr="game"] #s-game:not([hidden]){display:grid;grid-template-columns:auto minmax(200px,1fr);column-gap:8px;align-content:center;align-items:center;min-height:100vh;min-height:100dvh;padding-block:max(4px,env(safe-area-inset-top,0px)) max(4px,env(safe-area-inset-bottom,0px))}
   body[data-scr="game"] #s-game>*{grid-column:2;min-width:0}
   body[data-scr="game"] #s-game>.gbg{grid-column:1/-1}
-  body[data-scr="game"] #s-game>.table{grid-column:1;grid-row:1/span 12;padding:4px 2px;width:min(57vw,calc((100vh - 16px) * 1.17));width:min(57vw,calc((100dvh - 16px) * 1.17))}
+  body[data-scr="game"] #s-game>.table{grid-column:1;grid-row:1/span 12;padding:4px 2px;width:min(calc(100vw - 250px),calc((100vh - 10px) * 1.6));width:min(calc(100vw - 250px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px)),calc((100dvh - 10px) * 1.6))}
+  body[data-scr="game"] .board{aspect-ratio:1.45;border-width:7px}
   body[data-scr="game"] .gtop{padding-block:2px}
+  body[data-scr="game"] #s-game{overflow:hidden}
+  body[data-scr="game"] .gp .av{width:36px;height:36px}body[data-scr="game"] .gp{gap:6px}body[data-scr="game"] .gp b{font-size:13px}
+  body[data-scr="game"] .gmeta{font-size:10px;line-height:1.25;white-space:nowrap;flex:none}
+  body[data-scr="game"] .gtop{gap:4px}
   body[data-scr="game"] .controls{min-height:52px;margin-top:2px}
   body[data-scr="game"] .react{margin-top:4px}
   body[data-scr="game"] .gbottom{margin-top:6px}
@@ -550,6 +566,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
     <div class="tright">
       <button class="icb" id="musicBtn" title="Музыка" style="background-image:url(a/knopki/13.webp)"></button>
       <button class="icb" id="setBtn" title="Настройки" style="background-image:url(a/knopki/12.webp)"></button>
+      <button class="goldb" id="goldBtn" title="Рыжьё" hidden><b id="goldN">0</b></button>
       <button class="pack" id="packBtn" title="Сигареты"><b id="cigN">0</b></button>
     </div>
   </div>
@@ -1058,13 +1075,19 @@ STICKERS.forEach(([n,p,l],i)=>add({id:'st_'+i, cat:'bazar', sub:'stikery', slot:
  ['set1','Набор «Первоход»',200,'04','спортивный костюм, восьмиклинка, янтарные чётки, круглые очки, кожаный браслет и 500 сигарет','nabory'],
  ['set2','Набор «Блатной»',400,'05','малиновый пиджак, золотой крест, золотые часы, красные лаковые нарды, золотые авиаторы, золотая цепь на руку и 1000 сигарет','nabory'],
  ['set3','Набор «Хата под ключ»',500,'06','ремонт «Ковёр и кровать», ковёр на стену, кот, колбаса на стол, кружка с куполами и хрустальная пепельница','nabory']]
-  .forEach(([sid,n,st,k,gives,sub])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub, slot:'stars', name:n, stars:st, price:0, img:`zvezdy/${k}.webp`, gives}));
+  .forEach(([sid,n,st,k,gives,sub])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub, slot:'stars', name:n, gold:st, price:0, img:`zvezdy/${k}.webp`, gives}));
+// чифир — буст на одну онлайн-партию: +25% сигарет за победу
+[['chif1','Кружка чифира',10,'03','1 кружка: +25% сигарет за победу в следующей онлайн-партии'],['chif5','Пять кружек чифира',40,'04','5 кружек: каждая даёт +25% сигарет за победу на одну онлайн-партию']]
+  .forEach(([sid,n,g,k,gives])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'chifir', slot:'stars', name:n, gold:g, price:0, img:`kruzhki_pepelnitsy/${k}.webp`, gives}));
+// рыжьё — вторая валюта, покупается только за звёзды Телеграма
+[['gd50','Горсть рыжья',50,50,'01'],['gd100','Кисет рыжья',100,110,'02'],['gd250','Мешочек рыжья',250,290,'03'],['gd500','Котелок рыжья',500,600,'04'],['gd1000','Сундук рыжья',1000,1250,'05']]
+  .forEach(([sid,n,st,g,k])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'ryzhe', slot:'gold', name:n, stars:st, give:g, price:0, img:`ryzhe/${k}.webp`, gives:`${g} рыжья`+(g>st?` (${st} + ${g-st} в подарок)`:'')}));
 const ACH = {games100:'Сыграть 100 партий', beads5:'Собрать 5 видов чёток', streak10:'Выиграть 10 партий подряд', underdog:'Обыграть того, у кого хата на 2 уровня выше', mars5:'Сделать 5 марсов', stake500:'Выиграть партию со ставкой 500'};
 const item = id => ITEMS.find(x=>x.id===id);
 const CATS = [{id:'shmot',name:'Шмот',subs:{odezhda:'Одежда',shapki:'Шапки',ochki:'Очки',vruke:'В руке'}},{id:'nakolki',name:'Наколки',subs:PLACES},
   {id:'ryzhyo',name:'Рыжьё и чётки',subs:{sheya:'На шею',chasy:'Часы',braslety:'Браслеты',chetki:'Чётки'}},
   {id:'nardy',name:'Нарды',subs:{nardy:'Доски',shashki:'Шашки',kubiki:'Зарики'}},{id:'stol',name:'На стол',subs:{kruzhki:'Кружки',pepelnitsy:'Пепельницы',kurevo:'Курево',eda:'Еда'}},
-  {id:'hata',name:'Хата',subs:{hata:'Ремонт',stena:'На стену',pitomcy:'Питомцы'}},{id:'zvezdy',name:'⭐ За звёзды',subs:{pachki:'Сигареты',nabory:'Наборы'}},{id:'bazar',name:'Базар',subs:{frazy:'Фразы',stikery:'Стикеры'}}];
+  {id:'hata',name:'Хата',subs:{hata:'Ремонт',stena:'На стену',pitomcy:'Питомцы'}},{id:'zvezdy',name:'🪙 Рыжьё',subs:{ryzhe:'Рыжьё за ⭐',pachki:'Сигареты',nabory:'Наборы',chifir:'Чифир'}},{id:'bazar',name:'Базар',subs:{frazy:'Фразы',stikery:'Стикеры'}}];
 
 // ---------- Точки на теле (сцена 880×1168) ----------
 const SLOT = {chest:[{x:440,y:458,w:225,mh:230}], kl:[{x:362,y:340,w:50,r:-8},{x:522,y:340,w:50,r:8}], pog:[{x:262,y:300,w:58,r:-28},{x:604,y:300,w:58,r:28}],
@@ -1165,7 +1188,7 @@ async function composeHero(eq, opt){
 }
 const heroCache = new Map(), headCache = new Map();
 function heroKey(eq,opt){ return JSON.stringify([eq,opt||{}]); }
-async function heroCanvas(eq,opt){ const k=heroKey(eq,opt); if(!heroCache.has(k)){ if(heroCache.size>40) heroCache.clear(); heroCache.set(k,composeHero(eq,opt)); } return heroCache.get(k); }
+async function heroCanvas(eq,opt){ const k=heroKey(eq,opt); if(!heroCache.has(k)){ if(heroCache.size>8) heroCache.clear(); heroCache.set(k,composeHero(eq,opt)); } return heroCache.get(k); }
 async function headURL(eq){ const k=heroKey(eq); if(headCache.has(k)) return headCache.get(k); const c=await heroCanvas(eq); const h=document.createElement('canvas'); h.width=160; h.height=174; h.getContext('2d').drawImage(c,382,118,204,222,0,0,160,174); const u=h.toDataURL('image/webp',.85); headCache.set(k,u); return u; }
 async function heroOnBg(eq, lvl, w){ const c=document.createElement('canvas'); c.width=w||W; c.height=Math.round((w||W)*H/W); const x=c.getContext('2d'); x.drawImage(await img(`hata/uroven_${lvl}.webp`),0,0,c.width,c.height); { x.save(); x.scale(c.width/W,c.height/H); await drawWall(x,eq,lvl); x.restore(); } x.drawImage(await heroCanvas(Object.assign({},eq,{level:'l_'+lvl})),0,0,c.width,c.height); return c; }
 
@@ -1229,16 +1252,21 @@ function isNight(){ const t=P.set.tod; if(t==='day') return false; if(t==='night
 const pct = (v,d) => (v/d*100)+'%';
 async function buildScene(box, eq, opts){
   opts=opts||{}; const L = item(eq.level).lvl;
-  box.innerHTML='';
+  // хата не изменилась — не перерисовываем (на телефоне перерисовка давала лаг фона при переключении вкладок)
+  const skey=JSON.stringify([eq,!!opts.moments,isNight(),L]);
+  if(opts.moments && box._sk===skey && box.firstChild){ box.querySelectorAll('.nameplate').forEach(n=>n.remove()); scheduleMoments(box); return box; }
+  // всё тяжёлое готовим заранее, а старую картинку убираем только в последний момент — без пустого экрана
   const bg=document.createElement('canvas'); bg.width=W; bg.height=H; bg.getContext('2d').drawImage(await img(`hata/uroven_${L}.webp`),0,0); await drawWall(bg.getContext('2d'),eq,L);
   const hc = await heroCanvas(eq,{});
+  const pb0=opts.moments?petBox(eq):null, petIm=pb0?await img(pb0.it.img):null;
+  box.innerHTML=''; box._sk=skey;
   const mk=(cls)=>{ const c=document.createElement('canvas'); c.width=W; c.height=H; c.className=cls; c.getContext('2d').drawImage(hc,0,0); return c; };
   box.append(bg);
   const fxBack=document.createElement('div'); fxBack.className='lay fx'; box.append(fxBack);
   box.append(mk('low'), mk('up'));
   const light=document.createElement('div'); light.className='lay light'; const glow=document.createElement('div'); glow.className='lay glow';
   const fx=document.createElement('div'); fx.className='lay fx'; box.append(light,glow,fx);
-  { const pb=petBox(eq); if(pb && opts.moments){ const im=await img(pb.it.img); if(im){ const h=pb.w*im.height/im.width; const el=document.createElement('img'); el.src=im.src; el.className='petdom'; el.alt=pb.it.name;
+  { const pb=pb0; if(pb && opts.moments){ const im=petIm; if(im){ const h=pb.w*im.height/im.width; const el=document.createElement('img'); el.src=im.src; el.className='petdom'; el.alt=pb.it.name;
       Object.assign(el.style,{left:pct(PETPOS.cx-pb.w/2,W),top:pct(PETPOS.bot-h,H),width:pct(pb.w,W)}); el.onclick=e=>{ e.stopPropagation(); petPet(el,box,pb); }; box.append(el); } } }
   const night=isNight(), [lx,ly]=LAMPS[L], wn=WINDOWS[L];
   light.style.background = night ? `radial-gradient(circle at ${pct(lx,W)} ${pct(ly,H)},#fff 0,#c9b48a 18%,#2b3350 60%,#141a30 100%)` : `linear-gradient(#0000,#0000)`;
@@ -1332,7 +1360,7 @@ async function renderHome(){
 // личное дело: своё или чужое (из рейтинга и корешей)
 const NOTES=['Характер спокойный, на зарики не обижается.','В игре дерзкий, любит ставить на всё.','Марсы ставит без жалости.','Держит слово. Долги отдаёт сигаретами.','Говорит мало, ходит быстро.','С головы снимает аккуратно, по понятиям.'];
 function personOf(x){ if(!x||x.me) return {me:true,name:P.name,num:P.num,rating:P.rating,eq:P.eq,lvl:lvl(),games:P.games,wins:P.wins+P.botWins,mars:P.mars||0,streak:P.streak||0,fav:(P.longGames||0)>=(P.shortGames||0)?'длинные нарды':'короткие нарды',days:Math.max(1,Math.round((Date.now()-(P.since||Date.now()))/864e5))};
-  if(x.net){ const g=(x.wins|0)+(x.losses|0); return {name:x.name,num:String(x.num||'0000'),rating:x.rating,eq:x.eq,lvl:x.lvl||1,games:g,wins:x.wins|0,mars:x.mars|0,streak:x.best|0,fav:(x.longG|0)>=(x.shortG|0)?'длинные нарды':'короткие нарды',days:Math.max(1,Math.round((Date.now()-(x.created||Date.now()))/864e5)),online:x.online}; }
+  if(x.net){ const g=(x.wins|0)+(x.losses|0); return {smotr:!!x.smotr,name:x.name,num:String(x.num||'0000'),rating:x.rating,eq:x.eq,lvl:x.lvl||1,games:g,wins:x.wins|0,mars:x.mars|0,streak:x.best|0,fav:(x.longG|0)>=(x.shortG|0)?'длинные нарды':'короткие нарды',days:Math.max(1,Math.round((Date.now()-(x.created||Date.now()))/864e5)),online:x.online}; }
   const i=Math.max(0,EX.indexOf(x)); if(x.bot) return {bot:true,name:x.name,num:'0001',rating:x.rating,eq:x.eq,lvl:x.lvl||2,games:9999,wins:7777,mars:999,streak:42,fav:variant==='long'?'длинные нарды':'короткие нарды',days:3650,note:'Тренировочный. Сидит пожизненно, учит первоходов.'};
   return {name:x.name,num:String(1000+((x.name.length*397+x.rating*7)%8999)).padStart(4,'0'),rating:x.rating,eq:x.eq,lvl:x.lvl||1,games:x.wins*2+17,wins:x.wins,mars:Math.round(x.wins/9),streak:3+i%6,fav:i%3?'длинные нарды':'короткие нарды',days:40+x.rating%700,online:x.online,note:NOTES[i%NOTES.length]}; }
 async function showCase(x, inGame){
@@ -1342,7 +1370,7 @@ async function showCase(x, inGame){
   showModal(`<div class="case"><h4>Личное дело</h4><div class="num">№ ${p.num}-${String(p.rating).padStart(4,'0')}</div>
     <img class="stamp" src="${A}nashivki/0${ri+1}.webp" alt="">
     <div class="shots"><div><img id="mugF" alt=""><span>АНФАС</span></div><div><img id="mugFull" alt=""><span>В РОСТ</span></div></div>
-    <dl><dt>Погоняло</dt><dd>${p.name}</dd><dt>Звание</dt><dd>${rank} · ${p.rating}</dd><dt>Статья</dt><dd>${p.fav}</dd><dt>Партий</dt><dd>${p.games} · побед ${p.wins}</dd>
+    <dl><dt>Погоняло</dt><dd>${p.name}${p.smotr?' 👑':''}</dd>${p.smotr?'<dt>Масть</dt><dd>Смотрящий недели</dd>':''}<dt>Звание</dt><dd>${rank} · ${p.rating}</dd><dt>Статья</dt><dd>${p.fav}</dd><dt>Партий</dt><dd>${p.games} · побед ${p.wins}</dd>
     <dt>Марсов</dt><dd>${p.mars}</dd><dt>Лучшая серия</dt><dd>${p.streak} ${p.streak%10===1&&p.streak%100!==11?'победа':'побед'} подряд</dd><dt>Хата</dt><dd>${hata.name}</dd><dt>Нарды</dt><dd>${item(p.eq.board).name}</dd>
     <dt>Срок</dt><dd>${p.days} ${p.days%10===1&&p.days%100!==11?'день':(p.days%10>=2&&p.days%10<=4&&(p.days%100<10||p.days%100>=20))?'дня':'дней'} в игре</dd>
     <dt>Особые приметы</dt><dd>${tats.length?tats.join(', '):'наколок нет'}</dd>${p.note?`<dt>Характеристика</dt><dd>${p.note}</dd>`:''}</dl>
@@ -1358,7 +1386,7 @@ let shopCat='shmot', shopSub='odezhda', shopSel=null;
 function equippedId(it){ if(it.slot==='tat') return P.eq.tats[it.place]; if(it.slot==='phrase'||it.slot==='sticker') return null; return P.eq[it.slot]; }
 function tryEq(it){ const e=JSON.parse(JSON.stringify(P.eq)); if(it.slot==='tat') e.tats[it.place]=it.id; else if(it.slot==='level'||it.slot==='phrase'||it.slot==='sticker'){} else e[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place)) e.outfit='o_00_golyi'; if(it.slot==='level') e.level=it.id; return e; }
-function priceTag(it){ if(it.stars) return `<span class="tag">⭐ ${it.stars}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
+function priceTag(it){ if(it.slot==='gold') return `<span class="tag">⭐ ${it.stars}</span>`; if(it.slot==='stars') return `<span class="tag">🪙 ${it.gold}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
 async function thumb(it){
   if(!it.img){ return `<span style="font-size:12px;color:#5a503d">—</span>`; }
   if(it.slot==='level') return `<img src="${A+it.img}" alt="">`;
@@ -1385,9 +1413,12 @@ async function renderShop(){
 async function renderPreview(opt){
   const it=item(shopSel), own=owns(it.id), lk=locked(it), on=equippedId(it)===it.id;
   let btn;
-  if (it.slot==='stars'){
-    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big"><img src="${A+it.img}" alt=""></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Оплата звёздами Телеграма, всё приходит в игру сразу.</p><button class="btn hot" id="starBtn">Купить за ⭐ ${it.stars}</button></div>`;
+  if (it.slot==='gold'){
+    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big"><img src="${A+it.img}" alt=""></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Рыжьё — вторая валюта: на него берут наборы, пачки сигарет, пропуск, прокруты и чифир. Оплата звёздами Телеграма.</p><button class="btn hot" id="starBtn">Купить за ⭐ ${it.stars}</button></div>`;
     $('starBtn').onclick=()=>buyStars(it); return; }
+  if (it.slot==='stars'){
+    $('shopPreview').innerHTML = `<div class="pv" id="pvBox"><div class="big"><img src="${A+it.img}" alt=""></div></div><div><h3>${it.name}</h3><p>Внутри: ${it.gives}. Всё приходит в игру сразу.</p><button class="btn hot" id="starBtn">Взять за 🪙 ${it.gold}</button></div>`;
+    $('starBtn').onclick=()=>buyGold(it); return; }
   if (it.slot==='phrase' || it.slot==='sticker'){
     btn = own ? `<button class="btn sec" disabled>${it.slot==='phrase'?'Фраза твоя':'Стикер твой'}</button>` : lk ? `<button class="btn ghost" disabled>Закрыто: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Купить за ${it.price}</button>`;
   } else if (!own) btn = lk ? `<button class="btn ghost" disabled>Откроется: ${lk}</button>` : `<button class="btn hot" id="buyBtn" ${P.cigs<it.price?'disabled':''}>Взять за ${it.price}</button>${P.cigs<it.price?'<p style="margin:6px 0 0;font-size:12px;color:var(--danger)">Не хватает сигарет</p>':''}`;
@@ -1410,6 +1441,7 @@ async function renderPreview(opt){
   const b1=$('buyBtn'); if(b1) b1.onclick=()=>buy(it);
   const b2=$('eqBtn'); if(b2) b2.onclick=()=>{ if(it.slot==='tat'&&on) delete P.eq.tats[it.place]; else applyEq(it); saveP(); SFX.click(); if(it.slot==='tat'&&!on) inkAnim(it); else renderShop(); };
 }
+function buyGold(it){ SFX.click(); if(typeof NET!=='undefined'&&NET.on) nsend({t:'gbuy',id:it.sid}); else malyava('Рыжьё работает в игре через Телеграм'); }
 function buyStars(it){ SFX.click(); if(typeof NET!=='undefined'&&NET.on){ nsend({t:'stars',id:it.sid}); malyava('Открываю оплату…'); } else malyava('Покупка за звёзды работает в игре через Телеграм'); }
 function applyEq(it){ if(it.slot==='tat') P.eq.tats[it.place]=it.id; else if(it.slot==='level') P.eq.level=it.id; else if(it.slot!=='phrase'&&it.slot!=='sticker') P.eq[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place) && item(P.eq.outfit).file!=='00_golyi'){} }
@@ -1448,7 +1480,7 @@ function renderPlay(){
   if (playMode==='friend') h=`<div class="card invite"><b>Вызов корешу · ${vName}</b><span class="sub" style="margin:0">Ставка: каждый ставит столько же, победитель забирает всё.</span>${stakesHTML()}
       <span class="sub" style="margin:0">Ссылка-приглашение <span class="demo">пример</span></span><div class="link">https://t.me/nardy_kondrat_bot?start=K7F3QX</div>
       <div class="row"><button class="btn hot" id="sendTg">Отправить в Телеграм</button><button class="btn sec" id="pickFriend">Выбрать кореша</button></div>
-      <button class="btn ghost" id="fakeAccept">Посмотреть, как будет (кореш принял)</button></div>`;
+      <button class="btn ghost" id="fakeAccept">Посмотреть, как будет (кореш принял(а))</button></div>`;
   else if (playMode==='quick') h=`<div class="card invite"><b>Поиск соперника · ${vName}</b>${stakesHTML()}<button class="btn hot" id="startSearch">Искать</button></div>`;
   $('playPanel').innerHTML=h; if($('stakes')) bindStakes();
   if($('sendTg')) $('sendTg').onclick=()=>malyava('В Телеграме откроется список чатов');
@@ -1473,10 +1505,10 @@ async function renderTop(){
   const all=((window.NET&&NET.on)?(NET.top||[]):EX).map(x=>({...x})).concat([{name:P.name,rating:P.rating,wins:P.wins,eq:P.eq,me:true}]).sort((a,b)=>b.rating-a.rating);
   const t3=all.slice(0,3);
   const ord=[1,0,2].filter(i=>t3[i]);
-  $('top3').innerHTML=ord.map(i=>`<div class="frame"><span class="pl">${i+1}</span><img id="hf${i}" alt=""><b>${t3[i].name}</b><span>${t3[i].rating}</span></div>`).join('');
+  $('top3').innerHTML=ord.map(i=>`<div class="frame"><span class="pl">${i+1}</span><img id="hf${i}" alt=""><b>${t3[i].smotr?'👑 ':''}${t3[i].name}</b><span>${t3[i].rating}</span></div>`).join('');
   $('top3').querySelectorAll('.frame').forEach((el,k)=>{ const x=t3[ord[k]]; el.style.cursor='pointer'; el.onclick=()=>showCase(x.me?null:x); });
   t3.forEach(async(x,i)=>{ const c=await heroOnBg(x.eq, x.lvl||lvl(), 360); const h=document.createElement('canvas'); h.width=300; h.height=340; h.getContext('2d').drawImage(c,90,15,180,204,0,0,300,340); if($('hf'+i)) $('hf'+i).src=h.toDataURL('image/webp',.85); });
-  $('topList').innerHTML=all.slice(3).map((x,i)=>`<div class="li${x.me?' me':''}"><span class="n">${i+4}</span><span class="av"><img data-h="${i+3}" alt=""></span><span><b>${x.name}${x.me?' (ты)':''}</b><br><span style="font-size:11px">${rankOf(x.rating)} · ${x.wins} побед</span></span><span class="r">${x.rating}</span></div>`).join('');
+  $('topList').innerHTML=all.slice(3).map((x,i)=>`<div class="li${x.me?' me':''}"><span class="n">${i+4}</span><span class="av"><img data-h="${i+3}" alt=""></span><span><b>${x.smotr?'👑 ':''}${x.name}${x.me?' (ты)':''}</b><br><span style="font-size:11px">${rankOf(x.rating)} · ${x.wins} побед</span></span><span class="r">${x.rating}</span></div>`).join('');
   all.slice(3).forEach(async(x,i)=>{ const el=$('topList').querySelector(`[data-h="${i+3}"]`); if(el) el.src=await headURL(x.eq); });
   $('topList').querySelectorAll('.li').forEach((el,i)=>{ const x=all[i+3]; el.style.cursor='pointer'; el.onclick=()=>showCase(x.me?null:(EX.find(e=>e.name===x.name)||x)); });
   const cur=rankOf(P.rating), ci=rankIdx(cur);
@@ -1528,7 +1560,7 @@ async function startGame(o){
   setTimeout(()=>{ G.setup=false; SFX.dice();
     if(o.net){ G.myCol='w'; G.phase='opening2'; setG(a1>a2?'Твой зарик больше: ходишь первым':'Соперник ходит первым'); renderGame(); if(o.ready) setTimeout(o.ready,900); return; }
     if(a1>a2){ G.phase='pickColor'; setG('Твой зарик больше: выбирай цвет, ходишь первым'); renderGame(); }
-    else { G.myCol=Math.random()<.5?'w':'k'; G.phase='opening2'; setG(`Соперник выиграл розыгрыш, взял ${G.myCol==='w'?'чёрные':'белые'} и ходит первым`); renderGame(); setTimeout(()=>startTurn(1),1800); } },1500);
+    else { G.myCol=Math.random()<.5?'w':'k'; G.phase='opening2'; setG(`Соперник выиграл(а) розыгрыш, взял ${G.myCol==='w'?'чёрные':'белые'} и ходит первым`); renderGame(); setTimeout(()=>startTurn(1),1800); } },1500);
 }
 function setG(t){ $('gstatus').textContent=t; }
 function react(p, r){
@@ -1589,13 +1621,13 @@ async function gameOver(w, resigned, mOv){
   const title=w===0?(mult===3?'Кокс!':mult===2?'Марс!':'Победа!'):resigned?'Сдался':(mult>1?'Тебе марс…':'Поражение');
   const winnerEq = w===0?P.eq:G.opp.eq, winnerName = w===0?P.name:G.opp.name;
   window.lastEnd=async()=>{
-    showModal(`<div class="vict"><h3>${title}</h3><div class="hero" id="vHero"></div><p style="margin:6px 0 2px;color:var(--muted)">За столом победил ${winnerName}</p>
+    showModal(`<div class="vict"><h3>${title}</h3><div class="hero" id="vHero"></div><p style="margin:6px 0 2px;color:var(--muted)">За столом победил(а) ${winnerName}</p>
       <p style="font-size:18px;font-weight:700;margin:4px 0 12px">${lines.join(' · ')||'Без наград'}</p>
       <div class="row"><button class="btn sec" id="toHome">В хату</button><button class="btn hot" id="again">Реванш</button></div>
       <div class="row" style="margin-top:8px">${w===0?'<button class="btn ghost" id="photoBtn">Фото на память</button>':''}<button class="btn ghost" id="shareBtn">Поделиться партейкой</button></div></div>`);
     const c=await heroOnBg(winnerEq, w===0?lvl():(G.opp.lvl||2), 440); $('vHero').append(c);
     if(w===0){ SFX.coin(); cigRain(); }
-    $('toHome').onclick=()=>{ hideModal(); go('home'); }; $('again').onclick=()=>{ hideModal(); if(G.net){ playMode='quick'; return go('play'); } startGame(G.opp.bot?{bot:true}:{opp:G.opp,stake:G.stake,online:G.online}); };
+    $('toHome').onclick=()=>{ hideModal(); go('home'); }; $('again').onclick=()=>{ if(G.net&&window.netRematch) return netRematch(); hideModal(); if(G.net){ playMode='quick'; return go('play'); } startGame(G.opp.bot?{bot:true}:{opp:G.opp,stake:G.stake,online:G.online}); };
     if($('photoBtn')) $('photoBtn').onclick=()=>photo(title, lines);
     $('shareBtn').onclick=()=>shareGame(title, lines, w);
   };
@@ -1604,7 +1636,7 @@ async function gameOver(w, resigned, mOv){
 function cigRain(){ const r=document.createElement('div'); r.className='cigrain'; for(let i=0;i<30;i++){ const c=document.createElement('img'); c.src=A+'sigarety/02.webp'; c.style.left=Math.random()*100+'%';
   c.style.animationDuration=(1.6+Math.random()*1.6)+'s'; c.style.animationDelay=(Math.random()*1.2)+'s'; c.style.setProperty('--r',(Math.random()*720-360)+'deg'); r.append(c); } document.body.append(r); setTimeout(()=>r.remove(),4500); }
 function shareGame(title, lines, w){
-  const opp=G&&G.opp?G.opp.name:'соперник', txt=`«Нарды от Кондрата»: ${w===0?'выиграл':'проиграл'} партейку у ${opp}${lines.length?' ('+lines.join(', ')+')':''}. Садись за нарды, проверим кто кого!`;
+  const opp=G&&G.opp?G.opp.name:'соперник', txt=`«Нарды от Кондрата»: ${w===0?'выиграл(а)':'проиграл(а)'} партейку у ${opp}${lines.length?' ('+lines.join(', ')+')':''}. Садись за нарды, проверим кто кого!`;
   // в Телеграме здесь будет «Переслать в чат»; в прототипе копируем текст
   const done=()=>malyava('Текст партейки скопирован. В Телеграме тут будет «Переслать в чат».');
   try{ navigator.clipboard.writeText(txt).then(done,()=>malyava('В Телеграме тут будет «Переслать в чат».')); }catch(e){ malyava('В Телеграме тут будет «Переслать в чат».'); } }
@@ -1617,7 +1649,7 @@ async function photo(title, lines){
 }
 function rankUp(name){ const i=rankIdx(name); SFX.buzz();
   showModal(`<h3>Новое звание</h3><div class="patchsew"><img src="${A}nashivki/0${i+1}.webp" alt=""><svg viewBox="0 0 100 100" preserveAspectRatio="none"><rect x="4" y="4" width="92" height="92" rx="8"/></svg><span class="needle"></span></div>
-    <p style="text-align:center;font-size:20px;font-weight:700;margin:4px 0 12px">${name}</p><button class="btn hot" style="width:100%" data-close>Носить с честью</button>`); }
+    <p style="text-align:center;font-size:20px;font-weight:700;margin:4px 0 4px">${name}</p><p style="text-align:center;margin:0 0 12px;color:var(--muted)">Братва заметила: теперь ты ${name}. Носи с гордостью.</p><button class="btn hot" style="width:100%" data-close>Носить с честью</button>`); }
 
 const TL=[11,10,9,8,7,6], TR=[5,4,3,2,1,0], BL=[12,13,14,15,16,17], BR=[18,19,20,21,22,23];
 // куда может дойти выбранная шашка: на один кубик или на сумму кубиков (одной шашкой)
@@ -1785,7 +1817,7 @@ function cleanEq(eq) {
     if (eq.tats && typeof eq.tats === 'object') for (const k in eq.tats) if (PLACES[k] && item(eq.tats[k])) e.tats[k] = eq.tats[k]; }
   e.ring = 'r_0'; if (eq && typeof eq._av === 'string' && /^\/ava\/[\w-]+\.jpg(\?v=\w+)?$/.test(eq._av)) e._av = eq._av; return e;
 }
-function netPerson(p) { return { title: p.title || '', brig: p.brig || null, net: true, losses: p.losses | 0, mars: p.mars | 0, best: p.best | 0, longG: p.longG | 0, shortG: p.shortG | 0, created: p.created, num: p.num, id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
+function netPerson(p) { return { smotr: !!p.smotr, title: p.title || '', brig: p.brig || null, net: true, losses: p.losses | 0, mars: p.mars | 0, best: p.best | 0, longG: p.longG | 0, shortG: p.shortG | 0, created: p.created, num: p.num, id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
 // партия на сервере хранится «как есть»; если я второй игрок — разворачиваю доску, чтобы я всегда был снизу
 function flipState(s, me) {
   const n = E.clone(s); if (me !== 1) return n;
@@ -1845,7 +1877,7 @@ async function netMsg(m) {
     case 'err': if (G && G.net) G.pending = null; if (m.fatal) showModal(`<h3>Не получилось войти</h3><p style="text-align:center">${m.text}</p>`); else malyava(m.text); return;
     case 'toast': return malyava(m.text);
     case 'pong': NET.lastPong = Date.now(); return;
-    case 'nogame': if (G && G.net && !G.over) { G.over = true; clearInterval(G.timer); malyava('Партия прервалась: сервер обновлялся.' + (m.refund ? ` Ставка ${m.refund} возвращена.` : '')); hideModal(); go('menu'); } else if (m.refund) malyava(`Прошлая партия прервалась, ставка ${m.refund} возвращена`); return;
+    case 'nogame': if (G && G.net && !G.over) { G.over = true; clearInterval(G.timer); malyava(m.refund ? `Связь оборвалась, но мы не крысы: ${m.refund} сигарет вернули.` : 'Связь оборвалась: сервер обновлялся. Партия без ставки, ничего не потерял(а).'); hideModal(); go('menu'); } else if (m.refund) malyava(`Связь оборвалась, но мы не крысы: ${m.refund} сигарет вернули.`); return;
     case 'invite': if (G && G.net && !G.over) return; showModal(`<h3>Тебя зовут</h3><p style="text-align:center"><b>${String(m.from).replace(/[<>&]/g,'')}</b> зовёт тебя в ${m.variant === 'short' ? 'короткие' : 'длинные'} нарды. ${m.stake ? 'Ставка: ' + m.stake + ' сигарет.' : 'Без ставки.'}</p><button class="btn hot" style="width:100%" id="invYes">Сесть за доску</button><button class="btn ghost" style="width:100%;margin-top:8px" id="invNo">Не сейчас</button>`); $('invYes').onclick = () => { hideModal(); nsend({ t: 'join', code: m.code }); }; $('invNo').onclick = hideModal; try { SFX.coin(); } catch (e) { } return;
     case 'kicked': NET.kicked = true; showModal(`<h3>Игра открыта в другом окне</h3><p style="text-align:center">Нарды можно держать открытыми только в одном месте, иначе ходы теряются.</p><button class="btn hot" style="width:100%" id="kickBack">Играть здесь</button>`); $('kickBack').onclick = () => { NET.kicked = false; hideModal(); netConnect(); }; return;
     case 'searching': NET.searching = true; NET.room = null; if (screen === 'play') renderPlay(); return;
@@ -1856,7 +1888,7 @@ async function netMsg(m) {
     case 'game': return netGame(m);
     case 'peek': return netPeek(m);
     case 'invoice': try { TGA.openInvoice(m.link, st => { if (st === 'failed') malyava('Оплата не прошла'); }); } catch (e) { malyava('Обнови Телеграм, чтобы платить звёздами'); } return;
-    case 'paid': malyava(`Оплата прошла: ${m.title}. Всё уже у тебя!`); try { SFX.coin(); cigRain(); } catch (e) { } if (screen === 'shop') renderShop(); return;
+    case 'paid': malyava(m.gold ? `Готово: ${m.title}. Всё уже у тебя!` : `Оплата прошла: ${m.title}. Всё уже у тебя!`); try { SFX.coin(); if (/сигарет|Набор/.test(m.title)) cigRain(); } catch (e) { } if (screen === 'shop') renderShop(); return;
     case 'prepared': try { TGA.shareMessage(m.id, ok => { if (ok) { malyava('Фото отправлено'); endBack(); } }); } catch (e) { malyava('Обнови Телеграм, чтобы пересылать фото'); } return;
   }
 }
@@ -1899,9 +1931,9 @@ async function netGame(m) {
     }
     case 'over': {
       G.s = L(m.s); const w = m.over.winner === m.me ? 0 : 1;
-      if (m.over.reason === 'left') malyava(w === 0 ? 'Соперник ушёл со связи — победа твоя' : 'Ты долго был без связи — партия проиграна');
-      if (m.over.reason === 'timeout') malyava(w === 0 ? 'Соперник трижды пропустил ход' : 'Три пропуска хода подряд — поражение');
-      if (m.over.reason === 'resign' && w === 0) malyava('Соперник сдался');
+      if (m.over.reason === 'left') malyava(w === 0 ? 'Соперник ушёл(ла) со связи — победа твоя' : 'Ты долго был без связи — партия проиграна');
+      if (m.over.reason === 'timeout') malyava(w === 0 ? 'Соперник трижды пропустил(а) ход' : 'Три пропуска хода подряд — поражение');
+      if (m.over.reason === 'resign' && w === 0) malyava('Соперник сдался(лась)');
       G._srv = true; await gameOver(w, m.over.reason === 'resign' && w === 1, m.over.mult);
       clearInterval(G.timer); nsend({ t: 'prof', prof: profOf() });
       return;
@@ -1974,7 +2006,7 @@ function tgShare(text, url) { const u = `https://t.me/share/url?url=${encodeURIC
 shareGame = function (title, lines, w) {
   if (!NET.on) return _shareGame(title, lines, w);
   const opp = G && G.opp ? G.opp.name : 'соперник';
-  tgShare(`🎲 «Нарды от Кондрата»: ${w === 0 ? 'выиграл' : 'проиграл'} партейку у ${opp}${lines.length ? ' (' + lines.join(', ') + ')' : ''}. Садись за нарды, проверим кто кого!`);
+  tgShare(w === 0 ? winText(opp) : `🎲 «Нарды от Кондрата»: сегодня зарики были на стороне ${opp}. Садись за нарды, проверим, кто кого!`);
 };
 photo = async function (title, lines) {
   if (!NET.on) return _photo(title, lines);
@@ -1983,7 +2015,7 @@ photo = async function (title, lines) {
   showModal(`<h3>Фото на память</h3><div class="photo" id="ph"><p>${P.name} · ${new Date().toLocaleDateString('ru-RU')}</p></div>
     <button class="btn hot" style="width:100%" id="shareBtn">Отправить в Телеграм</button><button class="btn ghost" style="width:100%;margin-top:8px" id="phClose">Закрыть</button>`);
   $('phClose').onclick = endBack; $('ph').prepend(c);
-  $('shareBtn').onclick = () => { malyava('Готовлю фото…'); nsend({ t: 'photo', data: c.toDataURL('image/jpeg', .82), caption: `${P.name}: ${title} ${lines.join(' · ')}\n«Нарды от Кондрата»` }); };
+  $('shareBtn').onclick = () => { malyava('Готовлю фото…'); nsend({ t: 'photo', data: c.toDataURL('image/jpeg', .82), caption: (title && /обед|арс/i.test(title) && G && G.opp ? winText(G.opp.name) + '\n\n' : '') + `${P.name}: ${title} ${lines.join(' · ')}\n«Нарды от Кондрата»` }); };
 };
 window.netInvite = x => { playMode = 'friend'; nsend({ t: 'create', variant, stake: 0, friend: x.id, prof: profOf() }); malyava('Кореш получит приглашение в боте'); };
 function friendLink() { return `https://t.me/${NET.bot}?start=fr_${NET.uid}`; }
@@ -2062,13 +2094,13 @@ function fillCase(m) {
   if (NET.caseFor !== m.id || !$('cpS')) return;
   const u = m.user, g = (u.wins | 0) + (u.losses | 0), pc = g ? Math.round(u.wins / g * 100) : 0, me = m.id === NET.uid;
   $('cpS').innerHTML = `<dl><dt>Место в рейтинге</dt><dd>${m.place ? m.place + ' из ' + m.total : '—'}</dd><dt>Рейтинг</dt><dd>${u.rating} · ${rankOf(u.rating)}</dd>
-    <dt>Онлайн-партий</dt><dd>${g}</dd><dt>Побед</dt><dd>${u.wins | 0} (${pc}%)</dd><dt>Поражений</dt><dd>${u.losses | 0}</dd><dt>Марсов поставил</dt><dd>${u.mars | 0}</dd>
+    <dt>Онлайн-партий</dt><dd>${g}</dd><dt>Побед</dt><dd>${u.wins | 0} (${pc}%)</dd><dt>Поражений</dt><dd>${u.losses | 0}</dd><dt>Марсов поставил(а)</dt><dd>${u.mars | 0}</dd>
     <dt>Лучшая серия</dt><dd>${u.best | 0} ${plural(u.best | 0, 'победа', 'победы', 'побед')} подряд</dd><dt>Длинные / короткие</dt><dd>${u.longG | 0} / ${u.shortG | 0}</dd>
     ${me ? `<dt>Побед над ботом</dt><dd>${u.botWins | 0}</dd>` : ''}<dt>Привёл корешей</dt><dd>${m.refs}${m.refPaid ? ` (засчитано ${m.refPaid})` : ''}</dd>
     <dt>Сейчас</dt><dd>${m.inGame ? 'играет партию' : u.online ? 'в сети' : 'не в сети'}</dd></dl>`;
-  const RS = { win: '', resign: 'сдался', timeout: 'время', left: 'ушёл' };
+  const RS = { win: '', resign: 'сдался(лась)', timeout: 'время', left: 'ушёл(ла)' };
   $('cpH').innerHTML = m.hist.length ? m.hist.map(h => { const dt = new Date(h.at); const when = dt.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' }) + ' ' + dt.toTimeString().slice(0, 5);
-    const how = h.m === 3 ? 'кокс' : h.m === 2 ? 'марс' : ''; const why = h.w ? (h.r === 'win' ? '' : h.r === 'resign' ? 'соперник сдался' : h.r === 'left' ? 'соперник ушёл' : 'по времени') : (h.r === 'win' ? '' : RS[h.r] || '');
+    const how = h.m === 3 ? 'кокс' : h.m === 2 ? 'марс' : ''; const why = h.w ? (h.r === 'win' ? '' : h.r === 'resign' ? 'соперник сдался(лась)' : h.r === 'left' ? 'соперник ушёл(ла)' : 'по времени') : (h.r === 'win' ? '' : RS[h.r] || '');
     return `<div class="hrow"><span class="res ${h.w ? 'w' : 'l'}">${h.w ? 'W' : 'L'}</span><span><b>${h.w ? 'Победа' : 'Поражение'}${how ? ' · ' + how : ''}</b> против ${esc(h.on)}<small>${h.v === 'short' ? 'короткие' : 'длинные'}${h.s ? ' · ставка ' + h.s : ''}${why ? ' · ' + why : ''} · ${when}</small></span><span style="font-weight:700">${h.d > 0 ? '+' : ''}${h.d}</span></div>`; }).join('')
     : '<p style="text-align:center;margin-top:30px">Ещё ни одной онлайн-партии</p>';
   const w = $('caseWatch'); if (w) { w.hidden = !m.inGame; w.onclick = () => { hideModal(); watchGame(m.id); }; }
@@ -2098,7 +2130,7 @@ async function netWatch(m) {
   G.s = m.s; G.dice = (m.dice || []).slice(); G.shown = m.shown || []; G.rolledNow = m.phase === 'move' || m.phase === 'pass'; if (G.rolledNow) SFX.dice();
   G.phase = 'bot';
   if (m.phase === 'roll') setG(`${nm} бросает зарики…`); else if (m.phase === 'move') setG(`${nm} думает…`); else if (m.phase === 'pass') setG(`У ${nm} нет ходов`);
-  if (m.phase === 'over') { G.over = true; G.phase = 'over'; clearInterval(G.timer); const wn = m.over.winner === 0 ? p0.name : p1.name; setG(`Победил ${wn}${m.over.mult === 2 ? ' · марс' : m.over.mult === 3 ? ' · кокс' : ''}`); malyava(`Партия окончена: победил ${wn}`); }
+  if (m.phase === 'over') { G.over = true; G.phase = 'over'; clearInterval(G.timer); const wn = m.over.winner === 0 ? p0.name : p1.name; setG(`Победил ${wn}${m.over.mult === 2 ? ' · марс' : m.over.mult === 3 ? ' · кокс' : ''}`); malyava(`Партия окончена: победил(а) ${wn}`); }
   renderGame(); $('resignBtn').textContent = 'Выйти';
 }
 const _netMsg2 = netMsg;
@@ -2240,7 +2272,7 @@ fillCase = function (m) { _fillCase3(m); const b = m.user && m.user.brig; if (b 
 function renderBrig() {
   const box = $('brigBox'), d = NET.brigD; if (!d) { box.innerHTML = '<p class="sub" style="text-align:center">Загружаю…</p>'; return; }
   const b = d.b, top = NET.brigTop || [];
-  const topHTML = `<h2 style="font-size:24px;margin-top:16px">Бригады</h2>` + (top.length ? top.map((x, i) => `<div class="li2"><span class="n" style="width:22px;text-align:center;font-weight:800">${i + 1}</span><span class="av" style="border-radius:50%">${x.emblem ? `<img src="${emb(x.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(x.name)}</b><span>${x.n} из 15 · рейтинг ${x.rating}${x.bonus ? ' · +5%' : ''}</span></span></div>`).join('') : '<div class="card empty"><b>Пока ни одной</b>Собери первую бригаду.</div>');
+  const topHTML = `<h2 style="font-size:24px;margin-top:16px">Рейтинг общаков</h2><p class="sub" style="margin:0 0 8px">Очки общака: каждая онлайн-победа участника +10, марс +20, кокс +30. Нажми на бригаду — увидишь состав.</p>` + (top.length ? top.map((x, i) => `<div class="li2" data-bt="${x.id}" style="cursor:pointer"><span class="n" style="width:22px;text-align:center;font-weight:800">${i + 1}</span><span class="av" style="border-radius:50%">${x.emblem ? `<img src="${emb(x.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(x.name)}</b><span>${x.n} из 15 · очки общака ${x.rating}${x.bonus ? ' · +5%' : ''}</span></span><span class="r" style="margin-left:auto;font-weight:800">${x.rating}</span></div>`).join('') : '<div class="card empty"><b>Пока ни одной</b>Собери первую бригаду.</div>');
   if (!b) {
     box.innerHTML = (d.invites && d.invites.length ? `<h2 style="font-size:24px">Зовут в бригаду</h2>` + d.invites.map((v, i) => `<div class="li2"><span class="av" style="border-radius:50%">${v.emblem ? `<img src="${emb(v.emblem)}" alt="">` : ''}</span><span class="who"><b>${esc(v.name)}</b><span>зовёт ${esc(v.by)} · ${v.n} из 15</span></span><button class="btn hot" style="padding:8px 10px;font-size:13px" data-bj="${i}">Вступить</button><button class="btn ghost" style="padding:8px 10px;font-size:13px" data-bd="${i}">✕</button></div>`).join('') : '')
       + `<div class="card" style="text-align:center;padding:16px"><b>Общак</b><p class="sub" style="margin:6px 0 10px">Собери бригаду до 15 человек. В общак все скидываются сигаретами, а создатель тратит их на герб и на +5% к выигрышу для всех.</p><button class="btn hot" id="brigNew">Собрать бригаду · 5000</button></div>` + topHTML;
@@ -2306,7 +2338,7 @@ function renderTasks() {
     const D = d.daily;
     h += `<div class="card"><b>Передачка с воли</b><p class="sub" style="margin:4px 0 0">Заходи каждый день подряд — передачка растёт. Пропустил день — серия с начала.</p>
       <div class="streak">${D.table.map((v, i) => `<div class="${i + 1 < D.streak || (!D.ready && i + 1 === D.streak) ? 'got' : ''}${D.ready && i + 1 === Math.min(D.streak, 7) ? ' now' : ''}">день ${i + 1}<b>${v}</b></div>`).join('')}</div>
-      <button class="btn ${D.ready ? 'hot' : 'ghost'}" style="width:100%" id="tDaily" ${D.ready ? '' : 'disabled'}>${D.ready ? `Забрать ${D.reward}` : 'Уже забрал, приходи завтра'}</button></div>
+      <button class="btn ${D.ready ? 'hot' : 'ghost'}" style="width:100%" id="tDaily" ${D.ready ? '' : 'disabled'}>${D.ready ? `Забрать ${D.reward}` : 'Уже забрал(а), приходи завтра'}</button></div>
       <h2 style="font-size:24px;margin-top:14px">На сегодня</h2>`;
     h += d.quests.map((q, i) => `<div class="quest${q.c ? ' done' : ''}"><div><b>${q.t}</b><span class="sub" style="margin:0">${q.p} из ${q.n} · награда ${q.r}</span><div class="pb"><i style="width:${q.p / q.n * 100}%"></i></div></div>${q.c ? '<span>✓</span>' : `<button class="btn ${q.p >= q.n ? 'hot' : 'ghost'}" data-qc="${i}" ${q.p >= q.n ? '' : 'disabled'} style="padding:8px 12px;font-size:13px">Забрать</button>`}</div>`).join('');
     h += `<p class="sub" style="text-align:center">Сделай все три — ещё +${d.qAllR} сверху. Новые задания каждый день в полночь по Москве.</p>`;
@@ -2316,7 +2348,7 @@ function renderTasks() {
     const grad = W.sectors.map((_, i) => `${cols[i % cols.length]} ${i * 360 / n}deg ${(i + 1) * 360 / n}deg`).join(',');
     h += `<div class="wheelwrap"><canvas id="wheelCv" width="680" height="680"></canvas>${PIN_SVG}</div>
       <button class="btn hot" style="width:100%" id="wSpin">${W.free ? 'Крутить бесплатно' : W.spins ? `Крутить (осталось ${W.spins})` : 'Бесплатный прокрут завтра'}</button>
-      <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · 50 ⭐</button>${NET.me && NET.me.admin ? '<button class="btn ghost" style="width:100%;margin-top:8px" id="wTest">Тест-прокрут (только для админа, без награды)</button>' : ''}
+      <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · 50 🪙</button>${NET.me && NET.me.admin ? '<button class="btn ghost" style="width:100%;margin-top:8px" id="wTest">Тест-прокрут (только для админа, без награды)</button>' : ''}
       <p class="sub" style="text-align:center;margin-top:8px">Один прокрут в день бесплатно. Выпадает от 25 до 1000 сигарет или вещь с барахолки.</p>`;
   } else if (NET.taskTab === 's') {
     const S = d.season;
@@ -2324,7 +2356,7 @@ function renderTasks() {
     h += `<div class="card" style="text-align:center"><h2 style="margin:0">Сезон «${S.name}»</h2><p class="sub" style="margin:4px 0">До конца ${S.left} ${plural(S.left, 'день', 'дня', 'дней')}. Очки — это рейтинг, набранный за онлайн-партии в этом месяце.</p>
       <b style="font-size:20px">У тебя ${S.pts} ${plural(S.pts, 'очко', 'очка', 'очков')}${S.place ? ` · ${S.place}-е место` : ''}</b>
       <p class="sub" style="margin:6px 0 0">Награды тройке: 🥇 ${S.prizes[0]} · 🥈 ${S.prizes[1]} · 🥉 ${S.prizes[2]} сигарет и титул «Чемпион сезона»</p></div>
-      <div class="paper sheet" style="margin-top:12px">${S.top.length ? S.top.map((x, i) => `<div class="li${x.id === NET.uid ? ' me' : ''}"><span class="n">${i + 1}</span><span class="av"><img data-sh="${i}" alt=""></span><span><b>${esc(x.name)}${x.id === NET.uid ? ' (ты)' : ''}</b></span><span class="r">${x.pts}</span></div>`).join('') : '<p style="text-align:center;padding:14px">В этом сезоне ещё никто не набрал очков. Будь первым!</p>'}</div>
+      <div class="paper sheet" style="margin-top:12px">${S.top.length ? S.top.map((x, i) => `<div class="li${x.id === NET.uid ? ' me' : ''}"><span class="n">${i + 1}</span><span class="av"><img data-sh="${i}" alt=""></span><span><b>${esc(x.name)}${x.id === NET.uid ? ' (ты)' : ''}</b></span><span class="r">${x.pts}</span></div>`).join('') : '<p style="text-align:center;padding:14px">В этом сезоне ещё никто не набрал(а) очков. Будь первым!</p>'}</div>
       ${S.last ? `<p class="sub" style="text-align:center;margin-top:8px">Прошлый сезон: ${S.last.top.map((x, i) => ['🥇', '🥈', '🥉'][i] + ' ' + esc(x.name)).join(' · ') || 'без победителей'}</p>` : ''}`;
   } else {
     const cur = d.title;
@@ -2333,14 +2365,14 @@ function renderTasks() {
   if (box.dataset.h === h && box.childElementCount) return; box.dataset.h = h; box.innerHTML = h;
   if ($('wheelCv')) drawWheel(NET.wheelRot || 0, d.wheel.sectors);
   if ($('psClaim')) $('psClaim').onclick = () => { $('psClaim').disabled = true; flyCigs($('psClaim')); nsend({ t: 'psClaim' }); };
-  if ($('psBuy')) $('psBuy').onclick = () => buyStars({ sid: 'pass' });
-  { const tr = $('psTrack'), cur = tr && tr.querySelector('.pl.cur'); if (tr && cur && !tr.dataset.sc) { tr.dataset.sc = 1; tr.scrollLeft = cur.offsetLeft - tr.clientWidth / 2 + cur.clientWidth / 2; } }
+  if ($('psBuy')) $('psBuy').onclick = () => buyGold({ sid: 'pass' });
+  { const tr = $('psTrack'), cur = tr && tr.querySelector('.psl.cur'); if (tr && cur && !tr.dataset.sc) { tr.dataset.sc = 1; tr.scrollLeft = cur.offsetLeft - tr.clientWidth / 2 + cur.clientWidth / 2; } }
   if ($('wTest')) $('wTest').onclick = () => { if (NET.spinning) return; NET.spinning = true; nsend({ t: 'spin', test: 1 }); };
   if ($('promoGo')) $('promoGo').onclick = () => { const v = $('promoIn').value.trim(); if (!v) return $('promoIn').focus(); nsend({ t: 'promo', code: v }); };
   if ($('tDaily')) $('tDaily').onclick = () => { $('tDaily').disabled = true; flyCigs($('tDaily')); nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
   box.querySelectorAll('[data-qc]').forEach(b => b.onclick = () => { b.disabled = true; flyCigs(b); nsend({ t: 'qClaim', i: +b.dataset.qc }); try { SFX.coin(); } catch (e) { } });
-  if ($('wSpin')) $('wSpin').onclick = () => { if (NET.spinning) return; const W = d.wheel; if (!W.free && !W.spins) return malyava('Бесплатный прокрут завтра. Можно взять ещё за 50 ⭐'); NET.spinning = true; $('wSpin').disabled = true; nsend({ t: 'spin' }); };
-  if ($('wBuy')) $('wBuy').onclick = () => buyStars({ sid: 'spin' });
+  if ($('wSpin')) $('wSpin').onclick = () => { if (NET.spinning) return; const W = d.wheel; if (!W.free && !W.spins) return malyava('Бесплатный прокрут завтра. Можно взять ещё за 50 рыжья'); NET.spinning = true; $('wSpin').disabled = true; nsend({ t: 'spin' }); };
+  if ($('wBuy')) $('wBuy').onclick = () => buyGold({ sid: 'spin' });
   box.querySelectorAll('[data-tt]').forEach(b => b.onclick = () => nsend({ t: 'setTitle', k: b.dataset.tt }));
   if (NET.taskTab === 's') d.season.top.forEach(async (x, i) => { const el = box.querySelector(`[data-sh="${i}"]`); if (el) el.src = await headURL(cleanEq(x.eq)); });
 }
@@ -2593,7 +2625,7 @@ function inviteSetup(f) {
 }
 window.netInvite = x => inviteSetup(x);
 function roomLink() { return NET.room ? `https://t.me/${NET.bot}?start=room_${NET.room.code}` : ''; }
-function shareRoom() { const link = roomLink(), u = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(NET.inviteText ? NET.inviteText() : 'Го в нарды! Жми ссылку и садись за доску 🎲')}`; if (TGA && TGA.openTelegramLink) TGA.openTelegramLink(u); else window.open(u, '_blank'); }
+function shareRoom() { const link = roomLink(), u = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(inviteText(NET.room))}`; if (TGA && TGA.openTelegramLink) TGA.openTelegramLink(u); else window.open(u, '_blank'); }
 // небольшое окошко поверх всех вкладок, пока ждём кореша
 function roomPanel() {
   let el = $('roomWait');
@@ -2633,6 +2665,7 @@ netMsg = async function (m) {
     if (NET.inviting && !NET.inviting.code && Date.now() - NET.inviting.at < 15000) { NET.inviting.code = m.code; }
     roomPanel(); if (screen === 'play') renderPlay(); return;
   }
+  if (m.t === 'game' && !m.watch && NET.inviting && NET.inviting.name) malyava(`✅ ${NET.inviting.name} принял(а) вызов. Стол накрыт, зарики в кружке — погнали!`);
   if ((m.t === 'game' && !m.watch) || m.t === 'lobby') { NET.room = null; NET.inviting = null; roomPanel(); }
   return _netMsg8(m);
 };
@@ -2708,7 +2741,7 @@ function passHTML(p, S) {
   for (let l = 1; l <= p.max; l++) {
     const op = l <= p.lv, f = p.free[l], q = p.paid[l], fg = p.gf.includes(l), qg = p.gp.includes(l);
     if (op && f && !fg) ready++; if (op && p.prem && q && !qg) ready++;
-    cols += `<div class="pl${op ? ' op' : ''}${l === Math.min(p.max, p.lv + 1) ? ' cur' : ''}"><span class="n">${l}</span>
+    cols += `<div class="psl${op ? ' op' : ''}${l === Math.min(p.max, p.lv + 1) ? ' cur' : ''}"><span class="n">${l}</span>
       <div class="pf${f ? '' : ' e'}${fg ? ' got' : ''}${op && f && !fg ? ' rdy' : ''}">${psRew(f)}</div>
       <div class="pp${p.prem ? '' : ' lk'}${qg ? ' got' : ''}${op && p.prem && !qg ? ' rdy' : ''}">${psRew(q)}</div></div>`;
   }
@@ -2717,7 +2750,7 @@ function passHTML(p, S) {
     <div class="pbar"><i style="width:${done ? 100 : p.xp / p.per * 100}%"></i><span>${done ? 'Все 30 ступеней пройдены!' : `Ступень ${p.lv} из ${p.max} · ${p.xp}/${p.per} опыта`}</span></div>
     <div class="ptrack" id="psTrack"><div class="plab"><span></span><span>Для всех</span><span>Блатной</span></div>${cols}</div>
     ${ready ? `<button class="btn hot" style="width:100%;margin-top:10px" id="psClaim">Забрать награды (${ready})</button>` : ''}
-    ${p.prem ? '' : `<button class="btn sec" style="width:100%;margin-top:8px" id="psBuy">Блатной пропуск · ${p.price} ⭐</button><p class="sub" style="text-align:center;margin:6px 0 0">Награда на каждой ступени: больше сигарет, прокруты колеса, редкие вещи и титул «Хозяин сезона». Купишь позже — получишь всё за уже пройденные ступени.</p>`}
+    ${p.prem ? '' : `<button class="btn sec" style="width:100%;margin-top:8px" id="psBuy">Блатной пропуск · ${p.price} 🪙</button><p class="sub" style="text-align:center;margin:6px 0 0">Награда на каждой ступени: больше сигарет, прокруты колеса, редкие вещи и титул «Хозяин сезона». Купишь позже — получишь всё за уже пройденные ступени.</p>`}
     <p class="sub" style="text-align:center;margin:8px 0 0">Опыт: победа онлайн +50, партия +20, задание +40, передачка +30, победа над ботом +10</p></div>`;
 }
 const _netMsg12 = netMsg;
@@ -2726,5 +2759,132 @@ netMsg = async function (m) {
   if (m.t === 'paid' && m.id === 'pass') { const r = await _netMsg12(m); nsend({ t: 'tasks' }); return r; }
   return _netMsg12(m);
 };
+
+// ================= Лица в списках рисуются по очереди (на телефоне 50 сразу вешали рейтинг) =================
+{
+  let chain = Promise.resolve();
+  const _headURL13 = headURL;
+  headURL = function (eq) {
+    if (eq && eq._av) return Promise.resolve(eq._av);
+    const k = heroKey(eq); if (headCache.has(k)) return Promise.resolve(headCache.get(k));
+    const r = chain.then(() => _headURL13(eq)); chain = r.catch(() => { }).then(() => new Promise(z => setTimeout(z, 0)));
+    return r;
+  };
+  // ошибки у игроков уходят админу (/errs в боте)
+  const rep = (msg) => { try { if (NET.on) nsend({ t: 'jserr', msg: String(msg).slice(0, 300), scr: screen, ua: navigator.userAgent }); } catch (e) { } };
+  window.addEventListener('error', e => rep((e.message || '') + ' @' + (e.filename || '').split('/').pop() + ':' + e.lineno));
+  window.addEventListener('unhandledrejection', e => rep('promise: ' + (e.reason && (e.reason.stack || e.reason.message) || e.reason)));
+}
+
+// ================= Тексты, которые выбрал Кондрат (с (а) для любого пола) =================
+function inviteText(r) {
+  const st = r && r.stake ? r.stake : 0, vn = r && r.variant === 'short' ? 'короткие' : 'длинные';
+  return `Здорово, братан! Заходи в хату, раскинем ${vn} нарды${st ? ` на ${st} сигарет` : ''}. Я уже всё выбрал(а). Не ссы, зарики честные 🎲`;
+}
+function winText(opp) {
+  const st = G && G.stake ? G.stake : 0;
+  return Math.random() < .5
+    ? `Обыграл(а) ${opp}${st ? ` на ${st} сигарет` : ''}. Зарики любят меня 🎲 Заходи, проверим, любят ли тебя.`
+    : `${opp} сел(а) за стол крестьянином и встал(а) крестьянином. А я — катала 😎`;
+}
+setInterval(() => { const f = NET.inviting; if (f && f.at && !f.late && NET.room && Date.now() - f.at > 180000) { f.late = true; malyava(`Не дождались ${f.name}. Может, спит на нарах. Позови другого или сыграй с ботом.`); } }, 5000);
+
+// ================= Рыжьё (вторая валюта), чифир, реванш, смотрящий =================
+const _updCigs14 = updCigs;
+updCigs = function () { _updCigs14(); const b = $('goldBtn'); if (b && NET.on) { b.hidden = false; $('goldN').textContent = NET.me ? NET.me.gold | 0 : 0; } };
+function openGoldShop(sub) { shopCat = 'zvezdy'; shopSub = sub || 'ryzhe'; shopSel = null; go('shop'); }
+$('goldBtn').onclick = () => openGoldShop('ryzhe');
+const _netMsg14 = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'me') { const r = await _netMsg14(m); updCigs(); return r; }
+  if (m.t === 'noGold') { showModal(`<h3>Не хватает рыжья</h3><div style="text-align:center"><img src="${A}ryzhe/03.webp" alt="" style="width:120px"><p>Нужно ещё <b>${m.need}</b> 🪙. Рыжьё покупается за звёзды Телеграма.</p></div>
+      <button class="btn hot" style="width:100%" id="ngBuy">Купить рыжьё</button><button class="btn ghost" style="width:100%;margin-top:8px" data-close>Не сейчас</button>`); $('ngBuy').onclick = () => { hideModal(); openGoldShop('ryzhe'); }; return; }
+  if (m.t === 'rematchAsk') { NET.reAsk = m; const b = $('again'); if (b && G && G.over) { b.textContent = 'Соперник за реванш — жми!'; b.classList.add('pulse'); } malyava(`${m.name} хочет реванш${m.stake ? ` на ${m.stake} сигарет` : ''}`); return; }
+  if (m.t === 'rematchWait') { const b = $('again'); if (b) { b.textContent = 'Ждём соперника…'; b.disabled = true; } return; }
+  if (m.t === 'game' && !m.watch && $('again')) hideModal();
+  if (m.t === 'over' && G && G.net && m.over) G.chifBon = m.over.winner === m.me ? m.over.chif | 0 : 0;
+  return _netMsg14(m);
+};
+// реванш: одна кнопка, оба жмут — сразу новая партия с той же ставкой
+const _showModal14 = showModal;
+showModal = function (html) {
+  const r = _showModal14.apply(this, arguments);
+  const b = $('again');
+  if (b && G && G.net && G.over && !G.watch) {
+    NET.reAsk = null;
+    if (G.chifBon) { const p = b.closest('.vict') && b.closest('.vict').querySelector('p[style*="font-size:18px"]'); if (p) p.textContent += ` · ☕ +${G.chifBon} за чифир`; }
+  }
+  return r;
+};
+// чифир перед партией (вкладка «Играть»)
+const _renderPlay14 = renderPlay;
+renderPlay = async function () {
+  const r = await _renderPlay14.apply(this, arguments);
+  if (!NET.on || !NET.me) return r;
+  const box = $('s-play'); if (!box) return r; let c = $('chifCard');
+  if (!c) { c = document.createElement('div'); c.id = 'chifCard'; c.className = 'card chifc'; const anchor = box.querySelector('.card'); if (anchor) anchor.before(c); else box.append(c); }
+  const n = NET.me.chif | 0, on = !!NET.me.chifOn;
+  c.innerHTML = `<img src="${A}kruzhki_pepelnitsy/03.webp" alt=""><div style="flex:1;min-width:0"><b>Чифир ☕ ${n ? '· ' + n + ' шт.' : ''}</b><p class="sub">${on ? 'Заварен: +25% сигарет за победу в следующей онлайн-партии' : '+25% сигарет за победу на одну онлайн-партию'}</p></div>
+    ${n ? `<button class="btn ${on ? 'sec' : 'hot'}" id="chifTg" style="padding:8px 12px">${on ? 'Убрать' : 'Заварить'}</button>` : `<button class="btn hot" id="chifBuy" style="padding:8px 12px">🪙 10</button>`}`;
+  if ($('chifTg')) $('chifTg').onclick = () => { SFX.click(); NET.me.chifOn = !on; nsend({ t: 'chifOn', on: !on }); renderPlay(); };
+  if ($('chifBuy')) $('chifBuy').onclick = () => openGoldShop('chifir');
+  return r;
+};
+// смотрящий недели над доской почёта
+const _renderTop14 = renderTop;
+renderTop = function () {
+  const r = _renderTop14.apply(this, arguments);
+  if (NET.on) { const all = (NET.top || []).concat(NET.me ? [{ ...NET.me, me: true }] : []); const s = all.find(x => x.smotr); let el = $('smotrCard');
+    if (!el) { el = document.createElement('div'); el.id = 'smotrCard'; el.className = 'card smotr'; const h = document.querySelector('#topMain .honor'); if (h) h.before(el); }
+    el.hidden = !s; if (s) el.innerHTML = `👑 Смотрящий недели: ${esc(s.name)}${s.me ? ' (ты)' : ''}<span class="sub" style="margin:0;font-weight:400">· кто первый в рейтинге в понедельник</span>`; }
+  return r;
+};
+window.netRematch = () => { SFX.click(); nsend({ t: 'rematch' }); };
+// ================= Подсветка того, что можно забрать, внутри «Заданий» =================
+const _renderTasks15 = renderTasks;
+renderTasks = function () {
+  const r = _renderTasks15.apply(this, arguments);
+  const d = NET.tasks; if (!d || !d.ready) return r;
+  document.querySelectorAll('#taskSeg button').forEach(b => { let n = d.ready[b.dataset.t] | 0, x = b.querySelector('.tbadge'); if (!n) { if (x) x.remove(); return; } if (!x) { x = document.createElement('i'); x.className = 'tbadge'; b.append(x); } x.textContent = n; });
+  if (NET.taskTab === 'q') { const D = $('tDaily'); if (D && d.daily.ready) D.closest('.card').classList.add('glow'); document.querySelectorAll('#taskBox .quest .btn.hot').forEach(b => b.closest('.quest').classList.add('glow')); }
+  if (NET.taskTab === 'w' && d.wheel.free) { const b = $('wSpin'); if (b) b.classList.add('glowb'); }
+  if (NET.taskTab === 's') document.querySelectorAll('#psClaim').forEach(b => b.classList.add('glowb'));
+  return r;
+};
+
+// ================= Рейтинг общаков: профиль бригады, заявки на вступление =================
+const _renderBrig16 = renderBrig;
+renderBrig = function () {
+  const r = _renderBrig16.apply(this, arguments);
+  const box = $('brigBox'), d = NET.brigD;
+  box.querySelectorAll('[data-bt]').forEach(el => el.onclick = () => { SFX.click(); nsend({ t: 'brigInfo', id: el.dataset.bt }); });
+  const b = d && d.b;
+  if (b && b.req && b.req.length) {
+    const my = b.members.find(x => x.id === NET.uid) || {};
+    if (my.role === 'owner' || my.role === 'dep') {
+      const w = document.createElement('div');
+      w.innerHTML = `<h2 style="font-size:24px;margin-top:14px">Просятся в бригаду</h2><div class="card glow" style="padding:6px 12px">${b.req.map(q => `<div class="li2" style="border:0"><span class="who"><b>${esc(q.name)}</b><span>рейтинг ${q.rating}</span></span><button class="btn hot" style="padding:8px 10px;font-size:13px" data-ra="${q.id}">Принять</button><button class="btn ghost" style="padding:8px 10px;font-size:13px" data-rd="${q.id}">✕</button></div>`).join('')}</div>`;
+      const first = box.querySelector('h2'); if (first) first.before(w); else box.prepend(w);
+      w.querySelectorAll('[data-ra]').forEach(x => x.onclick = () => nsend({ t: 'brigReqAns', id: x.dataset.ra, ok: true }));
+      w.querySelectorAll('[data-rd]').forEach(x => x.onclick = () => nsend({ t: 'brigReqAns', id: x.dataset.rd, ok: false }));
+    }
+  }
+  // своя бригада: очки общака в шапке
+  if (b) { const head = box.querySelector('.brighead b'); if (head && !box.querySelector('#bRp')) head.insertAdjacentHTML('afterend', `<br><span id="bRp" style="font-weight:700">Очки общака: ${b.rating | 0}</span>`); }
+  return r;
+};
+function showBrigInfo(b) {
+  const BR = { owner: 'создатель', dep: 'заместитель', smot: 'смотрящий', member: 'в бригаде' };
+  const mine = NET.brigD && NET.brigD.b, mem = b.members.slice().sort((a, c) => ['owner', 'dep', 'smot', 'member'].indexOf(a.role) - ['owner', 'dep', 'smot', 'member'].indexOf(c.role) || (c.pts | 0) - (a.pts | 0));
+  showModal(`<div class="brighead"><img src="${b.emblem ? emb(b.emblem) : A + 'nashivki/01.webp'}" alt=""><div><h3 style="margin:0;text-align:left">${esc(b.name)}</h3><span class="sub" style="margin:0">${b.place ? b.place + '-е место · ' : ''}${b.n} из 15</span><br><b>Очки общака: ${b.rating | 0}</b><br><span class="sub" style="margin:0">побед участников: ${b.wins | 0}${b.bonus ? ' · +5% к выигрышу' : ''}</span></div></div>
+    <h2 style="font-size:22px;margin:12px 0 6px">Состав</h2><div style="max-height:46vh;overflow:auto">${mem.map((x, i) => `<div class="bmem" data-im="${i}" style="cursor:pointer"><img data-ih="${i}" alt=""><span><b>${x.smotr ? '👑 ' : ''}${esc(x.name)}</b><br><span class="sub" style="margin:0">${BR[x.role] || ''} · рейтинг ${x.rating} · в общак ${x.pts | 0}</span></span><i style="margin-left:auto;font-style:normal;color:${x.online ? '#7c6' : '#777'}">●</i></div>`).join('')}</div>
+    ${!mine && !(NET.brigD && NET.brigD.b) ? (b.asked ? '<button class="btn sec" style="width:100%;margin-top:10px" disabled>Заявка отправлена</button>' : b.n >= 15 ? '<button class="btn ghost" style="width:100%;margin-top:10px" disabled>Бригада полная</button>' : '<button class="btn hot" style="width:100%;margin-top:10px" id="biReq">Попроситься в бригаду</button>') : ''}
+    <button class="btn ghost" style="width:100%;margin-top:8px" data-close>Закрыть</button>`);
+  mem.forEach(async (x, i) => { const el = document.querySelector(`[data-ih="${i}"]`); if (el) el.src = await headURL(cleanEq(x.eq)); });
+  document.querySelectorAll('[data-im]').forEach(el => el.onclick = () => { const x = mem[+el.dataset.im]; showCase({ ...netPerson(x), net: true }); });
+  if ($('biReq')) $('biReq').onclick = () => { SFX.click(); nsend({ t: 'brigReq', id: b.id }); };
+}
+const _netMsg16 = netMsg;
+netMsg = async function (m) { if (m.t === 'brigInfo') return showBrigInfo(m.b); return _netMsg16(m); };
 
 </script>
