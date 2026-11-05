@@ -35,6 +35,7 @@ export class Lobby extends DurableObject {
       schedule: ms => this.ctx.storage.setAlarm(Date.now() + ms),   // рассылка идёт порциями: каждая порция — отдельный запуск
     });
     this.ctx.waitUntil(this.core.fetchName());
+    this.ctx.waitUntil(this.ctx.storage.getAlarm().then(a => { if (!a) return this.ctx.storage.setAlarm(Date.now() + 60e3); }));
     return this.core;
   }
   ensureTick() {
@@ -43,7 +44,10 @@ export class Lobby extends DurableObject {
   }
   async alarm() {
     const core = this.getCore(this.env.WEBAPP_URL || (await this.ctx.storage.get('origin')) || '');
-    if (await core.bcastStep()) await this.ctx.storage.setAlarm(Date.now() + 1100);
+    if (await core.bcastStep()) return this.ctx.storage.setAlarm(Date.now() + 1100);
+    const next = (await this.ctx.storage.get('hourAt')) || 0;   // раз в час бот напоминает пропавшим и про готовые сундуки
+    if (Date.now() >= next) { await this.ctx.storage.put('hourAt', Date.now() + 3600e3); try { await core.hourly(); } catch (e) { console.log('hourly', e.message); } }
+    await this.ctx.storage.setAlarm(Math.max(Date.now() + 60e3, ((await this.ctx.storage.get('hourAt')) || 0)));
   }
   async fetch(req) {
     const url = new URL(req.url), core = this.getCore(url.origin);

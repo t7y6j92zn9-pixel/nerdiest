@@ -1798,5 +1798,14 @@
   "slot": "hat",
   "free": false,
   "hidden": true
+ },
+ "h_11": {
+  "price": 99999,
+  "rank": null,
+  "ach": null,
+  "slot": "hat",
+  "free": false,
+  "hidden": true,
+  "ref": 3
  }
 }
