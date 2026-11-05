@@ -53,6 +53,11 @@ export class Lobby extends DurableObject {
       let out = null; try { out = core.onUpdate(await req.json()); } catch (e) { console.log('bot', e.message); }
       return Response.json(out || {});
     }
+    const av = url.pathname.match(/^\/ava\/([\w-]{1,40})\.jpg$/);
+    if (av) {   // аватарка из Телеграма — отдаём со своего адреса (чтобы картинки работали везде)
+      const src = core.avatarUrl(av[1]); if (!src) return new Response('', { status: 404 });
+      try { const r = await fetch(src); if (!r.ok) return new Response('', { status: 404 }); return new Response(r.body, { headers: { 'Content-Type': r.headers.get('content-type') || 'image/jpeg', 'Cache-Control': 'public, max-age=86400' } }); } catch (e) { return new Response('', { status: 502 }); }
+    }
     const ph = url.pathname.match(/^\/photo\/([0-9a-f]{16})\.jpg$/);
     if (ph) { const b = await core.getPhoto(ph[1]); return b ? new Response(b, { headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=86400' } }) : new Response('', { status: 404 }); }
     if (url.pathname === '/setup') {
@@ -75,7 +80,7 @@ export default {
   async fetch(req, env) {
     const url = new URL(req.url);
     if (url.pathname === '/health') return new Response('ok');
-    if (url.pathname === '/ws' || url.pathname === '/tg-hook' || url.pathname === '/setup' || url.pathname.startsWith('/photo/')) return env.LOBBY.get(env.LOBBY.idFromName('main')).fetch(req);
+    if (url.pathname === '/ws' || url.pathname === '/tg-hook' || url.pathname === '/setup' || url.pathname.startsWith('/photo/') || url.pathname.startsWith('/ava/')) return env.LOBBY.get(env.LOBBY.idFromName('main')).fetch(req);
     return env.ASSETS.fetch(req);
   },
 };

@@ -56,7 +56,8 @@ function createCore(cfg) {
     u.seen = Date.now(); save(u);
     return u;
   }
-  function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: u.eq, lvl: u.lvl || 1, mars: u.mars || 0, best: u.best || 0, longG: u.longG || 0, shortG: u.shortG || 0, created: u.created, title: u.title && ACH_BY[u.title] ? ACH_BY[u.title].title : '', brig: (b => b ? { id: b.id, name: b.name, emblem: b.emblem || 0 } : null)(u.brig && meta.brig && meta.brig[u.brig]), num: String(u.id).replace(/\D/g, '').slice(-4).padStart(4, '0') }; }
+  function eqv(u) { return u.photo ? { ...(u.eq || {}), _av: '/ava/' + u.id + '.jpg?v=' + crypto.createHash('md5').update(u.photo).digest('hex').slice(0, 6) } : u.eq; }
+  function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: eqv(u), lvl: u.lvl || 1, mars: u.mars || 0, best: u.best || 0, longG: u.longG || 0, shortG: u.shortG || 0, created: u.created, title: u.title && ACH_BY[u.title] ? ACH_BY[u.title].title : '', brig: (b => b ? { id: b.id, name: b.name, emblem: b.emblem || 0 } : null)(u.brig && meta.brig && meta.brig[u.brig]), num: String(u.id).replace(/\D/g, '').slice(-4).padStart(4, '0') }; }
   function meView(u) { const dT = dnum(Date.now()), ld = u.lastDaily ? dnum(u.lastDaily) : -9; return { ...publicUser(u), dailyReady: ld !== dT, streakD: u.streakD | 0, tasksReady: (() => { const q = quests(u); return q.list.filter(x => !x.c && x.p >= QPOOL[x.i].n).length + (u.spinDay !== today() ? 1 : 0); })(), unread: unread(u), bchat: chatUnread(u), admin: isAdmin(u.id), brigInv: (u.brigInv || []).length, giftLeft: u.giftDay === today() ? 500 - (u.giftSum | 0) : 500, cigs: u.cigs, owned: u.owned || [], lastDaily: u.lastDaily || 0, botWins: u.botWins || 0, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
   // внешний вид и счёт игрока присылает само приложение (сырой тестовый вариант)
   // кошелёк живёт на сервере. С телефона принимается только внешний вид (и только из того, что куплено).
@@ -136,6 +137,7 @@ function createCore(cfg) {
       online.set(uid, sock);
       const u = getUser(uid, [tg.first_name, tg.last_name].filter(Boolean).join(' ').slice(0, 40), tg.username);
       const fresh = !u.app;
+      if (tg.photo_url && /^https:\/\/[a-z0-9.-]*(t\.me|telegram\.org|telesco\.pe)\//i.test(tg.photo_url)) { if (u.photo !== tg.photo_url) { u.photo = tg.photo_url; save(u); } }
       if (!u.app) { u.app = Date.now(); save(u); }
       if (fresh) { const rm = String(start || '').match(/^ref_(\w+)$/i); const rr = rm ? rm[1] : (rooms.get(String(m.room || start || '').replace(/^room_?/i, '').toUpperCase()) || {}).host; setRef(u, rr); }
       applyProf(u, m.prof);
@@ -248,6 +250,13 @@ function createCore(cfg) {
     { k: 'login30', t: 'Прописался', d: 'Заходить 30 дней подряд', title: 'Прописался', r: 2000, ok: u => (u.streakBest | 0) >= 30 },
     { k: 'jack', t: 'Везунчик', d: 'Выбить 1000 на колесе', title: 'Везунчик', r: 0, ok: u => !!u.jackpot },
     { k: 'season', t: 'Чемпион сезона', d: 'Попасть в тройку сезона', title: 'Чемпион сезона', r: 0, ok: u => (u.seasonTop | 0) >= 1 },
+    // жаргон нард
+    { k: 'krest', t: 'Крестьянин', d: 'Проиграть 10 онлайн-партий. Не беда — все так начинали', title: 'Крестьянин', r: 100, ok: u => (u.losses | 0) >= 10 },
+    { k: 'katala', t: 'Катала', d: 'Выиграть 25 партий на ставку', title: 'Катала', r: 700, ok: u => (u.stakeWins | 0) >= 25 },
+    { k: 'katala100', t: 'Король катал', d: 'Выиграть 100 партий на ставку', title: 'Король катал', r: 3000, ok: u => (u.stakeWins | 0) >= 100 },
+    { k: 'zaryad', t: 'Заряженные зарики', d: 'Выбросить 3 дубля подряд в одной онлайн-партии', title: 'Заряженный', r: 300, ok: u => !!u.dbl3 },
+    { k: 'dushesh', t: 'Ду-шеш', d: 'Выбросить ду-шеш (6:6) 25 раз', title: 'Ду-шеш', r: 400, ok: u => ((u.dice || {})['6-6'] | 0) >= 25 },
+    { k: 'sheshbesh', t: 'Шеш-беш', d: 'Выбросить шеш-беш (6:5) 50 раз', title: 'Шеш-беш', r: 300, ok: u => ((u.dice || {})['5-6'] | 0) >= 50 },
   ];
   const ACH_BY = Object.fromEntries(ACHS.map(a => [a.k, a]));
   function achCheck(u) {
@@ -266,7 +275,7 @@ function createCore(cfg) {
       daily: { ready: last !== dToday, streak: nextStreak, reward: STREAK[Math.min(Math.max(nextStreak, 1), 7) - 1], table: STREAK },
       wheel: { free: u.spinDay !== today(), spins: u.spins | 0, sectors: WHEEL.map(w => w.t) },
       season: { id, name: MONTHS[+id.slice(5, 7) - 1], left: Math.max(0, Math.ceil((end - now) / 864e5)), pts: spts(u), place: all.findIndex(x => x.id === u.id) + 1, prizes: SEASON_PRIZE,
-        top: all.slice(0, 10).map(x => ({ id: x.id, name: x.name, pts: x.sp.pts, eq: x.eq })), last: (meta.seasons || [])[0] || null },
+        top: all.slice(0, 10).map(x => ({ id: x.id, name: x.name, pts: x.sp.pts, eq: eqv(x) })), last: (meta.seasons || [])[0] || null },
       achs: ACHS.map(a => ({ k: a.k, t: a.t, d: a.d, title: a.title, r: a.r, got: !!(u.achs && u.achs[a.k]) })), title: u.title || '' };
   }
 
@@ -288,6 +297,13 @@ function createCore(cfg) {
         send(uid, { t: 'toast', text: `Передачка: +${r} сигарет · день ${u.streakD} подряд` }); achCheck(u); sendMe(uid); return send(uid, tasksView(u));
       }
       case 'clean': { if (u.cigs >= 10) { u.cigs -= 10; save(u); } return sendMe(uid); }
+      case 'botgame': {   // партия с ботом закончилась: для статистики (админ видит), зарики — в профиль
+        if (Date.now() - (u.botGAt || 0) < 15e3) return; u.botGAt = Date.now();
+        u.botGames = (u.botGames | 0) + 1; if (m.w === 0) u.botW = (u.botW | 0) + 1; dayStat('bot'); if (m.w === 0) dayStat('botW');
+        const d = m.dice && typeof m.dice === 'object' ? m.dice : {}; let tot = 0;
+        for (const k in d) { const mm = /^([1-6])-([1-6])$/.exec(k), n = Math.max(0, Math.min(200, d[k] | 0)); if (mm && +mm[1] <= +mm[2] && n && tot + n <= 400) { diceAdd(u, +mm[1], +mm[2], n); tot += n; } }
+        save(u); return;
+      }
       case 'botwin': { // победа над ботом в тренировке: не чаще раза в 40 секунд
         const mult = Math.max(1, Math.min(3, m.mult | 0));
         if (Date.now() - (u.botAt || 0) > 40e3) { u.botAt = Date.now(); u.cigs += C.ECON.botWin * mult; u.botWins = (u.botWins || 0) + 1; save(u); qEvent(u, 'bot'); achCheck(u); }
@@ -444,7 +460,7 @@ function createCore(cfg) {
         if (userGame.has(uid)) return err(uid, 'Сначала доиграй свою партию');
         unwatch(uid); (g.watchers = g.watchers || new Set()).add(uid); watching.set(uid, g.id);
         g.uids.forEach(x => send(x, { t: 'toast', text: `${u.name} смотрит вашу партию 👀` })); qEvent(u, 'watch');
-        return send(uid, { ...gameView(g, 0), watch: true });
+        send(uid, { ...gameView(g, 0), watch: true }); return wcount(g);
       }
       case 'unwatch': return unwatch(uid);
       case 'live': {
@@ -456,6 +472,7 @@ function createCore(cfg) {
         const x = users[String(m.id || uid)]; if (!x) return;
         const all = Object.values(users).filter(y => y.app).sort((a, b) => b.rating - a.rating || b.wins - a.wins);
         return send(uid, { t: 'profile', id: x.id, user: { ...publicUser(x), online: online.has(x.id), botWins: x.id === uid ? (x.botWins || 0) : undefined },
+          dice: x.dice || {}, diceN: x.diceN | 0,
           hist: (x.hist || []).slice(0, 20), place: all.findIndex(y => y.id === x.id) + 1, total: all.length, refs: (x.refs || []).length, refPaid: x.refPaidN || 0,
           inGame: userGame.has(x.id) && games.has(userGame.get(x.id)) && !games.get(userGame.get(x.id)).over });
       }
@@ -516,12 +533,16 @@ function createCore(cfg) {
         return endGame(g, 1 - g.uids.indexOf(uid), 1, 'resign');
       }
       case 'chat': {
-        const g = games.get(userGame.get(uid)); if (!g || g.over) return;
-        const now = Date.now(); if (now - (g.chatAt[uid] || 0) < 2500) return; g.chatAt[uid] = now;
-        const text = m.text ? String(m.text).slice(0, 60) : '';
+        let g = games.get(userGame.get(uid)), wt = false;
+        if (!g) { g = games.get(watching.get(uid)); wt = !!g; }   // зритель тоже может кинуть фразу или стикер
+        if (!g || g.over) return;
+        const now = Date.now(); if (now - (g.chatAt[uid] || 0) < (wt ? 4000 : 2500)) return; g.chatAt[uid] = now;
+        const text = m.text ? clean(String(m.text).slice(0, 60)) : '';
         const img = /^stikery\/[\w-]+\.webp$/.test(String(m.img || '')) ? m.img : '';
         if (!text && !img) return;
+        if (wt) { const msg = { t: 'chat', text, img, w: 1, name: u.name }; g.uids.forEach(x => send(x, msg)); g.watchers.forEach(x => x !== uid && send(x, msg)); return; }
         g.uids.forEach(x => x !== uid && send(x, { t: 'chat', text, img }));
+        if (g.watchers) { const pi = g.uids.indexOf(uid); g.watchers.forEach(x => send(x, { t: 'chat', text, img, pi })); }
         return;
       }
     }
@@ -580,9 +601,13 @@ function createCore(cfg) {
     g.deadline = Date.now() + TURN_SECONDS * 1000 + (delay || 0);
     sendGame(g);
   }
+  // статистика выпадения зар: ключ «меньшее-большее»
+  function diceAdd(u, a, b, n) { if (!u) return; const k = Math.min(a, b) + '-' + Math.max(a, b); u.dice = u.dice || {}; u.dice[k] = (u.dice[k] | 0) + (n || 1); u.diceN = (u.diceN | 0) + (n || 1); save(u); }
   function doRoll(g) {
     const a = r6(), b = r6();
-    g.shown = [a, b];
+    g.shown = [a, b]; diceAdd(users[g.uids[g.turn]], a, b);
+    g.dblRow = g.dblRow || [0, 0]; g.dblRow[g.turn] = a === b ? g.dblRow[g.turn] + 1 : 0;
+    if (g.dblRow[g.turn] >= 3) { const du = users[g.uids[g.turn]]; if (du && !du.dbl3) { du.dbl3 = 1; save(du); setTimeout(() => achCheck(du), 2500); } }
     g.dice = E.beginTurn(g.s, g.turn, a, b);
     g.last = null;
     if (!E.legalSteps(g.s, g.turn, g.dice).length) {
@@ -646,6 +671,7 @@ function createCore(cfg) {
       phase: g.phase, last: g.last, opening: g.opening, over: g.over, resync: !!g.resync,
       deadline: g.deadline ? Math.max(0, g.deadline - Date.now()) : 0,
       players: g.uids.map(x => ({ ...publicUser(users[x]), online: online.has(x) })),
+      watchers: g.watchers ? g.watchers.size : 0,
     };
   }
   const watching = new Map();   // uid зрителя -> id партии
@@ -653,7 +679,8 @@ function createCore(cfg) {
     g.uids.forEach((x, i) => send(x, gameView(g, i)));
     if (g.watchers && g.watchers.size) { const v = { ...gameView(g, 0), watch: true }; for (const w of g.watchers) { if (watching.get(w) === g.id) send(w, v); else g.watchers.delete(w); } }
   }
-  function unwatch(uid) { const gid = watching.get(uid); if (!gid) return; watching.delete(uid); const g = games.get(gid); if (g && g.watchers) g.watchers.delete(uid); }
+  function unwatch(uid) { const gid = watching.get(uid); if (!gid) return; watching.delete(uid); const g = games.get(gid); if (g && g.watchers) { g.watchers.delete(uid); wcount(g); } }
+  function wcount(g) { const n = g.watchers ? g.watchers.size : 0; g.uids.forEach(x => send(x, { t: 'wcount', n })); if (g.watchers) g.watchers.forEach(x => send(x, { t: 'wcount', n })); }
   function endGame(g, w, mult, reason) {
     if (g.over) return;
     const l = 1 - w, res = { winner: w, mult, reason, at: Date.now() };
@@ -662,7 +689,7 @@ function createCore(cfg) {
     uw.cigs += g.stake * 2 + C.ECON.onlineWin * mult + bon; res.bon = bon;
     uw.rating += C.RATING.win[mult];
     ul.rating = Math.max(0, ul.rating + (reason === 'resign' ? C.RATING.resign : C.RATING.loss[mult]));
-    uw.wins++; ul.losses++;
+    uw.wins++; ul.losses++; if (g.stake) uw.stakeWins = (uw.stakeWins | 0) + 1;
     if (mult > 1) uw.mars = (uw.mars || 0) + 1;
     uw.streak = (uw.streak || 0) + 1; uw.best = Math.max(uw.best || 0, uw.streak); ul.streak = 0;
     const vk = g.variant === 'short' ? 'shortG' : 'longG'; uw[vk] = (uw[vk] || 0) + 1; ul[vk] = (ul[vk] || 0) + 1;
@@ -724,7 +751,7 @@ function createCore(cfg) {
       const v = days.map(d => (D[d] && D[d][k]) || 0), mx = Math.max(1, ...v);
       return `${name} (за 14 дней: ${v.reduce((a, b) => a + b, 0)})\n` + days.map((d, i) => `${d.slice(8, 10)}.${d.slice(5, 7)} ${'▇'.repeat(Math.round(v[i] / mx * 12)) || '·'} ${v[i]}`).join('\n');
     };
-    return '📈 Графики по дням (Москва)\n\n' + [block('dau', '👥 Заходили'), block('new', '🆕 Новые игроки'), block('games', '🎲 Партии'), block('stars', '⭐ Звёзды')].join('\n\n');
+    return '📈 Графики по дням (Москва)\n\n' + [block('dau', '👥 Заходили'), block('new', '🆕 Новые игроки'), block('games', '🎲 Партии онлайн'), block('bot', '🤖 Партии с ботом'), block('stars', '⭐ Звёзды')].join('\n\n');
   }
 
   // ---------- этап 6: рассылка ----------
@@ -838,6 +865,7 @@ function createCore(cfg) {
 🟢 Сейчас в игре: ${online.size}
 🎲 Идёт партий: ${inGames}, ищут соперника: ${queue.length}
 📊 Партий сегодня: ${meta.day === today() ? meta.gamesDay || 0 : 0}, всего: ${meta.gamesTotal || 0}
+🤖 С ботом сегодня: ${((meta.days || {})[today()] || {}).bot || 0} (побед игроков ${((meta.days || {})[today()] || {}).botW || 0}), всего: ${all.reduce((a, u) => a + (u.botGames | 0), 0)}
 ⭐ Продажи за звёзды: сегодня ${(meta.sales || []).filter(x => x.at > day).reduce((a, x) => a + x.stars, 0)} ⭐, всего ${(meta.sales || []).reduce((a, x) => a + x.stars, 0)} ⭐ (${(meta.sales || []).length} покупок)
 
 🏆 Топ:
@@ -908,7 +936,8 @@ ${top}
     return `👤 ${u.name}${u.username ? ' @' + u.username : ''}\nid: ${u.id}${u.banned ? '\n⛔ ЗАБАНЕН' + (u.banReason ? ': ' + u.banReason : '') : ''}
 🚬 Сигареты: ${u.cigs}
 ⭐ Рейтинг: ${u.rating} (${C.rankOf(u.rating)})
-🎲 Онлайн: побед ${u.wins || 0}, поражений ${u.losses || 0}; бот: ${u.botWins || 0} побед
+🎲 Онлайн: побед ${u.wins || 0}, поражений ${u.losses || 0}
+🤖 С ботом: сыграно ${u.botGames || 0}, побед ${u.botWins || 0}
 🛍 Вещей куплено: ${(u.owned || []).filter(id => ITEMS[id] && ITEMS[id].price).length}
 ⭐ Потратил звёзд: ${u.stars || 0}
 👥 Корешей: ${(u.friends || []).length}
@@ -1082,7 +1111,8 @@ ${top}
     }
   }
 
-  return { onMessage, onClose, tick, busy, onUpdate, hookAllowed, botSetup, fetchName, getPhoto, bcastStep, HOOK_PATH, get botUsername() { return botUsername; } };
+  function avatarUrl(id) { const u = users[String(id)]; return u && u.photo || null; }
+  return { avatarUrl, onMessage, onClose, tick, busy, onUpdate, hookAllowed, botSetup, fetchName, getPhoto, bcastStep, HOOK_PATH, get botUsername() { return botUsername; } };
 }
 
 module.exports = { createCore };
