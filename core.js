@@ -16,6 +16,7 @@ const STARS = {
   set2: { title: 'Набор «Блатной»', stars: 400, cigs: 1000, items: ['o_13_malinovyi', 'n_3', 'w_3', 'd_4', 'g_1', 'br_1'] },
   set3: { title: 'Набор «Хата под ключ»', stars: 500, cigs: 0, items: ['l_4', 'wl_5', 'pt_1', 'fd_6', 'm_3', 'a_3'] },
   spin: { title: 'Прокрут колеса фортуны', stars: 50, cigs: 0, spins: 1 },
+  pass: { title: 'Блатной пропуск на сезон', stars: 500, cigs: 0, pass: 1 },
 };
 const TURN_SECONDS = 90;
 const HOOK_PATH = '/tg-hook';
@@ -58,7 +59,7 @@ function createCore(cfg) {
   }
   function eqv(u) { return u.photo ? { ...(u.eq || {}), _av: '/ava/' + u.id + '.jpg?v=' + crypto.createHash('md5').update(u.photo).digest('hex').slice(0, 6) } : u.eq; }
   function publicUser(u) { return { id: u.id, name: u.name, rating: u.rating, rank: C.rankOf(u.rating), wins: u.wins, losses: u.losses, eq: eqv(u), lvl: u.lvl || 1, mars: u.mars || 0, best: u.best || 0, longG: u.longG || 0, shortG: u.shortG || 0, created: u.created, title: u.title && ACH_BY[u.title] ? ACH_BY[u.title].title : '', brig: (b => b ? { id: b.id, name: b.name, emblem: b.emblem || 0 } : null)(u.brig && meta.brig && meta.brig[u.brig]), num: String(u.id).replace(/\D/g, '').slice(-4).padStart(4, '0') }; }
-  function meView(u) { const dT = dnum(Date.now()), ld = u.lastDaily ? dnum(u.lastDaily) : -9; return { ...publicUser(u), dailyReady: ld !== dT, streakD: u.streakD | 0, tasksReady: (() => { const q = quests(u); return q.list.filter(x => !x.c && x.p >= QPOOL[x.i].n).length + (u.spinDay !== today() ? 1 : 0); })(), unread: unread(u), bchat: chatUnread(u), admin: isAdmin(u.id), brigInv: (u.brigInv || []).length, giftLeft: u.giftDay === today() ? 500 - (u.giftSum | 0) : 500, cigs: u.cigs, owned: u.owned || [], lastDaily: u.lastDaily || 0, botWins: u.botWins || 0, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
+  function meView(u) { const dT = dnum(Date.now()), ld = u.lastDaily ? dnum(u.lastDaily) : -9; return { ...publicUser(u), dailyReady: ld !== dT, streakD: u.streakD | 0, tasksReady: (() => { const q = quests(u); return q.list.filter(x => !x.c && x.p >= QPOOL[x.i].n).length + (u.spinDay !== today() ? 1 : 0) + passReady(u); })(), unread: unread(u), bchat: chatUnread(u), admin: isAdmin(u.id), brigInv: (u.brigInv || []).length, giftLeft: u.giftDay === today() ? 500 - (u.giftSum | 0) : 500, cigs: u.cigs, owned: u.owned || [], lastDaily: u.lastDaily || 0, botWins: u.botWins || 0, friends: u.friends.map(f => users[f]).filter(Boolean).map(f => ({ ...publicUser(f), online: online.has(f.id) })) }; }
   // внешний вид и счёт игрока присылает само приложение (сырой тестовый вариант)
   // кошелёк живёт на сервере. С телефона принимается только внешний вид (и только из того, что куплено).
   // Один раз, при переходе со старой версии, сервер забирает с телефона сигареты, рейтинг и покупки.
@@ -88,7 +89,7 @@ function createCore(cfg) {
     const p = STARS[id], u = users[uid]; if (!p || !u) return false;
     meta.paid = meta.paid || {}; if (meta.paid[charge]) return false; meta.paid[charge] = uid;
     if (!Array.isArray(u.owned)) u.owned = [];
-    u.cigs += p.cigs || 0; if (p.spins) u.spins = (u.spins | 0) + p.spins; (p.items || []).forEach(x => { if (ITEMS[x] && !u.owned.includes(x)) u.owned.push(x); });
+    u.cigs += p.cigs || 0; if (p.spins) u.spins = (u.spins | 0) + p.spins; if (p.pass) ps(u).prem = 1; (p.items || []).forEach(x => { if (ITEMS[x] && !u.owned.includes(x)) u.owned.push(x); });
     u.stars = (u.stars || 0) + (paid || p.stars); dayStat('stars', paid || p.stars);
     meta.sales = (meta.sales || []).concat([{ at: Date.now(), uid, id, stars: paid || p.stars, charge }]).slice(-1000);
     addLog('оплата', `${u.name} купил «${p.title}» за ${paid || p.stars} ⭐`);
@@ -225,6 +226,18 @@ function createCore(cfg) {
   const SEASON_PRIZE = [25000, 15000, 10000];
   function spts(u) { return u.sp && u.sp.id === sid() ? u.sp.pts | 0 : 0; }
   function seasonAdd(u, d) { const id = sid(); if (!u.sp || u.sp.id !== id) u.sp = { id, pts: 0 }; u.sp.pts = Math.max(0, (u.sp.pts | 0) + d); }
+  // --- сезонный пропуск: 30 ступеней по 100 опыта, бесплатная и платная («Блатной пропуск») ветки ---
+  const PASS_LV = 30, PASS_XP = 100;
+  const PASS_FREE = { 3: { c: 100 }, 6: { c: 150 }, 9: { c: 200 }, 12: { s: 1 }, 15: { c: 300 }, 18: { c: 350 }, 21: { s: 1 }, 24: { c: 500 }, 27: { c: 600 }, 30: { c: 1000 } };
+  const PASS_PREM = {}; for (let l = 1; l <= PASS_LV; l++) PASS_PREM[l] = { c: Math.round((150 + l * 15) / 10) * 10 };
+  Object.assign(PASS_PREM, { 5: { s: 2 }, 8: { i: 's_11' }, 12: { c: 600, s: 1 }, 16: { i: 'w_3' }, 20: { s: 3 }, 24: { i: 'd_15' }, 30: { c: 5000, i: 'o_08_troika', t: 1 } });
+  function ps(u) { const id = sid(); if (!u.ps || u.ps.id !== id) u.ps = { id, xp: 0, prem: 0, gf: [], gp: [] }; return u.ps; }
+  function psAdd(u, n) { if (!u) return; const p = ps(u), was = Math.min(PASS_LV, Math.floor(p.xp / PASS_XP)); p.xp = Math.min(PASS_LV * PASS_XP, p.xp + n); const now = Math.min(PASS_LV, Math.floor(p.xp / PASS_XP)); save(u); if (now > was && online.has(u.id)) send(u.id, { t: 'toast', text: `Пропуск: ступень ${now}! Загляни в «Задания» → «Сезон»` }); }
+  function psGive(u, r) { let c = r.c || 0; const out = []; if (r.s) { u.spins = (u.spins | 0) + r.s; out.push(`${r.s} ${r.s === 1 ? 'прокрут' : 'прокрута'} колеса`); }
+    if (r.i) { u.owned = u.owned || []; if (ITEMS[r.i] && !u.owned.includes(r.i)) { u.owned.push(r.i); out.push('вещь'); } else c += Math.round(((ITEMS[r.i] || {}).price || 1000) / 2); }
+    if (r.t) u.passMax = 1; if (c) { u.cigs += c; out.unshift(c + ' сигарет'); } return c; }
+  function passReady(u) { const p = ps(u), lv = Math.min(PASS_LV, Math.floor(p.xp / PASS_XP)); let n = 0; for (let l = 1; l <= lv; l++) { if (PASS_FREE[l] && !p.gf.includes(l)) n++; if (p.prem && !p.gp.includes(l)) n++; } return n ? 1 : 0; }
+  function passView(u) { const p = ps(u); return { lv: Math.min(PASS_LV, Math.floor(p.xp / PASS_XP)), xp: p.xp % PASS_XP, per: PASS_XP, max: PASS_LV, prem: !!p.prem, gf: p.gf, gp: p.gp, free: PASS_FREE, paid: PASS_PREM, price: STARS.pass.stars }; }
   function seasonRoll() {
     const id = sid(); if (meta.sid === id) return; const old = meta.sid; meta.sid = id; saveMeta(); if (!old) return;
     const top = Object.values(users).filter(u => u.sp && u.sp.id === old && u.sp.pts > 0).sort((a, b) => b.sp.pts - a.sp.pts).slice(0, 3);
@@ -249,6 +262,7 @@ function createCore(cfg) {
     { k: 'login7', t: 'Не пропускает', d: 'Заходить 7 дней подряд', title: 'Не пропускает', r: 300, ok: u => (u.streakBest | 0) >= 7 },
     { k: 'login30', t: 'Прописался', d: 'Заходить 30 дней подряд', title: 'Прописался', r: 2000, ok: u => (u.streakBest | 0) >= 30 },
     { k: 'jack', t: 'Везунчик', d: 'Выбить 1000 на колесе', title: 'Везунчик', r: 0, ok: u => !!u.jackpot },
+    { k: 'passmax', t: 'Хозяин сезона', d: 'Пройти Блатной пропуск до конца', title: 'Хозяин сезона', r: 0, ok: u => !!u.passMax },
     { k: 'season', t: 'Чемпион сезона', d: 'Попасть в тройку сезона', title: 'Чемпион сезона', r: 0, ok: u => (u.seasonTop | 0) >= 1 },
     // жаргон нард
     { k: 'krest', t: 'Крестьянин', d: 'Проиграть 10 онлайн-партий. Не беда — все так начинали', title: 'Крестьянин', r: 100, ok: u => (u.losses | 0) >= 10 },
@@ -274,6 +288,7 @@ function createCore(cfg) {
     return { t: 'tasks', quests: q.list.map(x => ({ ...QPOOL[x.i], p: x.p, c: x.c })), qAll: q.all, qAllR: Q_ALL,
       daily: { ready: last !== dToday, streak: nextStreak, reward: STREAK[Math.min(Math.max(nextStreak, 1), 7) - 1], table: STREAK },
       wheel: { free: u.spinDay !== today(), spins: u.spins | 0, sectors: WHEEL.map(w => w.t) },
+      pass: passView(u),
       season: { id, name: MONTHS[+id.slice(5, 7) - 1], left: Math.max(0, Math.ceil((end - now) / 864e5)), pts: spts(u), place: all.findIndex(x => x.id === u.id) + 1, prizes: SEASON_PRIZE,
         top: all.slice(0, 10).map(x => ({ id: x.id, name: x.name, pts: x.sp.pts, eq: eqv(x) })), last: (meta.seasons || [])[0] || null },
       achs: ACHS.map(a => ({ k: a.k, t: a.t, d: a.d, title: a.title, r: a.r, got: !!(u.achs && u.achs[a.k]) })), title: u.title || '' };
@@ -293,7 +308,7 @@ function createCore(cfg) {
       case 'daily': {
         const dT = dnum(Date.now()), last = u.lastDaily ? dnum(u.lastDaily) : -9; if (last === dT) return sendMe(uid);
         u.streakD = last === dT - 1 ? (u.streakD | 0) + 1 : 1; u.streakBest = Math.max(u.streakBest | 0, u.streakD);
-        const r = STREAK[Math.min(u.streakD, 7) - 1]; u.lastDaily = Date.now(); u.cigs += r; save(u);
+        const r = STREAK[Math.min(u.streakD, 7) - 1]; u.lastDaily = Date.now(); u.cigs += r; psAdd(u, 30); save(u);
         send(uid, { t: 'toast', text: `Передачка: +${r} сигарет · день ${u.streakD} подряд` }); achCheck(u); sendMe(uid); return send(uid, tasksView(u));
       }
       case 'clean': { if (u.cigs >= 10) { u.cigs -= 10; save(u); } return sendMe(uid); }
@@ -306,16 +321,24 @@ function createCore(cfg) {
       }
       case 'botwin': { // победа над ботом в тренировке: не чаще раза в 40 секунд
         const mult = Math.max(1, Math.min(3, m.mult | 0));
-        if (Date.now() - (u.botAt || 0) > 40e3) { u.botAt = Date.now(); u.cigs += C.ECON.botWin * mult; u.botWins = (u.botWins || 0) + 1; save(u); qEvent(u, 'bot'); achCheck(u); }
+        if (Date.now() - (u.botAt || 0) > 40e3) { u.botAt = Date.now(); u.cigs += C.ECON.botWin * mult; u.botWins = (u.botWins || 0) + 1; psAdd(u, 10); save(u); qEvent(u, 'bot'); achCheck(u); }
         return sendMe(uid);
       }
       case 'me': return sendMe(uid);
       case 'ping': return send(uid, { t: 'pong' });
       case 'promo': return usePromo(uid, m.code);
       case 'tasks': seasonRoll(); achCheck(u); return send(uid, tasksView(u));
+      case 'psClaim': {   // забрать все открытые награды пропуска
+        const p = ps(u), lv = Math.min(PASS_LV, Math.floor(p.xp / PASS_XP)); let c = 0, n = 0;
+        for (let l = 1; l <= lv; l++) {
+          if (PASS_FREE[l] && !p.gf.includes(l)) { p.gf.push(l); c += psGive(u, PASS_FREE[l]); n++; }
+          if (p.prem && PASS_PREM[l] && !p.gp.includes(l)) { p.gp.push(l); c += psGive(u, PASS_PREM[l]); n++; }
+        }
+        if (!n) return; save(u); achCheck(u); sendMe(uid); send(uid, { t: 'psGot', n, cigs: c }); return send(uid, tasksView(u));
+      }
       case 'qClaim': {
         const q = quests(u), x = q.list[m.i | 0]; if (!x) return; const Q = QPOOL[x.i];
-        if (x.c || x.p < Q.n) return; x.c = 1; u.cigs += Q.r; let extra = 0;
+        if (x.c || x.p < Q.n) return; x.c = 1; u.cigs += Q.r; let extra = 0; psAdd(u, 40);
         if (!q.all && q.list.every(y => y.c)) { q.all = 1; u.cigs += Q_ALL; extra = Q_ALL; }
         save(u); sendMe(uid); send(uid, { t: 'toast', text: `Задание выполнено: +${Q.r}${extra ? ` и +${extra} за все три` : ''} сигарет` }); return send(uid, tasksView(u));
       }
@@ -486,6 +509,7 @@ function createCore(cfg) {
       case 'photo': return sharePhoto(uid, m);
       case 'stars': { // купить за звёзды: сервер выписывает счёт, Телеграм сам принимает оплату
         const p = STARS[m.id]; if (!p) return;
+        if (p.pass && ps(u).prem) return err(uid, 'Блатной пропуск на этот сезон уже куплен');
         if (!BOT_TOKEN && DEV) { grantStars(uid, m.id, 'dev' + Date.now(), p.stars); return; }
         tg('createInvoiceLink', { title: p.title.slice(0, 32), description: starsDesc(p).slice(0, 255), payload: `${m.id}|${uid}|${Date.now()}`, currency: 'XTR', prices: [{ label: p.title.slice(0, 32), amount: p.stars }] })
           .then(r => r && r.ok ? send(uid, { t: 'invoice', id: m.id, link: r.result }) : err(uid, 'Оплата сейчас недоступна, попробуй позже'))
@@ -695,7 +719,7 @@ function createCore(cfg) {
     const vk = g.variant === 'short' ? 'shortG' : 'longG'; uw[vk] = (uw[vk] || 0) + 1; ul[vk] = (ul[vk] || 0) + 1;
     delete uw.hold; delete ul.hold;
     const dW = C.RATING.win[mult], dL = reason === 'resign' ? C.RATING.resign : C.RATING.loss[mult];
-    seasonRoll(); [[uw, ul, 1, dW], [ul, uw, 0, dL]].forEach(([a, b, win, d]) => { seasonAdd(a, d); qEvent(a, 'play'); qEvent(a, g.variant === 'short' ? 'short' : 'long'); if (win) { qEvent(a, 'win'); if (mult > 1) qEvent(a, 'mars'); } setTimeout(() => achCheck(a), 1500); a.hist = [{ at: Date.now(), o: b.id, on: b.name, v: g.variant, s: g.stake, w: win, m: mult, r: reason, d }].concat(a.hist || []).slice(0, 30); refCheck(a); });
+    seasonRoll(); [[uw, ul, 1, dW], [ul, uw, 0, dL]].forEach(([a, b, win, d]) => { seasonAdd(a, d); psAdd(a, win ? 50 : 20); qEvent(a, 'play'); qEvent(a, g.variant === 'short' ? 'short' : 'long'); if (win) { qEvent(a, 'win'); if (mult > 1) qEvent(a, 'mars'); } setTimeout(() => achCheck(a), 1500); a.hist = [{ at: Date.now(), o: b.id, on: b.name, v: g.variant, s: g.stake, w: win, m: mult, r: reason, d }].concat(a.hist || []).slice(0, 30); refCheck(a); });
     g.over = res; g.phase = 'over'; g.deadline = 0;
     try { susCheck(g, w, reason); } catch (e) { log('sus ' + (e && e.message)); }
     save(uw); save(ul);

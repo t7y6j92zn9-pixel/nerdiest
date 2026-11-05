@@ -241,6 +241,24 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:5px}
 .dc{background:#f3ecd6;color:#14204e;border-radius:6px;padding:4px 2px;text-align:center;line-height:1.15;box-shadow:inset 0 0 0 1px #c9b88a}
 .dc span{display:block;font-size:12px;color:#5a5040}.dc b{font-size:14px}
+.pass .ph{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pbadge{background:linear-gradient(135deg,#f6d77a,#b07a1c);color:#2a1a06;font-weight:800;font-size:12px;padding:4px 10px;border-radius:12px;box-shadow:0 2px 6px #000a}
+.pbar{position:relative;height:22px;border-radius:11px;background:#0009;border:1px solid var(--line);margin:10px 0;overflow:hidden}
+.pbar i{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,#8a5a1a,#f0c060);border-radius:11px}
+.pbar span{position:relative;display:block;text-align:center;font-size:12px;font-weight:700;line-height:22px;text-shadow:0 1px 2px #000}
+.ptrack{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+.plab{flex:0 0 auto;display:grid;grid-template-rows:18px 62px 62px;gap:4px;font-size:10px;color:var(--muted);writing-mode:vertical-rl;transform:rotate(180deg);text-align:center}
+.plab span{display:flex;align-items:center;justify-content:center}
+.pl{flex:0 0 58px;display:grid;grid-template-rows:18px 62px 62px;gap:4px;scroll-snap-align:center}
+.pl .n{text-align:center;font-size:12px;font-weight:800;color:var(--muted)}.pl.op .n{color:#f0c060}.pl.cur .n{color:#fff;background:#c9862a;border-radius:9px}
+.pf,.pp{border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;text-align:center;line-height:1.05;position:relative;overflow:hidden}
+.pf{background:#0007;border:1px solid var(--line)}.pf.e{background:#0003;border-style:dashed}
+.pp{background:linear-gradient(160deg,#3a2a10,#1e160a);border:1px solid #b08a3a}
+.pf img,.pp img{width:36px;height:36px;object-fit:contain}.pf b,.pp b{font-size:13px}.pf small,.pp small{font-size:9px;color:var(--muted)}
+.pl:not(.op) .pf,.pl:not(.op) .pp{opacity:.55}
+.pp.lk::after{content:"🔒";position:absolute;right:2px;top:1px;font-size:11px}
+.got::before{content:"✓";position:absolute;inset:0;display:grid;place-items:center;background:#000a;color:#7fd07f;font-size:24px;font-weight:800}
+.rdy{box-shadow:0 0 0 2px #f0c060,0 0 12px #f0c06088;animation:rdy 1.4s ease-in-out infinite}@keyframes rdy{50%{box-shadow:0 0 0 2px #f0c060,0 0 4px #f0c06044}}
 .dc.dbl{background:#e9dcae}.dc.hot{box-shadow:inset 0 0 0 2px #d4a020;background:#f6e39a}.dc.cold{box-shadow:inset 0 0 0 2px #5a7ab0;background:#dfe6f0}
 .ach{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:12px;background:#000a;border:1px solid var(--line);margin-bottom:8px}
 .ach .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#ffffff10}.ach.got .ic{background:radial-gradient(#f0d070,#8a6a1a)}
@@ -2295,6 +2313,7 @@ function renderTasks() {
       <p class="sub" style="text-align:center;margin-top:8px">Один прокрут в день бесплатно. Выпадает от 25 до 1000 сигарет или вещь с барахолки.</p>`;
   } else if (NET.taskTab === 's') {
     const S = d.season;
+    if (d.pass) h += passHTML(d.pass, S);
     h += `<div class="card" style="text-align:center"><h2 style="margin:0">Сезон «${S.name}»</h2><p class="sub" style="margin:4px 0">До конца ${S.left} ${plural(S.left, 'день', 'дня', 'дней')}. Очки — это рейтинг, набранный за онлайн-партии в этом месяце.</p>
       <b style="font-size:20px">У тебя ${S.pts} ${plural(S.pts, 'очко', 'очка', 'очков')}${S.place ? ` · ${S.place}-е место` : ''}</b>
       <p class="sub" style="margin:6px 0 0">Награды тройке: 🥇 ${S.prizes[0]} · 🥈 ${S.prizes[1]} · 🥉 ${S.prizes[2]} сигарет и титул «Чемпион сезона»</p></div>
@@ -2306,6 +2325,9 @@ function renderTasks() {
   }
   if (box.dataset.h === h && box.childElementCount) return; box.dataset.h = h; box.innerHTML = h;
   if ($('wheelCv')) drawWheel(NET.wheelRot || 0, d.wheel.sectors);
+  if ($('psClaim')) $('psClaim').onclick = () => { $('psClaim').disabled = true; flyCigs($('psClaim')); nsend({ t: 'psClaim' }); };
+  if ($('psBuy')) $('psBuy').onclick = () => buyStars({ sid: 'pass' });
+  { const tr = $('psTrack'), cur = tr && tr.querySelector('.pl.cur'); if (tr && cur && !tr.dataset.sc) { tr.dataset.sc = 1; tr.scrollLeft = cur.offsetLeft - tr.clientWidth / 2 + cur.clientWidth / 2; } }
   if ($('wTest')) $('wTest').onclick = () => { if (NET.spinning) return; NET.spinning = true; nsend({ t: 'spin', test: 1 }); };
   if ($('promoGo')) $('promoGo').onclick = () => { const v = $('promoIn').value.trim(); if (!v) return $('promoIn').focus(); nsend({ t: 'promo', code: v }); };
   if ($('tDaily')) $('tDaily').onclick = () => { $('tDaily').disabled = true; flyCigs($('tDaily')); nsend({ t: 'daily' }); try { SFX.coin(); } catch (e) { } };
@@ -2662,6 +2684,40 @@ netMsg = async function (m) {
   if (m.t === 'chat' && m.pi !== undefined) { if (G && G.watch && !G.over) showBubble(m.pi === 0 ? 0 : 1, m.img ? { img: m.img } : { text: m.text }); return; }
   if (m.t === 'game') { const r = await _netMsg11(m); setEye(G && !G.over ? m.watchers | 0 : 0); return r; }
   return _netMsg11(m);
+};
+
+// ================= Сезонный пропуск (в «Заданиях» → «Сезон») =================
+function psRew(r) {
+  if (!r) return '';
+  const parts = [];
+  if (r.i) { const it = item(r.i); parts.push(it ? `<img src="${A + (it.th || it.img)}" alt="" title="${esc(it.name)}">` : '🎁'); }
+  if (r.c) parts.push(`<b>${r.c >= 1000 ? (r.c / 1000) + 'к' : r.c}</b><small>сиг.</small>`);
+  if (r.s) parts.push(`<b>🎡×${r.s}</b>`);
+  if (r.t) parts.push('<small>титул</small>');
+  return parts.join('');
+}
+function passHTML(p, S) {
+  let cols = '', ready = 0;
+  for (let l = 1; l <= p.max; l++) {
+    const op = l <= p.lv, f = p.free[l], q = p.paid[l], fg = p.gf.includes(l), qg = p.gp.includes(l);
+    if (op && f && !fg) ready++; if (op && p.prem && q && !qg) ready++;
+    cols += `<div class="pl${op ? ' op' : ''}${l === Math.min(p.max, p.lv + 1) ? ' cur' : ''}"><span class="n">${l}</span>
+      <div class="pf${f ? '' : ' e'}${fg ? ' got' : ''}${op && f && !fg ? ' rdy' : ''}">${psRew(f)}</div>
+      <div class="pp${p.prem ? '' : ' lk'}${qg ? ' got' : ''}${op && p.prem && !qg ? ' rdy' : ''}">${psRew(q)}</div></div>`;
+  }
+  const done = p.lv >= p.max;
+  return `<div class="card pass"><div class="ph"><div><h2 style="margin:0;font-size:26px">Пропуск сезона</h2><span class="sub" style="margin:0">«${S.name}» · ещё ${S.left} ${plural(S.left, 'день', 'дня', 'дней')}</span></div>${p.prem ? '<span class="pbadge">Блатной</span>' : ''}</div>
+    <div class="pbar"><i style="width:${done ? 100 : p.xp / p.per * 100}%"></i><span>${done ? 'Все 30 ступеней пройдены!' : `Ступень ${p.lv} из ${p.max} · ${p.xp}/${p.per} опыта`}</span></div>
+    <div class="ptrack" id="psTrack"><div class="plab"><span></span><span>Для всех</span><span>Блатной</span></div>${cols}</div>
+    ${ready ? `<button class="btn hot" style="width:100%;margin-top:10px" id="psClaim">Забрать награды (${ready})</button>` : ''}
+    ${p.prem ? '' : `<button class="btn sec" style="width:100%;margin-top:8px" id="psBuy">Блатной пропуск · ${p.price} ⭐</button><p class="sub" style="text-align:center;margin:6px 0 0">Награда на каждой ступени: больше сигарет, прокруты колеса, редкие вещи и титул «Хозяин сезона». Купишь позже — получишь всё за уже пройденные ступени.</p>`}
+    <p class="sub" style="text-align:center;margin:8px 0 0">Опыт: победа онлайн +50, партия +20, задание +40, передачка +30, победа над ботом +10</p></div>`;
+}
+const _netMsg12 = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'psGot') { malyava(`Награды пропуска забраны: ${m.n}${m.cigs ? ` · +${m.cigs} сигарет` : ''}`); return; }
+  if (m.t === 'paid' && m.id === 'pass') { const r = await _netMsg12(m); nsend({ t: 'tasks' }); return r; }
+  return _netMsg12(m);
 };
 
 </script>
