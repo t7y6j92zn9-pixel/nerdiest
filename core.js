@@ -93,9 +93,7 @@ function createCore(cfg) {
     if (!Array.isArray(u.owned)) u.owned = [];
     if (!u.eco) {
       u.eco = Date.now();
-      if (Number.isFinite(+p.cigs)) u.cigs = Math.max(0, Math.min(20000, Math.floor(+p.cigs)));
-      if (Number.isFinite(+p.rating)) u.rating = Math.max(u.rating || 0, Math.min(5000, Math.floor(+p.rating)));
-      if (Array.isArray(p.owned)) u.owned = [...new Set(p.owned.filter(id => ITEMS[id]))];
+      // сигареты, рейтинг и вещи с телефона больше не принимаем: всё хранится только на сервере (защита от читов)
       if (Number.isFinite(+p.lastDaily)) u.lastDaily = +p.lastDaily;
     }
     if (p.eq && typeof p.eq === 'object' && JSON.stringify(p.eq).length < 2000) {
@@ -472,7 +470,8 @@ function createCore(cfg) {
       }
       case 'botwin': { // победа над ботом в тренировке: не чаще раза в 40 секунд
         const mult = Math.max(1, Math.min(3, m.mult | 0));
-        if (Date.now() - (u.botAt || 0) > 40e3) { u.botAt = Date.now(); u.cigs += [10, 20, 40][Math.max(0, Math.min(2, m.lv | 0))] * mult; u.botWins = (u.botWins || 0) + 1; psAdd(u, 10); save(u); qEvent(u, 'bot'); achCheck(u); }
+        if (u.botDay !== today()) { u.botDay = today(); u.botN = 0; }
+        if (Date.now() - (u.botAt || 0) > 40e3 && (u.botN | 0) < 30) { u.botN = (u.botN | 0) + 1; u.botAt = Date.now(); u.cigs += [10, 20, 40][Math.max(0, Math.min(2, m.lv | 0))] * mult; u.botWins = (u.botWins || 0) + 1; psAdd(u, 10); save(u); qEvent(u, 'bot'); achCheck(u); }
         return sendMe(uid);
       }
       case 'gbGet': { const x = users[String(m.id || '')]; if (!x) return; if (x.id === uid && x.gbNew) { x.gbNew = 0; save(x); } return send(uid, { t: 'gb', id: x.id, list: (x.gb || []).slice(0, 10), can: x.id !== uid && !((x.gbBy || {})[uid] > Date.now() - 12 * 3600e3) }); }
