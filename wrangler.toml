@@ -19,7 +19,7 @@ new_sqlite_classes = ["Lobby"]
 # Основная (боевая) игра: отдельный воркер «nardy» со своим ботом и своей базой.
 # Тест = воркер nerdiest (ветка main), боевая = воркер nardy (ветка release, команда: npx wrangler deploy --env prod)
 [env.prod]
-name = "nardy"
+name = "nardy-zona"
 
 [env.prod.assets]
 directory = "./app"
