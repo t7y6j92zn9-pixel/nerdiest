@@ -70,7 +70,7 @@ function createCore(cfg) {
   function getUser(id, name, username) {
     let u = users[id];
     if (!u) { u = users[id] = { id, name: name || 'Игрок', username: username || '', cigs: 2500, rating: 0, wins: 0, losses: 0, eq: null, lvl: 1, friends: [], created: Date.now() }; dayStat('new'); }
-    if (!u.no) { meta.seq = (meta.seq | 0) + 1; u.no = meta.seq; saveMeta(); if (u.no % 100 === 0) setTimeout(() => chanPost(`🚪 На зону заехал юбилейный игрок — дело №${String(u.no).padStart(3, '0')}: ${u.name}. Встречайте!`), 5000); }
+    if (!u.no) { meta.seq = (meta.seq | 0) + 1; u.no = meta.seq; saveMeta(); if (u.no % 100 === 0) setTimeout(() => chanPost(`🚪 На зону заехал юбилейный игрок — дело №${String(u.no).padStart(3, '0')}: ${u.name}. Встречайте!`, 'novichok'), 5000); }
     if (u.dauDay !== today()) { u.dauDay = today(); dayStat('dau'); }
     if (name) u.name = name;
     if (username) u.username = username;
@@ -246,7 +246,7 @@ function createCore(cfg) {
     const top = Object.values(meta.brig).filter(b => b.mp && b.mp.id === prev && b.mp.pts > 0).sort((a, b) => b.mp.pts - a.mp.pts).slice(0, 3);
     top.forEach((b, i) => { b.pot += CUP_PRIZE[i]; b.cups = (b.cups | 0) + (i === 0 ? 1 : 0); b['cup' + (i + 1)] = (b['cup' + (i + 1)] | 0) + 1; brigLog(b, `Кубок общаков: ${i + 1}-е место за месяц, +${CUP_PRIZE[i]} в общак`); });
     meta.cupLast = { id: prev, top: top.map(b => ({ id: b.id, name: b.name, pts: b.mp.pts })) };
-    if (top.length) chanPost('🏆 Кубок общаков за месяц разыгран!\n\n' + top.map((b, i) => `${['🥇', '🥈', '🥉'][i]} «${b.name}» — ${b.mp.pts} очков, +${CUP_PRIZE[i]} в общак`).join('\n'));
+    if (top.length) chanPost('🏆 Кубок общаков за месяц разыгран!\n\n' + top.map((b, i) => `${['🥇', '🥈', '🥉'][i]} «${b.name}» — ${b.mp.pts} очков, +${CUP_PRIZE[i]} в общак`).join('\n'), 'kubok');
   }
   function cupView() { cupRoll(); const id = sid(); return { prizes: CUP_PRIZE, last: meta.cupLast || null, top: Object.values(meta.brig).filter(b => b.mp && b.mp.id === id && b.mp.pts > 0).sort((a, b) => b.mp.pts - a.mp.pts).slice(0, 10).map(b => ({ id: b.id, name: b.name, emblem: b.emblem || 0, pts: b.mp.pts })) }; }
   // --- Базар: системные сообщения, задание бригады на день, встреча новичка ---
@@ -342,7 +342,7 @@ function createCore(cfg) {
     const id = sid(); if (meta.sid === id) return; const old = meta.sid; meta.sid = id; saveMeta(); if (!old) return;
     const top = Object.values(users).filter(u => u.sp && u.sp.id === old && u.sp.pts > 0).sort((a, b) => b.sp.pts - a.sp.pts).slice(0, 3);
     top.forEach((u, i) => { u.cigs += SEASON_PRIZE[i]; u.seasonTop = (u.seasonTop | 0) + 1; save(u); achCheck(u); pushMal(u.id, { fn: 'Сезон', text: `🏆 Сезон ${old} закончился. Ты ${i + 1}-й! Награда: ${SEASON_PRIZE[i]} сигарет.` }); });
-    if (top.length) chanPost(`🎫 Сезон ${old} закрыт. Лучшие:\n\n` + top.map((u, i) => `${['🥇', '🥈', '🥉'][i]} ${u.name} — +${SEASON_PRIZE[i]} сигарет`).join('\n'));
+    if (top.length) chanPost(`🎫 Сезон ${old} закрыт. Лучшие:\n\n` + top.map((u, i) => `${['🥇', '🥈', '🥉'][i]} ${u.name} — +${SEASON_PRIZE[i]} сигарет`).join('\n'), 'sezon');
     meta.seasons = [{ id: old, top: top.map(u => ({ id: u.id, name: u.name, pts: u.sp.pts })) }].concat(meta.seasons || []).slice(0, 24); saveMeta();
   }
   const COLL = { beads: 'Все чётки', board: 'Все нарды', mug: 'Все кружки', pet: 'Все питомцы', glasses: 'Все очки', watch: 'Все часы' };
@@ -521,7 +521,7 @@ function createCore(cfg) {
           const pool = Object.entries(ITEMS).filter(([id, it]) => it.price > 0 && it.price <= 900 && !it.rank && !it.ach && !it.stars && !(u.owned || []).includes(id) && !/^(z_|l_)/.test(id));
           if (pool.length) { const [id] = pool[crypto.randomInt(pool.length)]; u.owned = u.owned || []; u.owned.push(id); text = 'вещь'; send(uid, { t: 'spun', k, item: id }); }
           else { u.cigs += 300; send(uid, { t: 'spun', k, cigs: 300 }); }
-        } else { u.cigs += w.c; if (w.c >= 1000) { u.jackpot = 1; chanPost(`🎰 ${u.name} сорвал(а) джекпот на колесе: ${w.c} сигарет!`); } send(uid, { t: 'spun', k, cigs: w.c }); }
+        } else { u.cigs += w.c; if (w.c >= 1000) { u.jackpot = 1; chanPost(`🎰 ${u.name} сорвал(а) джекпот на колесе: ${w.c} сигарет!`, 'dzhekpot'); } send(uid, { t: 'spun', k, cigs: w.c }); }
         save(u); qEvent(u, 'spin'); achCheck(u); setTimeout(() => sendMe(uid), 4500); return send(uid, tasksView(u));
       }
       case 'setTitle': { if (m.k && !(u.achs && u.achs[m.k])) return; u.title = m.k || ''; save(u); sendMe(uid); return send(uid, tasksView(u)); }
@@ -874,7 +874,7 @@ function createCore(cfg) {
     const wk = weekNo(); if (meta.smotr && meta.smotr.wk === wk) return;
     const top = Object.values(users).filter(x => x.app && !x.banned && x.rating > 0).sort((a, b) => b.rating - a.rating || b.wins - a.wins)[0];
     if (!top) return;
-    meta.smotr = { wk, id: top.id, name: top.name }; saveMeta(); chanPost(`👑 Новый Смотрящий недели — ${top.name}!\n\nРейтинг ${top.rating}. Корона, +2000 сигарет и уважение всей зоны. Кто следующий?`);
+    meta.smotr = { wk, id: top.id, name: top.name }; saveMeta(); chanPost(`👑 Новый Смотрящий недели — ${top.name}!\n\nРейтинг ${top.rating}. Корона, +2000 сигарет и уважение всей зоны. Кто следующий?`, 'smotr');
     { top.cigs += 2000; top.smotrN = (top.smotrN | 0) + 1; save(top); pushMal(top.id, { fn: 'Администрация', text: '👑 Братва решила: эту неделю ты — Смотрящий. Корона в профиле и рейтинге, +2000 сигарет на общак хаты. Держи масть!', sys: true }); }
   }
   const isSmotr = id => { smotrRoll(); return !!(meta.smotr && meta.smotr.id === id); };
@@ -1110,9 +1110,12 @@ function createCore(cfg) {
     }
   }
   // ---------- канал новостей: бот сам постит события ----------
-  function chanPost(text) {
+  function chanPost(text, pic) {   // пост в канал с картинкой (a/posty/*.jpg)
     if (!BOT_TOKEN || !meta.chan) return;
-    tg('sendMessage', { chat_id: meta.chan, text, reply_markup: botUsername ? { inline_keyboard: [[{ text: '🎲 Играть в нарды', url: `https://t.me/${botUsername}?start=ch` }]] } : undefined }).catch(() => { });
+    const kb = botUsername ? { inline_keyboard: [[{ text: '🎲 Играть в нарды', url: `https://t.me/${botUsername}?start=ch` }]] } : undefined;
+    const photo = typeof pic === 'string' && pic.length > 40 ? pic : (WEBAPP_URL ? `${WEBAPP_URL}/a/posty/${pic || 'post'}.jpg` : '');
+    const send = photo && text.length <= 1000 ? tg('sendPhoto', { chat_id: meta.chan, photo, caption: text, reply_markup: kb }) : Promise.resolve(null);
+    send.then(r => { if (!r || !r.ok) tg('sendMessage', { chat_id: meta.chan, text, reply_markup: kb }).catch(() => { }); }).catch(() => { });
   }
   function bcastKick() {
     if (cfg.schedule) return cfg.schedule(100);
@@ -1257,7 +1260,7 @@ ${top}
 /give кто 500 — выдать сигареты (минус — забрать: /give кто -100)
 /gold кто 100 — выдать рыжьё (минус — забрать)
 /channel @канал — подключить канал новостей (бот сам постит события)
-/post текст — свой пост в канал
+/post текст — свой пост в канал (или пришли фото с подписью /post текст)
 /rating кто 1200 — поставить рейтинг
 /ban кто причина — закрыть доступ, /unban кто — открыть
 /mute кто — запрет маляв на сутки, /reports — жалобы на малявы
@@ -1295,7 +1298,7 @@ ${top}
     if (cmd === '/stats') return M(statsText());
     if (cmd === '/channel') {
       const c = String(parts[0] || '').trim();
-      if (!c) return M(meta.chan ? `📣 Канал новостей: ${meta.chan}\nБот сам постит: нового Смотрящего, кубок общаков, итоги сезона, джекпоты на колесе, каждого сотого игрока.\n\nСвой пост: /post текст\nОтключить: /channel off` : '📣 Канал новостей не подключён.\n\n1) Создай канал в Телеграме.\n2) Добавь этого бота в канал администратором (право «Публиковать сообщения»).\n3) Напиши сюда: /channel @адрес_канала');
+      if (!c) return M(meta.chan ? `📣 Канал новостей: ${meta.chan}\nБот сам постит: нового Смотрящего, кубок общаков, итоги сезона, джекпоты на колесе, каждого сотого игрока.\n\nСвой пост: /post текст, или пришли фото с подписью /post текст\nОтключить: /channel off` : '📣 Канал новостей не подключён.\n\n1) Создай канал в Телеграме.\n2) Добавь этого бота в канал администратором (право «Публиковать сообщения»).\n3) Напиши сюда: /channel @адрес_канала');
       if (c === 'off') { meta.chan = ''; saveMeta(); return M('Канал отключён, бот больше туда не пишет.'); }
       const id = /^-?\d+$/.test(c) ? c : '@' + c.replace(/^@|^https?:\/\/t\.me\//g, '');
       tg('sendMessage', { chat_id: id, text: '🎲 Нарды за решёткой: бот подключён к каналу. Тут будут новости зоны.' }).then(r => {
@@ -1398,6 +1401,10 @@ ${top}
       if (!(meta.admins || []).length) return M('Поддержка ещё не подключена, попробуй позже.');
       toSupport(me, msg).catch(() => { });
       return M('✅ Спасибо! Обращение передано. Ответ придёт сюда, в этот чат.', menuKeyboard());
+    }
+    if (me && isAdmin(me.id) && msg.photo && /^\/post/i.test(msg.caption || '')) {   // админ шлёт фото с подписью /post — уходит в канал
+      if (!meta.chan) return M('Сначала подключи канал: /channel @адрес');
+      const ph = msg.photo[msg.photo.length - 1]; chanPost(String(msg.caption).replace(/^\/post(@\w+)?\s*/i, '').slice(0, 1000), ph.file_id); addLog(me.id, 'пост с фото в канал'); return M('✅ Отправил в канал с твоей картинкой');
     }
     if (!text) return null;
     const [cmd0, payload] = text.split(/\s+/);
