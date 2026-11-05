@@ -55,7 +55,7 @@ export class Lobby extends DurableObject {
     }
     const av = url.pathname.match(/^\/ava\/([\w-]{1,40})\.jpg$/);
     if (av) {   // аватарка из Телеграма — отдаём со своего адреса (чтобы картинки работали везде)
-      const src = core.avatarUrl(av[1]); if (!src) return new Response('', { status: 404 });
+      const src = await core.avatarUrl(av[1]); if (!src) return new Response('', { status: 404 });
       try { const r = await fetch(src); if (!r.ok) return new Response('', { status: 404 }); return new Response(r.body, { headers: { 'Content-Type': r.headers.get('content-type') || 'image/jpeg', 'Cache-Control': 'public, max-age=86400' } }); } catch (e) { return new Response('', { status: 502 }); }
     }
     const ph = url.pathname.match(/^\/photo\/([0-9a-f]{16})\.jpg$/);

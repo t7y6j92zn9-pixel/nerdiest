@@ -181,6 +181,25 @@ h2{font-family:var(--f-hand);font-weight:700;font-size:34px;line-height:1;margin
 .lvls{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.lvls button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px;border-radius:10px;border:1px solid var(--line);background:#0006;color:inherit;font:inherit}.lvls button b{font-size:14px}.lvls button span{font-size:12px;color:#f6d27a}.lvls button.on{border-color:#f0c060;background:#3a2a10;box-shadow:0 0 0 1px #f0c060}
 .rbi{display:none}
 .cupi{width:28px;height:34px;object-fit:contain}.cups{display:inline-flex;gap:2px;margin-left:6px;vertical-align:-4px}.cupc{display:inline-flex;align-items:center;font:700 11px system-ui;color:#f6d27a}.cupc img{width:22px;height:27px;object-fit:contain}
+.breq{border-bottom:1px dashed #f0c06066;margin:0 0 4px;padding-bottom:4px}.breqh{font-size:12px;font-weight:700;color:#f0c060;padding:6px 0 2px}.breq .bmem{grid-template-columns:36px 1fr auto auto}.breq .bmem img:not([src]){background:#3a3b33}
+.smotrl{text-align:center;font-size:12px;color:var(--muted);margin:8px 6px 4px}.smotrl b{color:#f0c060}
+.top3 .frame:nth-child(2){border-image:linear-gradient(135deg,#f6d27a,#a8781c,#ffe9a6,#8a5a10) 1;box-shadow:0 0 14px #f0c06055}
+.top3 .frame:nth-child(1){border-image:linear-gradient(135deg,#e8e8e8,#7a7a7a,#ffffff,#8a8a8a) 1}
+.top3 .frame:nth-child(3){border-image:linear-gradient(135deg,#d08a4a,#6a3a14,#e8a868,#7a4a1c) 1}
+.top3 .frame:nth-child(1) .pl{color:#e0e0e0}.top3 .frame:nth-child(3) .pl{color:#e0a060}
+.tag.gc{min-width:0;padding:6px 8px 0 16px}.tag.gc .coini{width:15px;height:15px;margin-right:1px}
+.thn s{opacity:.55;font-size:.8em;margin-right:2px}
+.chh{font-family:var(--f-hand);font-size:24px;margin:0 0 6px}.chests{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.chest{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:8px 6px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px}
+.chest img{width:72px;height:66px;object-fit:contain}.chest b{font-size:13px}.chest small{font-size:10px;color:var(--muted);line-height:1.2;min-height:24px}.chest .btn{width:100%;padding:7px 4px;font-size:12px;margin-top:2px}
+.chbar{position:relative;width:100%;height:14px;border-radius:7px;background:#0009;border:1px solid var(--line);overflow:hidden}.chbar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#8a5a1a,#f0c060)}.chbar span{position:relative;font-size:10px;font-weight:700;line-height:14px}
+.chestopen .chimg{width:150px;display:block;margin:0 auto;animation:chpop .6s ease-out}@keyframes chpop{0%{transform:scale(.4) rotate(-10deg);opacity:0}70%{transform:scale(1.1) rotate(3deg)}100%{transform:none;opacity:1}}
+.betbox{margin-top:8px}.betbox .btn small{font-weight:400;opacity:.8}
+.vipb{height:18px;width:auto;vertical-align:-4px;margin-left:4px;display:inline-block}.frame .vipb{height:15px}
+.vipcase{display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,#3a2808,#1a1206);border:1px solid #c9962a;border-radius:10px;padding:6px 10px;margin-bottom:8px;box-shadow:0 0 12px #f0c06033}
+.vipcase img{height:46px}.vipcase b{display:block;color:#f6d27a;font-size:15px}.vipcase span{font-size:12px;color:#e8d0a0}
+.vipleft{background:#3a2808;border:1px solid #c9962a;border-radius:8px;padding:6px 8px;font-size:13px;color:#f6e2b0;margin:6px 0}
+.spinc{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px;margin:0 2px 8px}
 .x2c{position:absolute;right:4%;top:4%;background:#d33;color:#fff;font:italic 900 14px/1 system-ui;padding:4px 6px;border-radius:7px;transform:rotate(8deg);box-shadow:0 0 0 2px #fff4,0 2px 6px #000a;z-index:3}
 .thn{position:absolute;left:50%;top:6%;transform:translateX(-50%);background:#f6d27a;color:#2a1a04;font:800 15px/1 system-ui;padding:3px 8px;border-radius:8px;box-shadow:0 0 0 2px #7a4a08,0 2px 6px #000a;z-index:2}
 .tag.own{background:none;color:#2f5a1e;transform:none;padding:6px 6px 0}
@@ -623,7 +642,7 @@ input.vol{width:52%;accent-color:var(--accent2,#f2b35a)}
       <div class="modes">
         <button class="mode" data-mode="friend"><img src="a/knopki/03.webp" alt=""><span><b>Вызвать кореша</b><span>Ссылка в Телеграм, на сигареты или просто так</span></span></button>
         <button class="mode" data-mode="quick"><img src="a/knopki/01.webp" alt=""><span><b>Найти соперника</b><span>Случайный игрок онлайн, идёт в рейтинг</span></span></button>
-        <button class="mode" data-mode="bot"><img src="a/knopki/11.webp" alt=""><span><b>Армян</b><span>Тренировка без рейтинга, 3 уровня сложности</span></span></button>
+        <button class="mode" data-mode="bot"><img src="a/knopki/11.webp" alt=""><span><b>Бот Армян</b><span>Тренировка без рейтинга, 3 уровня сложности</span></span></button>
       </div>
       <div id="playPanel"></div>
     </section>
@@ -1101,7 +1120,7 @@ STICKERS.forEach(([n,p,l],i)=>add({id:'st_'+i, cat:'bazar', sub:'stikery', slot:
 // чифир — буст на одну онлайн-партию: +25% сигарет за победу
 [['chif1','Кружка чифира',10,'ryzhe/chif1.webp','1 кружка: +25% сигарет за победу в следующей онлайн-партии'],['chif5','Пять кружек чифира',40,'ryzhe/chif5.webp','5 кружек: каждая даёт +25% сигарет за победу на одну онлайн-партию']]
   .forEach(([sid,n,g,k,gives])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'chifir', slot:'stars', name:n, gold:g, price:0, img:k, gives}));
-add({id:'z_vip', sid:'vip', cat:'zvezdy', sub:'status', slot:'stars', name:'Блатной статус · 30 дней', gold:750, price:0, img:'nashivki/vip.webp', gives:'передачка ×1.5, золотое имя в рейтинге и в партии, 3 бесплатных прокрута колеса в день'});
+[['vip','на месяц',750,30],['vip3','на 3 месяца',1990,91],['vip6','на полгода',3590,182],['vip12','на год',6490,365]].forEach(([sid,n,g,d])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'status', slot:'stars', vipD:d, name:'Блатной '+n, gold:g, price:0, img:'nashivki/vip.webp', gives:`${d} дней: передачка ×1.5, золотое имя и нашивка «Блатной» в профиле, рейтинге и партии, 3 бесплатных прокрута колеса в день`+(d>30?` · выгода ${Math.round((1-g/(750*d/30))*100)}%`:'')}));
 // рыжьё — вторая валюта, покупается только за звёзды Телеграма
 [['gd50','Горсть рыжья',50,50,'01'],['gd100','Кисет рыжья',100,110,'02'],['gd250','Мешочек рыжья',250,290,'03'],['gd500','Котелок рыжья',500,600,'04'],['gd1000','Сундук рыжья',1000,1250,'05']]
   .forEach(([sid,n,st,g,k])=>add({id:'z_'+sid, sid, cat:'zvezdy', sub:'ryzhe', slot:'gold', name:n, stars:st, give:g, price:0, img:`ryzhe/${k}.webp`, gives:`${g} рыжья`+(g>st?` (${st} + ${g-st} в подарок)`:'')}));
@@ -1410,7 +1429,7 @@ function equippedId(it){ if(it.slot==='tat') return P.eq.tats[it.place]; if(it.s
 function tryEq(it){ const e=JSON.parse(JSON.stringify(P.eq)); if(it.slot==='tat') e.tats[it.place]=it.id; else if(it.slot==='level'||it.slot==='phrase'||it.slot==='sticker'){} else e[it.slot]=it.id;
   if(it.slot==='tat' && !['kist','palcy','neck','spina'].includes(it.place)) e.outfit='o_00_golyi'; if(it.slot==='level') e.level=it.id; return e; }
 const COIN=()=>`<img class="coini" src="${A}ryzhe/icon.webp" alt="">`;
-function priceTag(it){ if(it.slot==='gold') return `<span class="tag gold">⭐ ${it.stars}</span>`; if(it.slot==='stars') return `<span class="tag gold">${COIN()}${it.gold}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
+function priceTag(it){ if(it.slot==='gold') return `<span class="tag gold">⭐ ${it.stars}</span>`; if(it.slot==='stars') return `<span class="tag gc">${COIN()}${it.gold}</span>`; if(owns(it.id)) return `<span class="tag own">${equippedId(it)===it.id?'✓ надето':'есть'}</span>`; if(locked(it)) return ''; return `<span class="tag">${it.price}</span>`; }
 async function thumb(it){
   if(!it.img){ return `<span style="font-size:12px;color:#5a503d">—</span>`; }
   if(it.slot==='level') return `<img src="${A+it.img}" alt="">`;
@@ -1531,7 +1550,7 @@ async function renderTop(){
   const ord=[1,0,2].filter(i=>t3[i]);
   $('top3').innerHTML=ord.map(i=>`<div class="frame"><span class="pl">${i+1}</span><img id="hf${i}" alt=""><b>${t3[i].smotr?'👑 ':''}${t3[i].name}</b><span>${t3[i].rating}</span></div>`).join('');
   $('top3').querySelectorAll('.frame').forEach((el,k)=>{ const x=t3[ord[k]]; el.style.cursor='pointer'; el.onclick=()=>showCase(x.me?null:x); });
-  t3.forEach(async(x,i)=>{ const c=await heroOnBg(x.eq, x.lvl||lvl(), 360); const h=document.createElement('canvas'); h.width=300; h.height=340; h.getContext('2d').drawImage(c,90,15,180,204,0,0,300,340); if($('hf'+i)) $('hf'+i).src=h.toDataURL('image/webp',.85); });
+  t3.forEach(async(x,i)=>{ const av=x.eq&&x.eq._av||(x.me&&window.NET&&NET.myAv); if(av){ if($('hf'+i)) $('hf'+i).src=av; return; } const c=await heroOnBg(x.eq, x.lvl||lvl(), 360); const h=document.createElement('canvas'); h.width=300; h.height=340; h.getContext('2d').drawImage(c,90,15,180,204,0,0,300,340); if($('hf'+i)) $('hf'+i).src=h.toDataURL('image/webp',.85); });
   $('topList').innerHTML=all.slice(3).map((x,i)=>`<div class="li${x.me?' me':''}"><span class="n">${i+4}</span><span class="av"><img data-h="${i+3}" alt=""></span><span><b>${x.smotr?'👑 ':''}${x.name}${x.me?' (ты)':''}</b><br><span style="font-size:11px">${rankOf(x.rating)} · ${x.wins} побед</span></span><span class="r">${x.rating}</span></div>`).join('');
   all.slice(3).forEach(async(x,i)=>{ const el=$('topList').querySelector(`[data-h="${i+3}"]`); if(el) el.src=await headURL(x.eq); });
   $('topList').querySelectorAll('.li').forEach((el,i)=>{ const x=all[i+3]; el.style.cursor='pointer'; el.onclick=()=>showCase(x.me?null:(EX.find(e=>e.name===x.name)||x)); });
@@ -1560,7 +1579,7 @@ function myPhrases(){ return ITEMS.filter(x=>x.slot==='phrase'); }
 function myStickers(){ return ITEMS.filter(x=>x.slot==='sticker'); }
 async function startGame(o){
   if(G){ clearInterval(G.timer); G.over=true; }
-  const opp = o.boss ? {name:'Кондрат · босс недели', rating:3000, lvl:11, eq:Object.assign(JSON.parse(JSON.stringify(DEFAULT_EQ)),{outfit:'o_13_malinovyi',hat:'h_8',neck:'n_3',board:'d_4'}), bot:true, boss:true} : o.bot ? {name:'Армян · '+BOT_LV[o.lv||0].n, lv:o.lv||0, rating:[600,1200,2000][o.lv||0], lvl:[1,2,4][o.lv||0], eq:Object.assign(JSON.parse(JSON.stringify(DEFAULT_EQ)),{outfit:'o_03_roba',hat:'h_2',board:'d_1'}), bot:true} : o.opp;
+  const opp = o.boss ? {name:'Кондрат · босс недели', rating:3000, lvl:11, eq:Object.assign(JSON.parse(JSON.stringify(DEFAULT_EQ)),{outfit:'o_13_malinovyi',hat:'h_8',neck:'n_3',board:'d_4'}), bot:true, boss:true} : o.bot ? {name:'Бот Армян · '+BOT_LV[o.lv||0].n, lv:o.lv||0, rating:[600,1200,2000][o.lv||0], lvl:[1,2,4][o.lv||0], eq:Object.assign(JSON.parse(JSON.stringify(DEFAULT_EQ)),{outfit:'o_03_roba',hat:'h_2',board:'d_1'}), bot:true} : o.opp;
   G={ v:variant, s:E.newState(variant), turn:0, dice:[], shown:[], phase:'idle', steps:[], hist:[], sel:null, last:-1, opp, stake:o.stake||0, online:!!o.online, over:false, rolledNow:false, timer:null, muted:false, lastReact:0, setup:true };
   if(G.stake){ P.cigs-=G.stake; saveP(); }
   go('game');
@@ -1843,7 +1862,7 @@ function cleanEq(eq) {
     if (eq.tats && typeof eq.tats === 'object') for (const k in eq.tats) if (PLACES[k] && item(eq.tats[k])) e.tats[k] = eq.tats[k]; }
   e.ring = 'r_0'; if (eq && typeof eq._av === 'string' && /^\/ava\/[\w-]+\.jpg(\?v=\w+)?$/.test(eq._av)) e._av = eq._av; return e;
 }
-function netPerson(p) { return { smotr: !!p.smotr, title: p.title || '', brig: p.brig || null, net: true, losses: p.losses | 0, mars: p.mars | 0, best: p.best | 0, longG: p.longG | 0, shortG: p.shortG | 0, created: p.created, num: p.num, id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
+function netPerson(p) { return { vip: !!p.vip, smotr: !!p.smotr, title: p.title || '', brig: p.brig || null, net: true, losses: p.losses | 0, mars: p.mars | 0, best: p.best | 0, longG: p.longG | 0, shortG: p.shortG | 0, created: p.created, num: p.num, id: p.id, name: p.name, rating: p.rating | 0, wins: p.wins | 0, lvl: Math.min(11, Math.max(1, p.lvl | 0 || 1)), eq: cleanEq(p.eq), online: p.online !== false }; }
 // партия на сервере хранится «как есть»; если я второй игрок — разворачиваю доску, чтобы я всегда был снизу
 function flipState(s, me) {
   const n = E.clone(s); if (me !== 1) return n;
@@ -2373,9 +2392,10 @@ function renderTasks() {
     const W = d.wheel, n = W.sectors.length, cols = ['#7a1e14', '#1f4a2a', '#24324f', '#6a4a12', '#4a1a4a', '#1f3f4a', '#5a1414', '#8a6a12'];
     const grad = W.sectors.map((_, i) => `${cols[i % cols.length]} ${i * 360 / n}deg ${(i + 1) * 360 / n}deg`).join(',');
     h += `<div class="wheelwrap"><canvas id="wheelCv" width="680" height="680"></canvas>${PIN_SVG}</div>
+      <div class="spinc"><span>🎡 Бесплатных сегодня: <b>${W.freeN != null ? W.freeN : (W.free ? 1 : 0)} из ${W.freeMax || 1}</b>${(W.freeMax || 1) > 1 ? ' <span class="vipn">· блатной</span>' : ''}</span><span>Купленных: <b>${W.spins}</b></span></div>
       <button class="btn hot" style="width:100%" id="wSpin">${W.free ? 'Крутить бесплатно' : W.spins ? `Крутить (осталось ${W.spins})` : 'Бесплатный прокрут завтра'}</button>
       <button class="btn sec" style="width:100%;margin-top:8px" id="wBuy">Ещё прокрут · ${COIN()} 50</button>${NET.me && NET.me.admin ? '<button class="btn ghost" style="width:100%;margin-top:8px" id="wTest">Тест-прокрут (только для админа, без награды)</button>' : ''}
-      <p class="sub" style="text-align:center;margin-top:8px">Один прокрут в день бесплатно. Выпадает от 25 до 1000 сигарет или вещь с барахолки.</p>`;
+      <p class="sub" style="text-align:center;margin-top:8px">Один прокрут в день бесплатно, у блатных — три. Выпадает от 25 до 1000 сигарет или вещь с барахолки.</p>`;
   } else if (NET.taskTab === 's') {
     const S = d.season;
     h += `<div class="card" style="text-align:center;margin-bottom:12px"><h2 style="margin:0">Сезон «${S.name}»</h2><p class="sub" style="margin:4px 0">До конца ${S.left} ${plural(S.left, 'день', 'дня', 'дней')}. Очки — это рейтинг, набранный за онлайн-партии в этом месяце.</p>
@@ -2871,8 +2891,8 @@ const _renderTop14 = renderTop;
 renderTop = function () {
   const r = _renderTop14.apply(this, arguments);
   if (NET.on) { const all = (NET.top || []).concat(NET.me ? [{ ...NET.me, me: true }] : []); const s = all.find(x => x.smotr); let el = $('smotrCard');
-    if (!el) { el = document.createElement('div'); el.id = 'smotrCard'; el.className = 'card smotr'; const h = document.querySelector('#topMain .honor'); if (h) h.before(el); }
-    el.hidden = !s; if (s) el.innerHTML = `👑 Смотрящий недели: ${esc(s.name)}${s.me ? ' (ты)' : ''}<span class="sub" style="margin:0;font-weight:400">· кто первый в рейтинге в понедельник</span>`; }
+    if (!el) { el = document.createElement('div'); el.id = 'smotrCard'; el.className = 'smotrl'; const h = document.querySelector('#topMain .honor'); if (h) h.after(el); }
+    el.hidden = !s; if (s) el.innerHTML = `👑 Смотрящий недели — <b>${esc(s.name)}${s.me ? ' (ты)' : ''}</b>. Каждый понедельник им становится первый в рейтинге.`; }
   return r;
 };
 window.netRematch = () => { SFX.click(); nsend({ t: 'rematch' }); };
@@ -2898,9 +2918,11 @@ renderBrig = function () {
   if (b && b.req && b.req.length) {
     const my = b.members.find(x => x.id === NET.uid) || {};
     if (my.role === 'owner' || my.role === 'dep') {
-      const w = document.createElement('div');
-      w.innerHTML = `<h2 style="font-size:24px;margin-top:14px">Просятся в бригаду</h2><div class="card glow" style="padding:6px 12px">${b.req.map(q => `<div class="li2" style="border:0"><span class="who"><b>${esc(q.name)}</b><span>рейтинг ${q.rating}</span></span><button class="btn hot" style="padding:8px 10px;font-size:13px" data-ra="${q.id}">Принять</button><button class="btn ghost" style="padding:8px 10px;font-size:13px" data-rd="${q.id}">✕</button></div>`).join('')}</div>`;
-      const first = box.querySelector('h2'); if (first) first.before(w); else box.prepend(w);
+      const w = document.createElement('div'); w.className = 'breq';
+      w.innerHTML = `<div class="breqh">Просятся в бригаду · ${b.req.length}</div>` + b.req.map((q, k) => `<div class="bmem"><img data-rq="${k}" alt=""><span><b>${esc(q.name)}</b><small>${rankOf(q.rating)} · рейтинг ${q.rating}</small></span><button class="btn hot" style="padding:6px 10px;font-size:12px" data-ra="${q.id}">Принять</button><button class="btn ghost" style="padding:6px 9px;font-size:12px" data-rd="${q.id}">✕</button></div>`).join('');
+      const sost = [...box.querySelectorAll('h2')].find(x => x.textContent.trim() === 'Состав'), card = sost && sost.nextElementSibling;
+      if (card) card.prepend(w); else box.append(w);
+      b.req.forEach(async (q, k) => { const el = w.querySelector(`[data-rq="${k}"]`); if (el && q.eq) el.src = await headURL(q.eq); });
       w.querySelectorAll('[data-ra]').forEach(x => x.onclick = () => nsend({ t: 'brigReqAns', id: x.dataset.ra, ok: true }));
       w.querySelectorAll('[data-rd]').forEach(x => x.onclick = () => nsend({ t: 'brigReqAns', id: x.dataset.rd, ok: false }));
     }
@@ -2977,7 +2999,7 @@ const _fillCase17 = fillCase;
 fillCase = function (m) { _fillCase17(m); if (NET.caseFor !== m.id) return; const p = $('cpS'), u = m.user || {}; if (p && !p.querySelector('.authrow')) { const dl = p.querySelector('dl'); if (dl) dl.insertAdjacentHTML('afterbegin', `<dt class="authrow">Авторитет</dt><dd>👍 ${u.auth | 0}${u.vip ? ` · <img src="${A}nashivki/vip.webp" alt="" style="height:24px;vertical-align:-7px"> <span class="vipn">блатной</span>` : ''}${u.cap ? ' · в кепке «Лох» 😂' : ''}</dd>`); } };
 // первая покупка рыжья ×2
 const _renderShop17 = renderShop;
-renderShop = async function () { const r = await _renderShop17.apply(this, arguments); if (NET.on && NET.me && !NET.me.goldFirst && shopCat === 'zvezdy' && shopSub === 'ryzhe') { document.querySelectorAll('.thn').forEach(el => { const box = el.parentElement; if (box && !box.querySelector('.x2c')) box.insertAdjacentHTML('beforeend', '<i class="x2c">x2</i>'); }); } return r; };
+renderShop = async function () { const r = await _renderShop17.apply(this, arguments); if (NET.on && NET.me && !NET.me.goldFirst && shopCat === 'zvezdy' && shopSub === 'ryzhe') { document.querySelectorAll('.thn').forEach(el => { if (!el.dataset.x2) { el.dataset.x2 = 1; el.innerHTML = `<s>${el.textContent}</s> ${(+el.textContent) * 2}`; } const box = el.parentElement; if (box && !box.querySelector('.x2c')) box.insertAdjacentHTML('beforeend', '<i class="x2c">x2</i>'); }); } return r; };
 // война бригад и кубок месяца
 const _renderBrig17 = renderBrig;
 renderBrig = function () {
@@ -3029,7 +3051,7 @@ function modeSetup(mode) {
   let v = variant, st = CAT.ECON.stakes.includes(stake) ? stake : 0, lv = NET.botLv | 0;
   const draw = () => {
     let h = '';
-    if (mode === 'bot') h = `<h3>Армян</h3><p class="sub" style="text-align:center;margin:0">Тренировка без рейтинга. Чем сильнее Армян — тем больше сигарет за победу.</p>${vSegHTML(v)}
+    if (mode === 'bot') h = `<h3>Бот Армян</h3><p class="sub" style="text-align:center;margin:0">Тренировка без рейтинга. Чем сильнее бот — тем больше сигарет за победу.</p>${vSegHTML(v)}
       <p class="sub" style="margin:0 0 6px">Сложность</p><div class="lvls">${BOT_LV.map((x, i) => `<button data-lv="${i}" class="${i === lv ? 'on' : ''}"><b>${['😌', '😏', '😈'][i]} ${x.n[0].toUpperCase() + x.n.slice(1)}</b><span>+${x.r} сиг.</span></button>`).join('')}</div>
       <div class="row" style="margin-top:14px"><button class="btn sec" data-close>Отмена</button><button class="btn hot" id="mGo">Играть</button></div>`;
     else if (mode === 'quick') h = `<h3>Найти соперника</h3><p class="sub" style="text-align:center;margin:0">Случайный живой игрок, партия идёт в рейтинг</p>${vSegHTML(v)}${stHTML(st)}
@@ -3081,5 +3103,114 @@ renderBrig = function () {
 };
 const _showBrigInfo20 = showBrigInfo;
 showBrigInfo = function (b) { _showBrigInfo20(b); const h = document.querySelector('#modalBody .brighead h3'); if (h && !h.querySelector('.cups')) h.insertAdjacentHTML('beforeend', cupsHTML(b)); };
+
+// ================= Сундуки (в «Заданиях») =================
+const CHEST_UI = { kiset: { n: 'Кисет', d: 'за 5 онлайн-партий' }, dacha: { n: 'Дачка', d: 'за 10 онлайн-побед' }, gold: { n: 'Золотой сундук', d: 'редкая вещь с барахолки' } };
+function chestsHTML() {
+  const c = NET.me && NET.me.chests; if (!c) return '';
+  const card = k => { const x = c[k], ready = x.n ? x.p >= x.n : true;
+    return `<div class="chest${x.n && ready ? ' glow' : ''}"><img src="${A}sunduki/${k}.webp" alt=""><b>${CHEST_UI[k].n}</b><small>${CHEST_UI[k].d}</small>
+      ${x.n ? `<div class="chbar"><i style="width:${x.p / x.n * 100}%"></i><span>${x.p}/${x.n}</span></div>` : ''}
+      <button class="btn ${ready ? 'hot' : 'ghost'}" data-chest="${k}" ${x.n && !ready ? 'disabled' : ''}>${x.n ? 'Открыть' : `${COIN()} ${x.price}`}</button></div>`; };
+  return `<h3 class="chh">Сундуки</h3><div class="chests">${['kiset', 'dacha', 'gold'].map(card).join('')}</div>`;
+}
+const _renderTasks22 = renderTasks;
+renderTasks = function () {
+  const r = _renderTasks22.apply(this, arguments);
+  if (NET.taskTab === 'q' && NET.me && NET.me.chests && $('taskBox') && !$('chestBox')) {
+    const el = document.createElement('div'); el.id = 'chestBox'; el.innerHTML = chestsHTML(); $('taskBox').prepend(el);
+    el.querySelectorAll('[data-chest]').forEach(b => b.onclick = () => { SFX.click(); const k = b.dataset.chest;
+      if (k === 'gold') { showModal(`<div class="vict"><h3>Золотой сундук</h3><img src="${A}sunduki/gold.webp" alt="" style="width:150px;display:block;margin:0 auto"><p style="text-align:center">Внутри — вещь с барахолки дороже 3000, которой у тебя ещё нет. Если такие кончились — 5000 сигарет.</p><div class="row"><button class="btn sec" data-close>Не сейчас</button><button class="btn hot" id="chGo">Открыть · ${COIN()} ${NET.me.chests.gold.price}</button></div></div>`); $('chGo').onclick = () => { hideModal(); nsend({ t: 'chestOpen', k }); }; return; }
+      nsend({ t: 'chestOpen', k }); });
+  }
+  return r;
+};
+const _netMsg22 = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'chestGot') {
+    const it = m.item && item(m.item), parts = [];
+    if (it) parts.push(`<div style="text-align:center"><img src="${A + (it.th || it.img)}" alt="" style="width:110px;height:110px;object-fit:contain"><br><b>${esc(it.name)}</b><br><span class="sub">уже лежит в барахолке</span></div>`);
+    if (m.cigs) parts.push(`<p style="font-size:22px;font-weight:800;text-align:center;margin:6px 0">+${m.cigs} сигарет</p>`);
+    if (m.chif) parts.push(`<p style="text-align:center;margin:4px 0">☕ +${m.chif} чифир${m.chif > 1 ? 'а' : ''}</p>`);
+    if (m.spin) parts.push(`<p style="text-align:center;margin:4px 0">🎡 +1 прокрут колеса</p>`);
+    holdCigs(60000);
+    showModal(`<div class="vict chestopen"><h3>${CHEST_UI[m.k].n}</h3><img class="chimg" src="${A}sunduki/${m.k}.webp" alt="">${parts.join('')}<button class="btn hot" style="width:100%;margin-top:10px" data-close ${m.cigs ? 'data-fly' : ''}>Забрать</button></div>`);
+    try { SFX.coin(); } catch (e) { } return;
+  }
+  const r = await _netMsg22(m);
+  if (m.t === 'me' && screen === 'tasks' && NET.taskTab === 'q' && $('chestBox')) { const el = $('chestBox'); el.remove(); renderTasks(); }
+  return r;
+};
+// ================= Пари для зрителей =================
+function betBox(m) {
+  let el = $('betBox'); if (!G || !G.watch || G.over) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('div'); el.id = 'betBox'; el.className = 'card betbox'; $('controls').after(el); }
+  const P0 = G.self || {}, P1 = G.opp || {}, pool = (m && m.pool) || NET.betPool || [0, 0], mine = m ? m.mine : NET.betMine, open = m ? m.open : NET.betOpen;
+  NET.betPool = pool; NET.betMine = mine; NET.betOpen = open;
+  const names = [P0.name || 'Игрок 1', P1.name || 'Игрок 2'];
+  if (mine) { el.innerHTML = `<b>🎲 Твоё пари: ${mine.n} на ${esc(names[mine.side])}</b><p class="sub" style="margin:2px 0 0">В банке: ${esc(names[0])} ${pool[0]} · ${esc(names[1])} ${pool[1]}. Победители делят ставки проигравших.</p>`; return; }
+  if (!open) { el.innerHTML = `<p class="sub" style="margin:0">🎲 Пари закрыты — партия уже идёт. Банк: ${pool[0]} / ${pool[1]}</p>`; return; }
+  NET.betN = NET.betN || 50;
+  el.innerHTML = `<b>🎲 Пари: кто выиграет?</b><div class="stakes" style="margin:6px 0">${[10, 50, 100, 200].map(n => `<button data-bn="${n}" class="${n === NET.betN ? 'on' : ''}">${n}</button>`).join('')}</div>
+    <div class="row"><button class="btn sec" data-bs="0">${esc(names[0])}<small> · ${pool[0]}</small></button><button class="btn sec" data-bs="1">${esc(names[1])}<small> · ${pool[1]}</small></button></div>
+    <p class="sub" style="margin:4px 0 0">Победители делят ставки проигравших. Нет ставок на другую сторону — сигареты вернутся.</p>`;
+  el.querySelectorAll('[data-bn]').forEach(b => b.onclick = () => { NET.betN = +b.dataset.bn; betBox(); });
+  el.querySelectorAll('[data-bs]').forEach(b => b.onclick = () => { if (P.cigs < NET.betN) return malyava('Не хватает сигарет'); SFX.click(); nsend({ t: 'bet', side: +b.dataset.bs, n: NET.betN }); });
+}
+const _netMsg22b = netMsg;
+netMsg = async function (m) {
+  if (m.t === 'betPool') { if (G && G.watch) betBox(m); return; }
+  const r = await _netMsg22b(m);
+  if (m.t === 'game') { if (G && G.watch && !G.over) betBox(); else { const el = $('betBox'); if (el) el.remove(); NET.betPool = null; NET.betMine = null; } }
+  return r;
+};
+
+// ================= Блатной статус: нашивка у имени везде, срок — только себе =================
+const VIPB = '<img class="vipb" src="' + A + 'nashivki/vip.webp" alt="блатной" title="Блатной">';
+const myVipDays = () => { const t = NET.me && NET.me.vipTill; return t && t > Date.now() ? Math.ceil((t - Date.now()) / 864e5) : 0; };
+const isVipX = x => !!(x && (x.me || x.id === NET.uid ? myVipDays() : x.vip));
+function vipName(el) { if (el && !el.querySelector('.vipb')) { el.classList.add('vipn'); el.insertAdjacentHTML('beforeend', VIPB); } }
+const _renderTop23 = renderTop;
+renderTop = function () {
+  const r = _renderTop23.apply(this, arguments);
+  setTimeout(() => { if (!NET.on) return; const all = (NET.top || []).map(x => ({ ...x })).concat(NET.me ? [{ ...NET.me, me: true }] : []).sort((a, b) => b.rating - a.rating);
+    document.querySelectorAll('#top3 .frame').forEach((el, k) => { const x = all[[1, 0, 2][k]]; if (isVipX(x)) vipName(el.querySelector('b')); });
+    document.querySelectorAll('#topList .li b').forEach((el, i) => { if (isVipX(all[i + 3])) vipName(el); }); }, 20);
+  return r;
+};
+const _renderPlayers23 = renderPlayers;
+renderPlayers = async function () {
+  const r = await _renderPlayers23.apply(this, arguments);
+  if (G && NET.on) { if (isVipX(G.opp)) vipName($('gpOpp').querySelector('b')); const me = G.watch ? G.self : { me: true }; if (isVipX(me)) vipName($('gpMe').querySelector('b')); }
+  return r;
+};
+const _renderFriends23 = renderFriends;
+renderFriends = function () {
+  const r = _renderFriends23.apply(this, arguments);
+  setTimeout(() => { const fr = NET.friends || []; document.querySelectorAll('#friendList .li2').forEach((el, i) => { if (fr[i] && fr[i].vip) vipName(el.querySelector('.who b')); }); }, 20);
+  return r;
+};
+const _renderBrig23 = renderBrig;
+renderBrig = function () {
+  const r = _renderBrig23.apply(this, arguments);
+  const b = NET.brigD && NET.brigD.b; if (b) document.querySelectorAll('#brigBox .bmem[data-bm]').forEach(el => { const x = b.members.find(y => y.id === el.dataset.bm); if (isVipX(x)) vipName(el.querySelector('span b')); });
+  return r;
+};
+const _showCase23 = showCase;
+showCase = async function (x, inGame) {
+  const r = await _showCase23.apply(this, arguments);
+  const me = !x || x.me || x.id === NET.uid, cs = document.querySelector('#modalBody .case');
+  if (cs && NET.on && !cs.querySelector('.vipcase') && (me ? myVipDays() : x.vip)) cs.insertAdjacentHTML('afterbegin', `<div class="vipcase"><img src="${A}nashivki/vip.webp" alt=""><div><b>Блатной статус</b>${me ? `<span>действует ещё ${myVipDays()} ${plural(myVipDays(), 'день', 'дня', 'дней')}</span>` : '<span>уважаемый человек</span>'}</div></div>`);
+  return r;
+};
+// барахолка: блатной уже есть — показываем срок вместо покупки
+const _renderShop23 = renderShop;
+renderShop = async function () {
+  const r = await _renderShop23.apply(this, arguments);
+  if (NET.on && shopCat === 'zvezdy' && shopSub === 'status') { const d = myVipDays(), pv = $('shopPreview');
+    if (d && pv && !pv.querySelector('.vipleft')) { pv.querySelectorAll('.btn.hot').forEach(b => { b.disabled = true; b.textContent = 'Уже блатной'; b.classList.remove('hot'); b.classList.add('ghost'); });
+      (pv.querySelector('h3') || pv).insertAdjacentHTML('afterend', `<p class="vipleft">👑 Твой статус действует ещё <b>${d} ${plural(d, 'день', 'дня', 'дней')}</b>. Продлить можно, когда закончится.</p>`); } }
+  return r;
+};
 
 </script>
