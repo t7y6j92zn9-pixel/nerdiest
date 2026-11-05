@@ -15,3 +15,16 @@ class_name = "Lobby"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Lobby"]
+
+# Основная (боевая) игра: отдельный воркер «nardy» со своим ботом и своей базой.
+# Тест = воркер nerdiest (ветка main), боевая = воркер nardy (ветка release, команда: npx wrangler deploy --env prod)
+[env.prod]
+name = "nardy"
+
+[env.prod.assets]
+directory = "./app"
+binding = "ASSETS"
+
+[[env.prod.durable_objects.bindings]]
+name = "LOBBY"
+class_name = "Lobby"
