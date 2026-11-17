@@ -25,4 +25,4 @@ function seedBots(users, save, meta) {
     save(u);
   }
 }
-module.exports = { PROFILES, seedBots, WAIT_MS: 12000 };
+module.exports = { PROFILES, seedBots, WAIT_MS: 3500 };
