@@ -200,6 +200,6 @@
     return 2;
   }
 
-  const api = { absOf, idxOf, own, newState, clone, removeOne, allHome, pip, step, beginTurn, legalSteps, botPlan, applyTurn, winMult };
+  const api = { absOf, idxOf, own, newState, clone, removeOne, allHome, pip, step, beginTurn, legalSteps, botPlan, applyTurn, winMult, evaluate, key };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.Engine = api;
 })(this);

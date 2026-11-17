@@ -6,6 +6,7 @@ const E = require('./engine.js');
 const C = require('./catalog.js');
 const ITEMS = require('./items.json'); // цены барахолки (собираются из игры)
 const { seedBots, PROFILES: RANKED_BOTS, WAIT_MS } = require('./ranked-bots.js');
+const BRAIN = require('./bot-brain.js');
 const RANK_NAMES = C.RANKS.map(r => r.name);
 
 // покупки за Telegram Stars (цены в звёздах). Что входит — решает только сервер.
@@ -803,8 +804,6 @@ function createCore(cfg) {
         leaveQueue(uid);
         const i = queue.findIndex(q => q.variant === variant && q.stake === stake && q.uid !== uid && online.has(q.uid));
         if (i >= 0) { const o = queue.splice(i, 1)[0]; return startGame([o.uid, uid], variant, stake); }
-        const bot = rankedBotFor(u, stake);
-        if (bot) return startGame([uid, bot.id], variant, stake);
         queue.push({ uid, variant, stake, at: Date.now() });
         return send(uid, { t: 'searching', variant, stake, waiting: queue.length });
       }
@@ -831,23 +830,19 @@ function createCore(cfg) {
   }
   function leaveQueue(uid) { for (let i = queue.length - 1; i >= 0; i--) if (queue[i].uid === uid) queue.splice(i, 1); }
   function rankedBotFor(u, stake) {
-    const pool = RANKED_BOTS.map(p => users[p.id]).filter(b => b && !b.banned && !userGame.has(b.id) && b.cigs >= stake);
+    const pool = RANKED_BOTS.map(p => users[p.id]).filter(b => b && !b.banned && !userGame.has(b.id) && b.cigs >= stake && !pairCooled(u.id, b.id));
     if (!pool.length) return null;
     pool.sort((a, b) => Math.abs(a.rating - u.rating) - Math.abs(b.rating - u.rating));
     return pool[crypto.randomInt(Math.min(3, pool.length))];
   }
   function rankedBotPlan(u, state, player, dice) {
-    const skill = Math.max(0, Math.min(1, +(u.aiSkill ?? 1)));
-    if (skill >= 1 || crypto.randomInt(100) < Math.round(skill * 100)) return E.botPlan(state, player, dice);
-    let st = state, left = dice.slice(); const plan = [], memo = new Map();
-    while (left.length) {
-      const steps = E.legalSteps(st, player, left, memo);
-      if (!steps.length) break;
-      const step = steps[crypto.randomInt(steps.length)];
-      plan.push({ i: step.i, d: step.d }); st = step.n; left = E.removeOne(left, step.d);
-    }
-    return plan;
+    const mist = Math.max(0, Math.min(0.5, +(u.aiMist ?? 0.05)));
+    try { return BRAIN.plan(state, player, dice, mist); } catch (e) { log('brain ' + (e && e.message)); return E.botPlan(state, player, dice); }
   }
+  // серия партий с одним соперником: максимум 3 подряд, ×2 — один раз за серию; после серии с ботом — перерыв 30 минут
+  const SER_MAX = 3, pairCool = new Map();
+  const pairKey = (a, b) => [a, b].sort().join(':');
+  function pairCooled(a, b) { const t = pairCool.get(pairKey(a, b)); if (!t) return false; if (t < Date.now()) { pairCool.delete(pairKey(a, b)); return false; } return true; }
   function joinRoom(uid, code) {
     const r = rooms.get(code);
     if (!r) return err(uid, 'Комната не найдена: кореш уже сел играть или отменил');
@@ -883,11 +878,14 @@ function createCore(cfg) {
     const r = lastG.get(uid); if (!r || Date.now() - r.at > 5 * 60e3) return err(uid, 'Реванш уже не взять: соперник ушёл(ла) из-за стола');
     const o = lastG.get(r.opp), ou = users[r.opp], u = users[uid];
     if (!ou || (!ou.ai && !online.has(r.opp)) || userGame.has(r.opp)) return err(uid, 'Соперник уже не за столом');
-    const k = x2 && r.stake ? 2 : 1, st = r.stake * k;
+    const ser = r.ser || { n: 1, x2: false };
+    if (ser.n >= SER_MAX) return err(uid, `С одним соперником — не больше ${SER_MAX} партий подряд. Найди нового`);
+    if (x2 && ser.x2) return err(uid, 'Удвоить ставку можно только один раз за серию');
+    const k = x2 && r.stake ? 2 : 1, st = r.stake * k, ns = { n: ser.n + 1, x2: ser.x2 || k > 1 };
     if (st && (u.cigs < st || ou.cigs < st)) return err(uid, k > 1 ? 'На реванш ×2 у кого-то не хватает сигарет' : 'На реванш не хватает сигарет на ставку');
-    if (ou.ai) { lastG.delete(uid); lastG.delete(ou.id); return startGame([uid, ou.id], r.variant, st, r.cap); }
+    if (ou.ai) { lastG.delete(uid); lastG.delete(ou.id); return startGame([uid, ou.id], r.variant, st, r.cap, ns); }
     r.want = k;
-    if (o && o.opp === uid && o.want === k) { lastG.delete(uid); lastG.delete(r.opp); return startGame([r.opp, uid], r.variant, st, r.cap); }
+    if (o && o.opp === uid && o.want === k) { lastG.delete(uid); lastG.delete(r.opp); return startGame([r.opp, uid], r.variant, st, r.cap, ns); }
     send(r.opp, { t: 'rematchAsk', name: u.name, stake: st, x2: k > 1, variant: r.variant }); send(uid, { t: 'rematchWait', x2: k > 1 });
   }
   // ---------- смотрящий недели: кто в понедельник первый в рейтинге ----------
@@ -902,7 +900,7 @@ function createCore(cfg) {
   const isSmotr = id => { smotrRoll(); return !!(meta.smotr && meta.smotr.id === id); };
 
   // ---------- партия ----------
-  function startGame(uids, variant, stake, cap) {
+  function startGame(uids, variant, stake, cap, ser) {
     if (uids.some(id => !users[id] || users[id].banned || userGame.has(id) || users[id].cigs < stake)) {
       uids.filter(id => !users[id]?.ai).forEach(id => { leaveQueue(id); err(id, 'Соперник занят или не хватает сигарет на ставку. Начни поиск заново.'); });
       return;
@@ -911,7 +909,7 @@ function createCore(cfg) {
     for (const [c, r] of rooms) if (uids.includes(r.host)) rooms.delete(c);
     const g = {
       id: crypto.randomBytes(6).toString('hex'), uids, variant, stake, s: E.newState(variant), turn: 0, dice: [], shown: [],
-      cap: !!cap, phase: 'roll', last: null, seq: 0, away: [0, 0], timeouts: [0, 0], deadline: 0, over: null, opening: null, chatAt: {}, at: Date.now(), moves: 0,
+      cap: !!cap, ser: ser || { n: 1, x2: false }, phase: 'roll', last: null, seq: 0, away: [0, 0], timeouts: [0, 0], deadline: 0, over: null, opening: null, chatAt: {}, at: Date.now(), moves: 0,
     };
     dayStat('games'); if (stake) dayStat('stakes', stake);
     meta.gamesTotal = (meta.gamesTotal || 0) + 1; if (meta.day !== today()) { meta.day = today(); meta.gamesDay = 0; } meta.gamesDay = (meta.gamesDay || 0) + 1; saveMeta();
@@ -1012,7 +1010,7 @@ function createCore(cfg) {
   function gameView(g, i) {
     return {
       t: 'game', id: g.id, seq: ++g.seq, me: i, variant: g.variant, stake: g.stake, s: g.s, turn: g.turn, dice: g.dice, shown: g.shown,
-      phase: g.phase, last: g.last, opening: g.opening, over: g.over, resync: !!g.resync,
+      phase: g.phase, last: g.last, opening: g.opening, over: g.over, resync: !!g.resync, ser: { n: g.ser.n, max: SER_MAX, x2: g.ser.x2 },
       deadline: g.deadline ? Math.max(0, g.deadline - Date.now()) : 0,
       players: g.uids.map(x => ({ ...publicUser(users[x]), online: !!users[x].ai || online.has(x) })),
       watchers: g.watchers ? g.watchers.size : 0,
@@ -1041,7 +1039,8 @@ function createCore(cfg) {
     const chb = g.chif && g.chif[w] ? Math.round((g.stake + C.ECON.onlineWin * mult) * CHIF_BONUS) : 0;
     uw.cigs += g.stake * 2 + C.ECON.onlineWin * mult + bon + chb; res.bon = bon; res.chif = chb;
     if (g.cap) { ul.capTill = Date.now() + 24 * 3600e3; res.cap = 1; }
-    lastG.set(uw.id, { opp: ul.id, variant: g.variant, stake: g.stake, cap: g.cap, at: Date.now() }); lastG.set(ul.id, { opp: uw.id, variant: g.variant, stake: g.stake, cap: g.cap, at: Date.now() });
+    lastG.set(uw.id, { opp: ul.id, variant: g.variant, stake: g.stake, cap: g.cap, ser: g.ser, at: Date.now() }); lastG.set(ul.id, { opp: uw.id, variant: g.variant, stake: g.stake, cap: g.cap, ser: g.ser, at: Date.now() });
+    if (g.ser.n >= SER_MAX && (uw.ai || ul.ai)) pairCool.set(pairKey(uw.id, ul.id), Date.now() + 30 * 60e3);
     uw.rating += C.RATING.win[mult];
     ul.rating = Math.max(0, ul.rating + (reason === 'resign' ? C.RATING.resign : C.RATING.loss[mult]));
     uw.wins++; ul.losses++; if (g.stake) uw.stakeWins = (uw.stakeWins | 0) + 1;
@@ -1240,6 +1239,7 @@ function createCore(cfg) {
   function inviteFriend(u, fid, room) {
     if (users[fid]?.ai) {
       if (userGame.has(fid)) return err(u.id, 'Соперник сейчас доигрывает партию');
+      if (pairCooled(u.id, fid)) return err(u.id, 'С этим соперником ты уже сыграл(а) 3 подряд. Отдохни полчаса или найди другого');
       return startGame([u.id, fid], room.variant, room.stake, room.cap);
     }
     if (online.has(fid) && !userGame.has(fid)) { send(fid, { t: 'invite', code: room.code, from: u.name, variant: room.variant, stake: room.stake }); }   // кореш уже в игре: зовём прямо внутри (и на всякий случай ещё сообщением в боте)

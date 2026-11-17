@@ -1,11 +1,11 @@
-// Six persistent opponents. Ratings and results are earned through actual matches.
+// Six persistent opponents (strong: mist = how often a bot picks 2nd/3rd best move). Ratings and results are earned through actual matches.
 const PROFILES = [
-  { id: 'rankbot_1', name: 'Саня Часовщик', skill: 0.15, outfit: 'o_15_velour', hat: 'h_0', neck: 'n_8', beads: 'b_8', level: 'l_12', board: 'd_2' },
-  { id: 'rankbot_2', name: 'Миша Тихий', skill: 0.70, outfit: 'o_07_rubashka', hat: 'h_3', neck: 'n_9', beads: 'b_9', level: 'l_4', board: 'd_1' },
-  { id: 'rankbot_3', name: 'Рустам', skill: 1, outfit: 'o_05_sportivka', hat: 'h_2', neck: 'n_1', beads: 'b_2', level: 'l_8', board: 'd_3' },
-  { id: 'rankbot_4', name: 'Дядя Витя', skill: 0.15, outfit: 'o_11_kletchataya', hat: 'h_4', neck: 'n_2', beads: 'b_1', level: 'l_2', board: 'd_0' },
-  { id: 'rankbot_5', name: 'Лёха Север', skill: 0.15, outfit: 'o_06_kozhanka', hat: 'h_7', neck: 'n_3', beads: 'b_4', level: 'l_6', board: 'd_4' },
-  { id: 'rankbot_6', name: 'Гриша Рыжий', skill: 0.15, outfit: 'o_09_telnyashka', hat: 'h_0', neck: 'n_0', beads: 'b_9', level: 'l_3', board: 'd_2' },
+  { id: 'rankbot_1', name: 'Саня Часовщик', mist: 0.05, outfit: 'o_15_velour', hat: 'h_0', neck: 'n_8', beads: 'b_8', level: 'l_12', board: 'd_2' },
+  { id: 'rankbot_2', name: 'Миша Тихий', mist: 0.08, outfit: 'o_07_rubashka', hat: 'h_3', neck: 'n_9', beads: 'b_9', level: 'l_4', board: 'd_1' },
+  { id: 'rankbot_3', name: 'Рустам', mist: 0, outfit: 'o_05_sportivka', hat: 'h_2', neck: 'n_1', beads: 'b_2', level: 'l_8', board: 'd_3' },
+  { id: 'rankbot_4', name: 'Дядя Витя', mist: 0.1, outfit: 'o_11_kletchataya', hat: 'h_4', neck: 'n_2', beads: 'b_1', level: 'l_2', board: 'd_0' },
+  { id: 'rankbot_5', name: 'Лёха Север', mist: 0.03, outfit: 'o_06_kozhanka', hat: 'h_7', neck: 'n_3', beads: 'b_4', level: 'l_6', board: 'd_4' },
+  { id: 'rankbot_6', name: 'Гриша Рыжий', mist: 0.06, outfit: 'o_09_telnyashka', hat: 'h_0', neck: 'n_0', beads: 'b_9', level: 'l_3', board: 'd_2' },
 ];
 function seedBots(users, save, meta) {
   for (const p of PROFILES) {
@@ -20,9 +20,9 @@ function seedBots(users, save, meta) {
       u.lvl = +p.level.slice(2);
     }
     u.ai = true;
-    u.aiSkill = p.skill;
+    u.aiMist = p.mist; delete u.aiSkill;
     u.avatar = '/a/avatars/' + p.id + '.webp';
     save(u);
   }
 }
-module.exports = { PROFILES, seedBots, WAIT_MS: 0 };
+module.exports = { PROFILES, seedBots, WAIT_MS: 12000 };

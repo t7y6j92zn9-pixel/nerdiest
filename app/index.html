@@ -3296,6 +3296,20 @@ netMsg = async function (m) {
   if (m.t === 'rematchWait') { const b = $(m.x2 ? 'again2' : 'again'), o = $(m.x2 ? 'again' : 'again2'); if (b) { b.textContent = 'Ждём соперника…'; b.disabled = true; } if (o) o.disabled = false; return; }
   return _netMsg26(m);
 };
+// ================= Серия: максимум 3 партии подряд с одним соперником, ×2 один раз =================
+const _netMsgSer = netMsg;
+netMsg = async function (m) { if (m && m.t === 'game' && m.ser) NET.ser = m.ser; return _netMsgSer(m); };
+const _showModalSer = showModal;
+showModal = function (html) {
+  const r = _showModalSer.apply(this, arguments);
+  const sr = NET.ser, b = $('again');
+  if (b && sr && G && G.net && G.over && !G.watch) {
+    const b2 = $('again2');
+    if (sr.n >= sr.max) { b.textContent = `${sr.max} партии подряд — хватит`; b.disabled = true; if (b2) b2.remove(); const rw = b.closest('.row'); if (rw) rw.classList.remove('row3'); }
+    else { if (sr.x2 && b2) { b2.remove(); const rw = b.closest('.row'); if (rw) rw.classList.remove('row3'); } b.textContent = `Реванш (${sr.n + 1}/${sr.max})`; }
+  }
+  return r;
+};
 // ================= Гостевая книга: надписи на стене хаты =================
 const GB_T = ['Здесь был(а) {n}', '{n} заходил(а) на чифир', 'Сидели, играли. {n}', 'Привет хате от {n}', '{n}: держи масть!', 'Тут был(а) {n}. Всем мира'];
 const _visitCell27 = visitCell;
