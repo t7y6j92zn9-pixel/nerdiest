@@ -104,6 +104,13 @@
   "slot": "outfit",
   "free": false
  },
+ "o_15_velour": {
+  "price": 1800,
+  "rank": null,
+  "ach": null,
+  "slot": "outfit",
+  "free": false
+ },
  "h_0": {
   "price": 0,
   "rank": null,
@@ -173,6 +180,23 @@
   "ach": null,
   "slot": "hat",
   "free": false
+ },
+ "h_10": {
+  "price": 0,
+  "rank": null,
+  "ach": null,
+  "slot": "hat",
+  "free": false,
+  "hidden": true
+ },
+ "h_11": {
+  "price": 99999,
+  "rank": null,
+  "ach": null,
+  "slot": "hat",
+  "free": false,
+  "hidden": true,
+  "ref": 3
  },
  "n_0": {
   "price": 0,
@@ -323,6 +347,34 @@
  },
  "b_7": {
   "price": 900,
+  "rank": null,
+  "ach": null,
+  "slot": "beads",
+  "free": false
+ },
+ "n_8": {
+  "price": 1600,
+  "rank": null,
+  "ach": null,
+  "slot": "neck",
+  "free": false
+ },
+ "n_9": {
+  "price": 1100,
+  "rank": null,
+  "ach": null,
+  "slot": "neck",
+  "free": false
+ },
+ "b_8": {
+  "price": 1300,
+  "rank": null,
+  "ach": null,
+  "slot": "beads",
+  "free": false
+ },
+ "b_9": {
+  "price": 650,
   "rank": null,
   "ach": null,
   "slot": "beads",
@@ -1026,77 +1078,96 @@
   "rank": null,
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 1
  },
  "l_2": {
   "price": 1500,
   "rank": null,
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 2
  },
  "l_3": {
   "price": 4000,
   "rank": null,
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 3
  },
  "l_4": {
   "price": 9000,
   "rank": null,
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 4
  },
  "l_5": {
   "price": 20000,
   "rank": "Вор",
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 5
  },
  "l_6": {
   "price": 2500,
   "rank": null,
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 6
  },
  "l_7": {
   "price": 6000,
   "rank": null,
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 7
  },
  "l_8": {
   "price": 3500,
   "rank": null,
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 8
  },
  "l_9": {
   "price": 30000,
   "rank": "Положенец",
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 9
  },
  "l_10": {
   "price": 45000,
   "rank": "Вор",
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 10
  },
  "l_11": {
   "price": 25000,
   "rank": "Блатной",
   "ach": null,
   "slot": "level",
-  "free": false
+  "free": false,
+  "lvl": 11
+ },
+ "l_12": {
+  "price": 6500,
+  "rank": null,
+  "ach": null,
+  "slot": "level",
+  "free": false,
+  "lvl": 12
  },
  "g_0": {
   "price": 0,
@@ -1790,22 +1861,5 @@
   "ach": null,
   "slot": "sticker",
   "free": false
- },
- "h_10": {
-  "price": 0,
-  "rank": null,
-  "ach": null,
-  "slot": "hat",
-  "free": false,
-  "hidden": true
- },
- "h_11": {
-  "price": 99999,
-  "rank": null,
-  "ach": null,
-  "slot": "hat",
-  "free": false,
-  "hidden": true,
-  "ref": 3
  }
 }
